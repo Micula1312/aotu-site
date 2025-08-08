@@ -11,13 +11,17 @@ const links = [
   { href: '#dump', label: 'editorial dump' },
 ];
 ---
+
 <aside class="sidebar">
   <h2>INDEX</h2>
   <nav>
-    {links.map(l => <a class="node" href={l.href}>{l.label}</a>)}
+    {links.map((l) => <a class="node" href={l.href}>{l.label}</a>)}
   </nav>
   <div class="controls">
-    <div class="toggle"><span>theme</span><button id="themeBtn" aria-pressed="false">terminal</button></div>
+    <div class="toggle">
+      <span>theme</span>
+      <button id="themeBtn" aria-pressed="false">terminal</button>
+    </div>
     <button id="audioBtn" type="button">[ unmute ]</button>
   </div>
 </aside>

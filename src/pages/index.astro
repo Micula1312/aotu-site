@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+const BASE = import.meta.env.BASE_URL || '/';
 ---
 <Base>
   <Fragment slot="head-title">Archive of the Untamed</Fragment>
@@ -9,8 +10,9 @@ import Base from '../layouts/Base.astro';
     <p class="sub">protocol://disorder.memory.network</p>
   </header>
 
-  <div id="terminal"></div>
+  <!-- Pass the base to JS via data-attribute so links work at /REPO/... -->
+  <div id="terminal" data-base={BASE}></div>
 
-  <script src={`${import.meta.env.BASE_URL}js/index.js`} is:inline></script>
-
+  <!-- Public script: use BASE and is:inline -->
+  <script src={`${BASE}js/index.js`} is:inline></script>
 </Base>
