@@ -1,0 +1,22 @@
+---
+const links = [
+  { href: '/index', label: 'home' },
+  { href: '/abstract', label: 'abstract' },
+  { href: '/manifesto', label: 'manifesto' },
+  { href: '/archive', label: 'online platform' },
+  { href: '#hardware', label: 'hardware treehouse' },
+  { href: '#logs', label: 'performative logs' },
+  { href: '#narratives', label: 'narrative modes' },
+  { href: '#dump', label: 'editorial dump' },
+];
+---
+<aside class="sidebar">
+  <h2>INDEX</h2>
+  <nav>
+    {links.map(l => <a class="node" href={l.href}>{l.label}</a>)}
+  </nav>
+  <div class="controls">
+    <div class="toggle"><span>theme</span><button id="themeBtn" aria-pressed="false">terminal</button></div>
+    <button id="audioBtn" type="button">[ unmute ]</button>
+  </div>
+</aside>

@@ -1,16 +1,15 @@
 ---
-
+import Base from '../layouts/Base.astro';
 ---
+<Base>
+  <Fragment slot="head-title">Archive of the Untamed</Fragment>
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+  <header>
+    <h1>ARCHIVE OF THE UNTAMED</h1>
+    <p class="sub">protocol://disorder.memory.network</p>
+  </header>
+
+  <div id="terminal"></div>
+
+  <script src="/js/index.js" is:inline></script>
+</Base>

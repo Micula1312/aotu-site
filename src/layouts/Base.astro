@@ -1,0 +1,23 @@
+---
+import Sidebar from '../components/Sidebar.astro';
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/terminal.css" />
+    <title><slot name="head-title" /></title>
+  </head>
+  <body>
+    <main class="layout container">
+      <Sidebar />
+      <section class="content">
+        <slot />
+        <audio id="bg-audio" preload="auto" playsinline loop muted>
+          <source src="/assets/audio/soundscape.mp3" type="audio/mp3" />
+        </audio>
+      </section>
+    </main>
+    <script src="/js/core.js" is:inline></script>
+  </body>
+</html>

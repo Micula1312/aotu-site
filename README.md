@@ -1,43 +1,81 @@
-# Astro Starter Kit: Minimal
+````markdown
+# Archive of the Untamed — Astro Starter
 
-```sh
-npm create astro@latest -- --template minimal
+Questo repository contiene il sito della tesi **Archive of the Untamed** costruito con [Astro](https://astro.build), tema "terminal", **sidebar/indice** comune, audio di background e pagina **Archive** collegata in modalità headless a WordPress.
+
+## Requisiti
+
+- **Node.js 18+** (consigliato 20)
+- **Git**
+
+## Installazione e avvio
+
+```bash
+# Installa le dipendenze
+npm install
+
+# Avvia l'ambiente di sviluppo
+npm run dev
+# → apri http://localhost:4321
+
+# Build per la produzione
+npm run build
+
+# Anteprima della build
+npm run preview
+````
+
+## Struttura del progetto
+
+```
+/public
+  /css/terminal.css             # Stile tema terminale
+  /js/core.js                   # Toggle tema + mute audio
+  /js/index.js                  # Effetto typewriter per index
+  /js/archive.js                # Fetch WP REST + griglia + lightbox
+  /assets/audio/soundscape.mp3  # Audio di background
+/src
+  /components/Sidebar.astro     # Sidebar/Indice condivisa
+  /components/Header.astro      # Header comune
+  /layouts/Base.astro           # Layout a due colonne
+  /pages/index.astro            # Home
+  /pages/abstract.astro         # Abstract
+  /pages/manifesto.astro        # Manifesto
+  /pages/archive.astro          # Archive
+/.github/workflows/deploy.yml   # Deploy GitHub Pages
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Import JS e avviso `is:inline`
 
-## 🚀 Project Structure
+Quando importi script da `/public` in un file `.astro`, aggiungi l’attributo `is:inline` per evitare il bundling automatico di Astro:
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```astro
+<script src="/js/index.js" is:inline></script>
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Questo vale per tutti i file in `/public/js/`.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## Configurazione
 
-Any static assets, like images, can be placed in the `public/` directory.
+* **URL del sito**: imposta `site` in `astro.config.mjs`.
+* **Audio**: percorso in `Base.astro` → `<source src="/assets/audio/soundscape.mp3" ...>`.
+* **Endpoint WordPress**: modifica `WP_API_URL` in `public/js/archive.js`.
 
-## 🧞 Commands
+## Deploy su GitHub Pages
 
-All commands are run from the root of the project, from a terminal:
+1. Commit & push di tutto (incluso `/.github/workflows/deploy.yml`).
+2. Su GitHub → **Settings → Pages** → Source: **GitHub Actions**.
+3. Ogni push su `main` avvia build e deploy automatico.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## Note
 
-## 👀 Want to learn more?
+* Usa `core.js` per gestione tema e audio.
+* Aggiorna `Sidebar.astro` per modificare l’indice.
+* Per SEO, valuta il fetch dei contenuti WP in fase di build.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+---
+
+**Autrice:** Micol Gelsi — *Archive of the Untamed*
+
+```
+```
