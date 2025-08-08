@@ -11,5 +11,6 @@ import Base from '../layouts/Base.astro';
 
   <div id="terminal"></div>
 
-  <script src="/js/index.js" is:inline></script>
+  <script src={`${import.meta.env.BASE_URL}js/index.js`} is:inline></script>
+
 </Base>
