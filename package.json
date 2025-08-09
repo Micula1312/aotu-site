@@ -3,12 +3,20 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
+    "dev": "cross-env DEPLOY_TARGET=domain astro dev",
+    "dev:gh": "cross-env DEPLOY_TARGET=ghpages astro dev",
+
+    "build": "cross-env DEPLOY_TARGET=domain astro build",
+    "build:gh": "cross-env DEPLOY_TARGET=ghpages astro build",
+
+    "preview": "astro preview"
   },
   "dependencies": {
     "astro": "^5.12.9"
+  },
+  "devDependencies": {
+    "cross-env": "^10.0.0"
   }
 }
+
+
