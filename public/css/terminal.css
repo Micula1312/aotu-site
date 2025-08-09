@@ -58,6 +58,10 @@ header nav a:hover { text-decoration:underline }
   font-family:inherit;
 }
 
+.sub {
+ margin: 0;
+}
+
 /* === Layout: sempre 2 colonne (sidebar + contenuto) === */
 .layout {
   display:grid;
