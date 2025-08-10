@@ -1,5 +1,6 @@
 ---
 const base = import.meta.env.BASE_URL || '/';
+
 const links = [
   { href: base, label: 'home' },
   { href: base + 'abstract', label: 'abstract' },
@@ -12,16 +13,30 @@ const links = [
 ];
 ---
 
-<aside class="sidebar">
-  <h2>INDEX</h2>
-  <nav>
-    {links.map((l) => <a class="node" href={l.href}>{l.label}</a>)}
-  </nav>
-  <div class="controls">
-    <div class="toggle">
-      <span>theme</span>
-      <button id="themeBtn" aria-pressed="false">terminal</button>
+<aside class="index" aria-label="Site index">
+  <!-- Titlebar stile Win ’90 -->
+  <div class="winbar">
+    <p class="title">A#U — index</p>
+    <div class="controls" aria-hidden="true">
+      <span class="dot" title="minimize"></span>
+      <span class="dot" title="maximize"></span>
+      <span class="dot" title="close"></span>
     </div>
-    <button id="audioBtn" type="button">[ unmute ]</button>
+  </div>
+
+  <!-- Lista indice scrollabile -->
+  <nav class="index-list" aria-label="Sections">
+    {links.map((l) => (
+      <a class="node" href={l.href}>{l.label}</a>
+    ))}
+  </nav>
+
+  <!-- Toolbar (opzionale) -->
+  <div class="controls" style="padding:10px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span class="muted">theme</span>
+      <button id="themeBtn" class="chip" aria-pressed="false">terminal</button>
+    </div>
+    <button id="audioBtn" type="button" class="btn">[ unmute ]</button>
   </div>
 </aside>

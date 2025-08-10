@@ -1,6 +1,9 @@
-// AOTU Archive — fetch from WP REST (with /wp or root auto-detect)
+// AOTU Archive — Matrix cards + lightbox (compatible with archive.css)
+// - Auto-detect WP endpoint (/wp/ or root)
+// - Debounced search, type filter, refresh
+// - Accessible cards + lightbox polish
 
-// UI refs
+// ---------- UI refs ----------
 const grid = document.getElementById('grid');
 const state = document.getElementById('state');
 const typeFilter = document.getElementById('type');
@@ -13,12 +16,15 @@ const lbInfo = document.getElementById('lbInfo');
 const lbTags = document.getElementById('lbTags');
 const lbNotes = document.getElementById('lbNotes');
 
-// --- WP endpoint auto-detect ---
+if (!grid || !state) {
+  console.warn('[archive] Missing required elements (#grid, #state).');
+}
+
+// ---------- WP endpoint auto-detect ----------
 const WP_ROOT = 'https://thearchiveoftheuntamed.xyz';
 let WP_API_URL = null;
 
 async function detectWpApiUrl() {
-  // Prova prima /wp/wp-json/, se non esiste fallback a /wp-json/
   const tryUrl = async (u) => {
     try {
       const res = await fetch(u, { mode: 'cors' });
@@ -27,7 +33,6 @@ async function detectWpApiUrl() {
       return false;
     }
   };
-
   const wpJsonInSubdir = `${WP_ROOT}/wp/wp-json/`;
   const wpJsonInRoot   = `${WP_ROOT}/wp-json/`;
 
@@ -39,27 +44,23 @@ async function detectWpApiUrl() {
 }
 
 async function ensureApiResolved() {
-  if (!WP_API_URL) {
-    await detectWpApiUrl();
-  }
+  if (!WP_API_URL) await detectWpApiUrl();
 }
 
-// --- Data / render ---
+// ---------- Data ----------
 let CACHE = [];
 
 async function fetchArchive() {
-  state.hidden = false;
-  state.textContent = 'Loading…';
-  grid.hidden = true;
+  if (state) { state.hidden = false; state.textContent = 'Loading…'; }
+  if (grid) grid.hidden = true;
 
   try {
     await ensureApiResolved();
-
     const url = new URL(WP_API_URL);
     url.searchParams.set('per_page', '50');
     url.searchParams.set('_fields', 'id,date,mime_type,media_type,source_url,title,alt_text,caption,media_details');
 
-    const q = searchInput.value.trim();
+    const q = (searchInput?.value || '').trim();
     if (q) url.searchParams.set('search', q);
 
     const res = await fetch(url, { mode: 'cors' });
@@ -70,7 +71,7 @@ async function fetchArchive() {
     renderArchive();
   } catch (err) {
     console.error(err);
-    state.textContent = 'Error loading archive (check CORS & API).';
+    if (state) state.textContent = 'Error loading archive (check CORS & API).';
   }
 }
 
@@ -95,66 +96,104 @@ function escapeHtml(s) {
 }
 
 function renderArchive() {
-  const wanted = typeFilter.value.trim();
+  const wanted = (typeFilter?.value || '').trim();
   const list = CACHE.filter(it => !wanted || mapType(it) === wanted);
 
+  if (!grid) return;
   grid.innerHTML = '';
+
   if (!list.length) {
-    state.hidden = false;
-    state.textContent = 'No results';
+    if (state) { state.hidden = false; state.textContent = 'No results'; }
     grid.hidden = true;
     return;
   }
 
-  state.hidden = true;
+  if (state) state.hidden = true;
   grid.hidden = false;
 
   list.forEach(item => {
     const t = mapType(item);
     const el = document.createElement('article');
     el.className = 'card';
-    const imgHTML = t === 'image'
-      ? `<img loading="lazy" src="${thumb(item)}" alt="${escapeHtml(item.title?.rendered || '')}">`
-      : `<div class="ph">${t.toUpperCase()}</div>`;
-    el.innerHTML = `<a href="#" data-id="${item.id}">${imgHTML}<div class="meta"><h3 class="title">${escapeHtml(item.title?.rendered || 'Untitled')}</h3><div class="muted">${(item.date || '').slice(0,10)}</div></div></a>`;
-    el.querySelector('a').addEventListener('click', e => { e.preventDefault(); openLightbox(item); });
+    el.dataset.type = t;
+    el.dataset.id = item.id;
+
+    const title = escapeHtml(item.title?.rendered || 'Untitled');
+    const date = (item.date || '').slice(0,10);
+    const imgHTML = (t === 'image')
+      ? `<img loading="lazy" src="${thumb(item)}" alt="${title}">`
+      : `<div class="ph" aria-hidden="true">${t.toUpperCase()}</div>`;
+
+    el.innerHTML = `
+      <a href="#" data-id="${item.id}" aria-label="Open ${title} (${t})">
+        ${imgHTML}
+        <div class="meta">
+          <h3 class="title">${title}</h3>
+          <div class="muted">${[t, date].filter(Boolean).join(' · ')}</div>
+        </div>
+      </a>`;
+
+    const link = el.querySelector('a');
+    link.addEventListener('click', e => { e.preventDefault(); openLightbox(item); });
+    link.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(item); } });
+
     grid.appendChild(el);
   });
 }
 
+// ---------- Lightbox ----------
 function openLightbox(item) {
+  if (!lb) return;
   const t = mapType(item);
-  lbTitle.textContent = item.title?.rendered || 'Untitled';
-  lbInfo.textContent = [t, (item.date || '').slice(0,10)].filter(Boolean).join(' · ');
-  lbTags.textContent = item.alt_text || '';
-  lbNotes.innerHTML = item.caption?.rendered || '';
-  lbMedia.innerHTML = '';
+  lbTitle && (lbTitle.textContent = item.title?.rendered || 'Untitled');
+  lbInfo && (lbInfo.textContent = [t, (item.date || '').slice(0,10)].filter(Boolean).join(' · '));
+  lbTags && (lbTags.textContent = item.alt_text || '');
+  lbNotes && (lbNotes.innerHTML = item.caption?.rendered || '');
+  if (lbMedia) lbMedia.innerHTML = '';
 
-  if (t === 'image') {
-    const img = new Image();
-    img.src = item.source_url;
-    img.alt = item.title?.rendered || '';
-    lbMedia.appendChild(img);
-  } else if (t === 'video') {
-    const v = document.createElement('video');
-    v.src = item.source_url; v.controls = true;
-    lbMedia.appendChild(v);
-  } else if (t === 'audio') {
-    const a = document.createElement('audio');
-    a.src = item.source_url; a.controls = true;
-    lbMedia.appendChild(a);
-  } else {
-    const p = document.createElement('p');
-    p.innerHTML = `Document: <a href="${item.source_url}" target="_blank" rel="noopener">open</a>`;
-    lbMedia.appendChild(p);
+  if (lbMedia) {
+    if (t === 'image') {
+      const img = new Image();
+      img.src = item.source_url;
+      img.alt = item.title?.rendered || '';
+      lbMedia.appendChild(img);
+    } else if (t === 'video') {
+      const v = document.createElement('video');
+      v.src = item.source_url; v.controls = true; v.playsInline = true;
+      lbMedia.appendChild(v);
+    } else if (t === 'audio') {
+      const a = document.createElement('audio');
+      a.src = item.source_url; a.controls = true;
+      lbMedia.appendChild(a);
+    } else {
+      const p = document.createElement('p');
+      p.innerHTML = `Document: <a href="${item.source_url}" target="_blank" rel="noopener">open</a>`;
+      lbMedia.appendChild(p);
+    }
   }
+
   lb.showModal();
 }
 
-// Events
-refreshBtn.addEventListener('click', fetchArchive);
-typeFilter.addEventListener('change', renderArchive);
-searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') fetchArchive(); });
+// close on backdrop click
+lb?.addEventListener('click', (e) => {
+  const rect = lb.getBoundingClientRect();
+  const inDialog = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+  if (!inDialog) lb.close();
+});
+// ensure Esc closes (native for <dialog>, but guard)
+lb?.addEventListener('keydown', (e) => { if (e.key === 'Escape') lb.close(); });
 
-// Kick-off
+// ---------- Events ----------
+const debounce = (fn, ms=250) => {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), ms); };
+};
+
+refreshBtn?.addEventListener('click', fetchArchive);
+typeFilter?.addEventListener('change', renderArchive);
+searchInput?.addEventListener('input', debounce(() => fetchArchive(), 250));
+searchInput?.addEventListener('keypress', e => { if (e.key === 'Enter') fetchArchive(); });
+
+// ---------- Kick-off ----------
 fetchArchive();
