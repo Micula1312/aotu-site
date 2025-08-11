@@ -1,17 +1,23 @@
 ---
 const base = import.meta.env.BASE_URL || '/';
-
 const links = [
   { href: base, label: 'home' },
   { href: base + 'abstract', label: 'abstract' },
   { href: base + 'manifesto', label: 'manifesto' },
   { href: base + 'archive', label: 'online platform' },
-  { href: base + 'network', label: 'network' }, // 🆕 nuova voce
+  { href: base + 'network', label: 'network' },
   { href: '#hardware', label: 'hardware treehouse' },
   { href: '#logs', label: 'performative logs' },
   { href: '#narratives', label: 'narrative modes' },
   { href: '#dump', label: 'editorial dump' },
 ];
+
+// normalizza per confronto
+const current = Astro.url.pathname.endsWith('/') ? Astro.url.pathname.slice(0, -1) : Astro.url.pathname;
+function isActive(href) {
+  const h = href.endsWith('/') ? href.slice(0, -1) : href;
+  return h === '' ? current === '' : current === h;
+}
 ---
 
 <aside class="index" aria-label="Site index">
@@ -26,11 +32,20 @@ const links = [
   </div>
 
   <!-- Lista indice scrollabile -->
-  <nav class="index-list" aria-label="Sections">
-    {links.map((l) => (
-      <a class="node" href={l.href}>{l.label}</a>
-    ))}
-  </nav>
+<nav class="index-list" aria-label="Sections">
+  {links.map((l) => {
+    const active = isActive(l.href);
+    return (
+      <a
+        class={`node${active ? ' is-active' : ''}`}
+        href={l.href}
+        aria-current={active ? 'page' : undefined}
+      >
+        {l.label}
+      </a>
+    );
+  })}
+</nav>
 
   <!-- Toolbar (opzionale) -->
   <div class="controls" style="padding:10px">

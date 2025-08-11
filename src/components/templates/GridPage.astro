@@ -18,5 +18,19 @@ import "../../styles/archive.css";
   <div id="state" class="loading">Loading…</div>
   <div id="grid" class="grid" hidden></div>
 
+  <!-- 🔽 Lightbox atteso da archive.js -->
+  <dialog id="lb">
+    <button class="close" onclick="document.getElementById('lb').close()">Close</button>
+    <div class="lb-wrap">
+      <div class="lb-media" id="lbMedia"></div>
+      <div class="lb-meta">
+        <h3 class="lb-title" id="lbTitle"></h3>
+        <div class="muted" id="lbInfo"></div>
+        <div id="lbTags" style="margin-top:8px"></div>
+        <div id="lbNotes" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </dialog>
+
   {scriptUrl && <script type="module" src={scriptUrl}></script>}
 </Base>
