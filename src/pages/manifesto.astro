@@ -1,40 +1,50 @@
 ---
-import Base from '../layouts/Base.astro';
+import Base from "../layouts/Base.astro";
 ---
 <Base>
   <Fragment slot="head-title">Manifesto | Archive of the Untamed</Fragment>
 
   <header>
-    <h1>ARCHIVE OF THE UNTAMED — MANIFESTO</h1>
+    <h1>ARCHIVE OF THE UNTAMED :: MANIFESTO</h1>
   </header>
 
-  <pre>
-  <p>
-# ARCHIVE OF THE UNTAMED :: MANIFESTO
+  <pre id="manifesto-terminal"></pre>
 
-> This is not an archive of the past.
-> This is not a neutral repository.
+  <script is:inline>
+    const text = `ARCHIVE_OF_THE_UNTAMED :: MANIFESTO
 
-> It is a living system:
-  made of gestures, roots, soil, and stories.
+This is not an archive_of_the_past.
+This is not a [NEUTRAL_REPOSITORY].
 
-> An interface between body and environment,
-  between resistance and memory.
+It is a {LIVING_SYSTEM} ⭐
+made_of(gestures, roots, soil, stories)
 
-> It archives what escapes,
-  what overgrows,
-  what exceeds the protocols of control.
+An_interface between [BODY] and [ENVIRONMENT],
+between {RESISTANCE} and {MEMORY} ⭐
 
-> The wild is not the other.
-> It is the force that resists capture,
-  that grows in the cracks of domination.
+It archives what_escapes,
+what_overgrows,
+what_exceeds(protocols_of_control)
 
-> Archive of the Untamed is a tool for:
-  - imagining otherwise,
-  - reclaiming space,
-  - documenting the unarchivable.
+The {WILD} is not the other.
+It is the force_that_resists_capture ⭐
+that grows_in(cracks_of_domination)
 
-:: wildness = data :: feeling = evidence :: disorder = method
-    </p>
-  </pre>
+Archive_of_the_Untamed is a TOOL_for:
+- imagining_otherwise()
+- reclaiming_space()
+- documenting(the_unarchivable)
+
+:: WILDNESS = data :: FEELING = evidence :: DISORDER = method`;
+
+    const el = document.getElementById("manifesto-terminal");
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        el.textContent += text.charAt(i++);
+        requestAnimationFrame(() => setTimeout(type, 10));
+      }
+    }
+    type();
+  </script>
 </Base>

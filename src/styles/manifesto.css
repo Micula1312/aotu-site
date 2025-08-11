@@ -1,0 +1,117 @@
+/* Manifesto — minimal brutal/poetic styling, dark-friendly */
+:root {
+  --mf-bg: #0c0c0f;
+  --mf-fg: #ededed;
+  --mf-muted: #a8a8b3;
+  --mf-accent: #8AE9B2;  /* tua palette: Verde radiazione */
+  --mf-red: #D62328;     /* Rosso segnaletico */
+  --mf-border: #2a2a33;
+  --mf-radius: 16px;
+}
+
+.mf { 
+  position: relative;
+  color: var(--mf-fg);
+  padding: clamp(16px, 4vw, 40px);
+  background:
+    radial-gradient(1200px 800px at 10% 0%, rgba(138,233,178,0.06), transparent 60%),
+    radial-gradient(1200px 900px at 90% 10%, rgba(214,35,40,0.07), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.02), transparent 35%),
+    var(--mf-bg);
+}
+
+/* Hero */
+.mf-hero {
+  padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 40px) 0;
+  background:
+    radial-gradient(600px 400px at 20% 10%, rgba(255,255,255,0.04), transparent 60%);
+}
+.mf-k {
+  letter-spacing: .06em;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin: 0;
+}
+.mf-sub {
+  margin: 6px 0 0;
+  color: var(--mf-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .08em;
+}
+
+/* Panel */
+.mf-panel {
+  max-width: 900px;
+  margin: clamp(16px, 5vw, 48px) auto 72px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--mf-border);
+  border-radius: var(--mf-radius);
+  padding: clamp(18px, 3.5vw, 36px);
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+  backdrop-filter: blur(4px);
+}
+
+.mf-lead {
+  font-size: clamp(18px, 2.1vw, 22px);
+  line-height: 1.55;
+  margin: 0 0 18px;
+  color: var(--mf-fg);
+  font-weight: 600;
+}
+.mf-panel p {
+  margin: 12px 0 0;
+  line-height: 1.7;
+  color: var(--mf-fg);
+}
+
+.mf-panel em {
+  color: var(--mf-accent);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* List */
+.mf-list { margin-top: 18px; }
+.mf-list-h {
+  color: var(--mf-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.mf-bullets {
+  margin: 0;
+  padding-left: 18px;
+}
+.mf-bullets li {
+  margin: 2px 0;
+  line-height: 1.6;
+}
+
+/* Inline “code mantra” */
+.mf-code {
+  margin-top: 22px;
+  padding: 12px 14px;
+  border: 1px dashed var(--mf-border);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+}
+.mf-code code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: .04em;
+  color: var(--mf-muted);
+}
+
+/* Small hover sugar on panel */
+.mf-panel:hover {
+  border-color: color-mix(in srgb, var(--mf-accent) 35%, var(--mf-border));
+  box-shadow: 0 16px 60px rgba(0,0,0,.35);
+  transition: .25s ease;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .mf-panel, .mf { scroll-behavior: auto; }
+}

@@ -1,0 +1,59 @@
+/* Toggle UI (valido per entrambe le modalità) */
+.mf-viewtoggle {
+  display:flex; gap:8px; align-items:center; margin: 12px 0 6px;
+  font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color: var(--mf-muted, #a8a8b3);
+}
+.mf-viewtoggle .sep { opacity:.6; }
+.mf-viewtoggle button{
+  appearance:none; border:none; background:transparent; color:inherit; cursor:pointer;
+  padding:4px 8px; border-radius:10px; transition:background .2s;
+}
+.mf-viewtoggle button:hover{ background:rgba(255,255,255,.06); }
+.mf-viewtoggle .is-active{ color:var(--mf-accent, #8AE9B2); }
+
+/* Modalità: terminal */
+.mf.mode-terminal { 
+  background: #0a0b0d; 
+  padding-top: clamp(10px, 3vw, 28px);
+}
+.mf.mode-terminal .mf-panel { display:none; }
+.mf.mode-terminal .mf-term { display:block; }
+
+.mf .mf-term { display:none; }
+
+.mf.mode-terminal .crt{
+  max-width: 900px;
+  margin: clamp(12px,5vw,36px) auto 72px;
+  padding: clamp(16px,3vw,28px);
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--mf-border, #2a2a33) 80%, transparent);
+  color: #d6f5e6;
+  background:
+    radial-gradient(1200px 800px at 10% 0%, rgba(138,233,178,0.08), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.02), transparent 35%),
+    #050607;
+  box-shadow: 0 10px 40px rgba(0,0,0,.3);
+  font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  line-height: 1.7;
+  letter-spacing: .01em;
+  position: relative;
+}
+
+/* scanlines soft */
+.mf.mode-terminal .crt::after{
+  content:"";
+  position:absolute; inset:0;
+  background: repeating-linear-gradient(
+    to bottom, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 1px, transparent 2px
+  );
+  opacity:.12; pointer-events:none;
+}
+
+/* caret blink */
+@keyframes caretBlink { 0%, 49% {opacity:1;} 50%, 100% {opacity:0;} }
+.mf.mode-terminal .caret { animation: caretBlink 1.1s steps(1) infinite; }
+
+/* Links/strong */
+.mf.mode-terminal .crt p { margin: 8px 0; }
+.mf.mode-terminal .crt em { color: var(--mf-accent, #8AE9B2); font-style: normal; }
