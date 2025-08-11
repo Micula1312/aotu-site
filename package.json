@@ -5,10 +5,8 @@
   "scripts": {
     "dev": "cross-env DEPLOY_TARGET=domain astro dev",
     "dev:gh": "cross-env DEPLOY_TARGET=ghpages astro dev",
-
     "build": "cross-env DEPLOY_TARGET=domain astro build",
     "build:gh": "cross-env DEPLOY_TARGET=ghpages astro build",
-
     "preview": "astro preview"
   },
   "dependencies": {
@@ -18,5 +16,3 @@
     "cross-env": "^10.0.0"
   }
 }
-
-

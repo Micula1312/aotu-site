@@ -1,8 +1,10 @@
-// AOTU Index — typewriter with base-aware links (robust)
-(function () {
-  const host = document.getElementById('terminal');
-  // Read base from data attribute (set in index.astro) and normalize it:
-  const rawBase = (host && host.dataset.base) || '/';
+// AOTU Index — typewriter con link base-aware (ES module, bundlato da Astro)
+(() => {
+  const terminalEl = document.getElementById('terminal');
+  if (!terminalEl) return;
+
+  // Legge il base path passato da index.astro
+  const rawBase = terminalEl.dataset.base || '/';
   const BASE = rawBase.endsWith('/') ? rawBase : rawBase + '/';
 
   const pre = `
@@ -31,7 +33,7 @@
     `- Performative Logs`,
     `- Narrative Modes`,
     `- Editorial Dump`,
-    '' // final newline
+    ''
   ].join('<br>\n');
 
   const post = `
@@ -39,13 +41,12 @@
 
 > END_OF_INDEX █`;
 
-  // Build DOM targets
+  // Target
   const preSpan = document.createElement('span');
   const nodesDiv = document.createElement('div');
   const postSpan = document.createElement('span');
 
-  const container = host || document.body;
-  container.append(preSpan, document.createTextNode('\n'), nodesDiv, document.createTextNode('\n'), postSpan);
+  terminalEl.append(preSpan, document.createTextNode('\n'), nodesDiv, document.createTextNode('\n'), postSpan);
 
   function typeTo(el, text, speed = 10) {
     return new Promise((resolve) => {
@@ -61,9 +62,9 @@
     });
   }
 
-  (async function run() {
+  (async () => {
     await typeTo(preSpan, pre);
-    nodesDiv.innerHTML = nodesHTML; // links include normalized BASE
+    nodesDiv.innerHTML = nodesHTML; // link già con BASE
     await typeTo(postSpan, post);
   })();
 })();

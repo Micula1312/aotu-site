@@ -1,40 +1,32 @@
 ---
-import Base from '../layouts/Base.astro';
-const BASE = import.meta.env.BASE_URL || '/';
+import Base from "../layouts/Base.astro";
+import archiveScriptUrl from "../scripts/archive.js?url";
+import "../styles/archive.css"; 
 ---
-
 <Base>
   <Fragment slot="head-title">AOTU — Archive</Fragment>
-
-  <!-- CSS statici serviti da /public -->
-  <link rel="stylesheet" href="/css/archive.css" />
-
   <header>
     <h1>ARCHIVE OF THE UNTAMED — ONLINE PLATFORM</h1>
     <p class="sub">Headless from WordPress (REST API)</p>
   </header>
 
-  <!-- Toolbar -->
   <section class="bar">
-    <select id="type" aria-label="Filter by type">
+    <select id="type">
       <option value="">All types</option>
       <option>image</option>
       <option>video</option>
       <option>audio</option>
       <option>doc</option>
     </select>
-
-    <input id="q" placeholder="Search title / notes / tags" aria-label="Search" />
-    <button id="refresh" class="btn" type="button">Refresh</button>
+    <input id="q" placeholder="Search title / notes / tags" />
+    <button id="refresh">Refresh</button>
   </section>
 
-  <!-- Stato + griglia -->
   <div id="state" class="loading">Loading…</div>
   <div id="grid" class="grid" hidden></div>
 
-  <!-- Lightbox -->
   <dialog id="lb">
-    <button class="close" onclick="document.getElementById('lb').close()" aria-label="Close">Close</button>
+    <button class="close" onclick="document.getElementById('lb').close()">Close</button>
     <div class="lb-wrap">
       <div class="lb-media" id="lbMedia"></div>
       <div class="lb-meta">
@@ -46,6 +38,5 @@ const BASE = import.meta.env.BASE_URL || '/';
     </div>
   </dialog>
 
-  <!-- JS pubblico (da /public/js/) -->
-  <script src={`${BASE}js/archive.js`} is:inline></script>
+  <script type="module" src={archiveScriptUrl}></script>
 </Base>

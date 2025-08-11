@@ -144,3 +144,34 @@ dialog#lb {
 @media (prefers-reduced-motion: reduce) {
   .card { transition: none; }
 }
+
+
+
+/* Preview media inside cards */
+.card .pv {
+  width: 100%;
+  height: auto;
+  display: block;
+  aspect-ratio: 4/3;
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  border-radius: calc(var(--radius) - 6px);
+  object-fit: cover;
+}
+
+/* Audio preview: piccolo bottone overlay + hover play */
+.card .audio-wrap { position: relative; }
+.card .audio-wrap audio.pv { width: 100%; height: auto; display: block; aspect-ratio: 4/3; background:#000; }
+.card .audio-play {
+  position: absolute;
+  left: 8px; bottom: 8px; z-index: 2;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  cursor: pointer;
+  background: rgba(0,0,0,.6);
+  color: #fff; font-size: 12px; font-weight: 700;
+  backdrop-filter: blur(2px);
+}
+.card .audio-play:hover { background: rgba(0,0,0,.75); }
+
+/* Placeholder (DOC) già presente come .ph — ok */

@@ -1,13 +1,13 @@
 ---
-import Sidebar from '../components/Sidebar.astro'; // IMPORTANT
-const BASE = import.meta.env.BASE_URL || '/';
+import Sidebar from "../components/Sidebar.astro";
+import "../styles/terminal.css";                    // ✅ styles sta a src/styles
+import soundFile from "../assets/audio/soundscape.mp3"; // ✅ asset bundlato
+import coreScriptUrl from "../scripts/core.js?url";     // ✅ script bundlato
 ---
-
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href={`${BASE}css/terminal.css`} />
     <title><slot name="head-title" /></title>
   </head>
   <body>
@@ -16,12 +16,11 @@ const BASE = import.meta.env.BASE_URL || '/';
       <section class="content">
         <slot />
         <audio id="bg-audio" preload="auto" playsinline loop muted>
-          <source src={`${BASE}assets/audio/soundscape.mp3`} type="audio/mp3" />
+          <source src={soundFile} type="audio/mpeg" />
         </audio>
       </section>
     </main>
 
-    <!-- Scripts from /public need is:inline + BASE -->
-    <script src={`${BASE}js/core.js`} is:inline></script>
+    <script type="module" src={coreScriptUrl}></script>
   </body>
 </html>
