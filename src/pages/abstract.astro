@@ -1,87 +1,121 @@
 ---
-import Base from '../layouts/Base.astro';
+import SimplePage from "../components/templates/SimplePage.astro";
 ---
-
-<Base>
-  <Fragment slot="head-title">Abstract | Archive of the Untamed</Fragment>
-
-  <header>
-    <h1>ARCHIVE OF THE UNTAMED — ABSTRACT</h1>
-  </header>
+<SimplePage title="ARCHIVE OF THE UNTAMED — ABSTRACT">
+  <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px">
+    <button id="tt-toggle" class="btn" aria-pressed="true">[ stop ]</button>
+    <small class="muted">typewriter</small>
+  </div>
 
   <pre id="abstract-terminal"></pre>
 
   <script is:inline>
-    const text = `# >> BOOT SEQUENCE : archive_project()
+    const text = `>> BOOT SEQUENCE : archive_project()
 
-# :: INIT project_research
-# Archive of the Untamed → deploys as an artistic_research_project
-# Purpose: investigate [landscape_protection] + [public_space]
-# as zones of conflict_and_potential()
+:: INIT project_research
+Archive of the Untamed → deploys as an artistic_research_project
+Purpose: investigate [landscape_protection] + [public_space]
+as zones of conflict_and_potential()
 
-# :: CONNECT urban_forest(“Prati di Caprara”, Bologna)
-# :: SYNC collective(“Exit”)
-# Archive is framed as counter-narrative_tool + political_interface
-# executed via local_collab(“Comitato Rigenerazione No Speculazione”)
+:: CONNECT urban_forest("Prati di Caprara", Bologna)
+:: SYNC collective("Exit")
+Archive is framed as counter-narrative_tool + political_interface
+executed via local_collab("Comitato Rigenerazione No Speculazione")
 
-# → archive is not passive_storage()
-# → archive = active_device.participatory(resistance, memory, rewilding)
+→ archive is not passive_storage()
+→ archive = active_device.participatory(resistance, memory, rewilding)
 
-# :: DEFINE concept(“wildness”) as generative_force:
-#     ↳ non-linear
-#     ↳ disobedient
-#     ↳ vision-producing
-#     ↳ anti-normative
+:: DEFINE concept("wildness") as generative_force:
+  ↳ non-linear
+  ↳ disobedient
+  ↳ vision-producing
+  ↳ anti-normative
 
-# >> LAUNCH PLATFORM: https://thearchiveoftheuntamed.xyz/
-# :: upload heterogeneous_materials:
-#     ↳ texts, sounds, images, voices, documents
-# :: archive_relation_network(wild_entities, artists, activists)
+>> LAUNCH PLATFORM: https://thearchiveoftheuntamed.xyz/
+:: upload heterogeneous_materials:
+  ↳ texts, sounds, images, voices, documents
+:: archive_relation_network(wild_entities, artists, activists)
 
-# >> BUILD prototype(“high-tech_treehouse”)
-#     inspired_by: experience(“Parco Don Bosco”, Bologna)
-#     function: vertical_occupation_unit()
-#     use_case: reclaim_urban_space()
+>> BUILD prototype("high-tech_treehouse")
+  inspired_by: experience("Parco Don Bosco", Bologna)
+  function: vertical_occupation_unit()
+  use_case: reclaim_urban_space()
 
-# >> ENGAGE mode(“performance”)
-# :: user = artist
-# :: environment = urban_forest
-#     ↳ actions: emotional traversal
-#     ↳ protocol: live_test(habitat_prototype)
-#     ↳ logs: sensorial + embodied feedback
+>> ENGAGE mode("performance")
+:: user = artist
+:: environment = urban_forest
+  ↳ actions: emotional traversal
+  ↳ protocol: live_test(habitat_prototype)
+  ↳ logs: sensorial + embodied feedback
 
-# >> RETURN_1 :: exhibition(“Casa dei Colori”, Montagnola, Bologna)
-# :: input:
-#     ↳ presentation of the project
-#     ↳ server_init(“Discord_Channel”) → online platform boot
-# :: output:
-#     ↳ video_mapping installation
-#     ↳ live audiovisual performance
+>> RETURN_1 :: exhibition("Casa dei Colori", Montagnola, Bologna)
+:: input:
+  ↳ presentation of the project
+  ↳ server_init("Discord_Channel") → online platform boot
+:: output:
+  ↳ video_mapping installation
+  ↳ live audiovisual performance
 
-# >> RETURN_2 :: exhibition(“6Artista”, Pastificio Cerere, Rome)
-# archive_output = stratified_readings()
-# ↳ authored_by: artist_perspective()
-# ↳ context: shared_space.dialogue()
+>> RETURN_2 :: exhibition("6Artista", Pastificio Cerere, Rome)
+archive_output = stratified_readings()
+↳ authored_by: artist_perspective()
+↳ context: shared_space.dialogue()
 
-# >> PUBLISH :: editorial_dump()
-# archive_format = chaotic_documentation()
-# ↳ no hierarchy
-# ↳ rhizomatic_structure()
-# ↳ open_links(multimedia_resources, external_spaces)
+>> PUBLISH :: editorial_dump()
+archive_format = chaotic_documentation()
+↳ no hierarchy
+↳ rhizomatic_structure()
+↳ open_links(multimedia_resources, external_spaces)
 
-# :: END_OF_ABSTRACT`;
+:: END_OF_ABSTRACT`;
 
-    const el = document.getElementById('abstract-terminal');
+    const el = document.getElementById("abstract-terminal");
+    const btn = document.getElementById("tt-toggle");
+
     let i = 0;
+    let paused = false;
+    let rafId = null;
 
-    function type() {
+    function tick() {
+      if (paused) return;
       if (i < text.length) {
-        el.textContent += text.charAt(i);
-        i++;
-        requestAnimationFrame(() => setTimeout(type, 10)); // Velocità ottimizzata
+        el.textContent += text.charAt(i++);
+        // velocità di battitura
+        rafId = requestAnimationFrame(() => setTimeout(tick, 10));
+      } else {
+        btn.textContent = "[ replay ]";
+        btn.setAttribute("aria-pressed", "false");
       }
     }
 
-    type();
+    function startTyping(from = 0) {
+      cancelAnimationFrame(rafId);
+      i = from;
+      paused = false;
+      btn.textContent = "[ stop ]";
+      btn.setAttribute("aria-pressed", "true");
+      if (from === 0) el.textContent = "";
+      tick();
+    }
+
+    // Toggle play/stop/replay
+    btn.addEventListener("click", () => {
+      if (i >= text.length) {
+        // replay
+        startTyping(0);
+      } else if (paused) {
+        paused = false;
+        btn.textContent = "[ stop ]";
+        btn.setAttribute("aria-pressed", "true");
+        tick();
+      } else {
+        paused = true;
+        btn.textContent = "[ play ]";
+        btn.setAttribute("aria-pressed", "false");
+      }
+    });
+
+    // avvio
+    startTyping(0);
   </script>
-</Base>
+</SimplePage>

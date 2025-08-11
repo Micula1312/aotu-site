@@ -63,7 +63,7 @@ section.bar button:hover { box-shadow: var(--shadow-neon); }
 }
 
 /* Thumbnail / placeholder */
-.card img, .card .ph {
+.card img, .card .ph, .card .pv {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -147,16 +147,6 @@ dialog#lb {
 
 
 
-/* Preview media inside cards */
-.card .pv {
-  width: 100%;
-  height: auto;
-  display: block;
-  aspect-ratio: 4/3;
-  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-  border-radius: calc(var(--radius) - 6px);
-  object-fit: cover;
-}
 
 /* Audio preview: piccolo bottone overlay + hover play */
 .card .audio-wrap { position: relative; }

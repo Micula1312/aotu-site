@@ -1,14 +1,6 @@
 ---
-import Base from "../layouts/Base.astro";
+import TypewriterPage from "../components/templates/TypewriterPage.astro";
 import indexScriptUrl from "../scripts/index.js?url";
 const BASE = import.meta.env.BASE_URL || "/";
 ---
-<Base>
-  <Fragment slot="head-title">Archive of the Untamed</Fragment>
-  <header>
-    <h1>ARCHIVE OF THE UNTAMED</h1>
-    <p class="sub">protocol://disorder.memory.network</p>
-  </header>
-  <div id="terminal" data-base={BASE}></div>
-  <script type="module" src={indexScriptUrl}></script>
-</Base>
+<TypewriterPage title="ARCHIVE OF THE UNTAMED" scriptUrl={indexScriptUrl} base={BASE} />

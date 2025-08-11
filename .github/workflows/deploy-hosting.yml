@@ -1,35 +1,42 @@
-name: Deploy Astro to GitHub Pages
+name: Deploy Astro to Hosting (FTP)
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+    branches: [ main ]     # deploy ad ogni push su main
+  workflow_dispatch:        # avvio manuale da Actions
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci
-      - run: npm run build:gh
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
+          cache: 'npm'
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Install deps
+        run: npm ci
+
+      # Build per il DOMINIO (usa lo script con DEPLOY_TARGET=domain)
+      - name: Build (domain target)
+        run: npm run build
+
+      # Deploy via FTP: carica ./dist nella root del dominio
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}         # es: ftp.tuodominio.com
+          username: ${{ secrets.FTP_USERNAME }}     # es: u12345678
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp                             # ftp | ftps
+          port: 21                                  # 21 (FTP) o 990 (FTPS)
+          local-dir: dist                           # cartella build Astro
+          server-dir: /public_html/                 # root del dominio
+          # opzionali utili:
+          # dry-run: true                           # prova senza upload
+          # dangerous-clean-slate: true             # svuota server-dir prima (ATTENZIONE!)

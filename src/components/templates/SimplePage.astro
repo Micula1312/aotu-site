@@ -1,0 +1,10 @@
+---
+import Base from "../../layouts/Base.astro";
+const { title, scriptUrl, base = "/" } = Astro.props;
+---
+<Base>
+  <Fragment slot="head-title">{title}</Fragment>
+  <header><h1>{title}</h1></header>
+  <div id="terminal" data-base={base}></div>
+  {scriptUrl && <script type="module" src={scriptUrl}></script>}
+</Base>

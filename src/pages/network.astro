@@ -1,36 +1,26 @@
 ---
-import Base from "../layouts/Base.astro";
-import "../styles/archive.css"; // riusa barra, card, griglia
+import ListPage from "../components/templates/ListPage.astro";
 import networkScriptUrl from "../scripts/network.js?url";
 ---
-<Base>
-  <Fragment slot="head-title">Network | Archive of the Untamed</Fragment>
-
-  <header>
-    <h1>ARCHIVE OF THE UNTAMED — NETWORK</h1>
-    <p class="sub">mapping :: [collectives] [associations] [nodes]</p>
-  </header>
-
-  <section class="bar" aria-label="Filters">
-    <select id="kind" aria-label="Kind">
-      <option value="">All kinds</option>
-    </select>
-
+<ListPage
+  title="ARCHIVE OF THE UNTAMED — NETWORK"
+  subtitle="mapping :: [collectives] [associations] [nodes]"
+  scriptUrl={networkScriptUrl}
+>
+  <Fragment slot="filters">
+    <select id="kind" aria-label="Kind"><option value="">All kinds</option></select>
     <input id="q" placeholder="Search name / city / tags" aria-label="Search" />
-
     <div style="display:flex; gap:10px; align-items:center; justify-content:flex-end">
       <select id="sort" aria-label="Sort">
-        <option value="az">A→Z</option>
-        <option value="za">Z→A</option>
-        <option value="new">recenti</option>
+        <option value="az">A→Z</option><option value="za">Z→A</option><option value="new">recenti</option>
       </select>
       <button id="refresh">Refresh</button>
     </div>
-  </section>
+  </Fragment>
 
-  <div id="state" class="loading">Loading…</div>
-  <div id="grid" class="grid" hidden></div>
-
-  <!-- import inline: esegue sempre -->
-  <script type="module" src={networkScriptUrl}></script>
-</Base>
+  <Fragment slot="list-header">
+    <div class="network-header">
+      <div>Name</div><div>Location</div><div>Kind</div><div>Website</div>
+    </div>
+  </Fragment>
+</ListPage>

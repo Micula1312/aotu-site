@@ -1,0 +1,22 @@
+---
+import Base from "../../layouts/Base.astro";
+const { title, subtitle, scriptUrl } = Astro.props;
+import "../../styles/archive.css";
+---
+<Base>
+  <Fragment slot="head-title">{title}</Fragment>
+
+  <header>
+    <h1>{title}</h1>
+    {subtitle && <p class="sub">{subtitle}</p>}
+  </header>
+
+  <section class="bar" aria-label="Filters">
+    <slot name="filters" />
+  </section>
+
+  <div id="state" class="loading">Loading…</div>
+  <div id="grid" class="grid" hidden></div>
+
+  {scriptUrl && <script type="module" src={scriptUrl}></script>}
+</Base>

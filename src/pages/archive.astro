@@ -1,42 +1,18 @@
 ---
-import Base from "../layouts/Base.astro";
+import GridPage from "../components/templates/GridPage.astro";
 import archiveScriptUrl from "../scripts/archive.js?url";
-import "../styles/archive.css"; 
 ---
-<Base>
-  <Fragment slot="head-title">AOTU — Archive</Fragment>
-  <header>
-    <h1>ARCHIVE OF THE UNTAMED — ONLINE PLATFORM</h1>
-    <p class="sub">Headless from WordPress (REST API)</p>
-  </header>
-
-  <section class="bar">
+<GridPage
+  title="ARCHIVE OF THE UNTAMED — ONLINE PLATFORM"
+  subtitle="Headless from WordPress (REST API)"
+  scriptUrl={archiveScriptUrl}
+>
+  <Fragment slot="filters">
     <select id="type">
       <option value="">All types</option>
-      <option>image</option>
-      <option>video</option>
-      <option>audio</option>
-      <option>doc</option>
+      <option>image</option><option>video</option><option>audio</option><option>doc</option>
     </select>
     <input id="q" placeholder="Search title / notes / tags" />
     <button id="refresh">Refresh</button>
-  </section>
-
-  <div id="state" class="loading">Loading…</div>
-  <div id="grid" class="grid" hidden></div>
-
-  <dialog id="lb">
-    <button class="close" onclick="document.getElementById('lb').close()">Close</button>
-    <div class="lb-wrap">
-      <div class="lb-media" id="lbMedia"></div>
-      <div class="lb-meta">
-        <h3 class="lb-title" id="lbTitle"></h3>
-        <div class="muted" id="lbInfo"></div>
-        <div id="lbTags" style="margin-top:8px"></div>
-        <div id="lbNotes" style="margin-top:10px"></div>
-      </div>
-    </div>
-  </dialog>
-
-  <script type="module" src={archiveScriptUrl}></script>
-</Base>
+  </Fragment>
+</GridPage>
