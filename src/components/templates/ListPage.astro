@@ -21,5 +21,19 @@ import "../../styles/network.css";
   <slot name="list-header" />
   <div id="networkList" class="network-list" hidden></div>
 
+  <dialog id="node">
+    <button class="close" onclick="document.getElementById('node').close()">Close</button>
+    <div class="lb-wrap">
+      <div class="lb-media" id="nodeMedia"></div>
+      <div class="lb-meta">
+        <h3 id="nodeTitle"></h3>
+        <div class="muted" id="nodeInfo"></div>
+        <div id="nodeTerms" style="margin-top:6px"></div>
+        <div id="nodeBody" style="margin-top:10px"></div>
+        <div id="nodeLinks" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;"></div>
+      </div>
+    </div>
+  </dialog>
+
   {scriptUrl && <script type="module" src={scriptUrl}></script>}
 </Base>

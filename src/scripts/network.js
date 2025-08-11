@@ -122,6 +122,9 @@ function render() {
       <div data-label="Website">${website ? `<a href="${website}" target="_blank" rel="noopener">link</a>` : ''}</div>
     `;
     listEl.appendChild(row);
+    // dentro render(), dopo aver creato row:
+    row.addEventListener('click', () => openNode(item.id));
+    row.style.cursor = 'pointer';
   });
 }
 
@@ -132,3 +135,82 @@ qInput?.addEventListener('input', debounce(fetchNodes, 300));
 
 console.log('[network] boot');
 (async function init(){ await fetchKinds(); await fetchNodes(); })();
+
+async function openNode(id){
+  try {
+    await ensureApi();
+    const url = `${API_BASE}/aotu_node/${id}?_embed=1`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
+    const it = await r.json();
+
+    // --- dati
+    const title = it.title?.rendered || 'Untitled';
+    const meta  = it.meta || {};
+    const acf   = it.acf || {}; // se usi ACF con "Show in REST" attivo
+    const termsGroups = it?._embedded?.['wp:term'] || [];
+    const terms = termsGroups.flat().map(t => t?.name).filter(Boolean);
+
+    // --- target elementi
+    const dlg   = document.getElementById('node');
+    const tEl   = document.getElementById('nodeTitle');
+    const iEl   = document.getElementById('nodeInfo');
+    const tmEl  = document.getElementById('nodeTerms');
+    const bodyEl= document.getElementById('nodeBody');
+    const links = document.getElementById('nodeLinks');
+    const media = document.getElementById('nodeMedia');
+
+    if (!dlg) return console.warn('[network] missing <dialog id="node">');
+
+    // --- riempi contenuti
+    tEl && (tEl.textContent = title);
+    iEl && (iEl.textContent = [meta.city, meta.country].filter(Boolean).join(' · '));
+    tmEl && (tmEl.textContent = terms.join(' · '));
+
+    // corpo: preferisci ACF description, poi excerpt/content
+    const bodyHTML = acf.description
+      ? esc(acf.description)
+      : (it.excerpt?.rendered || it.content?.rendered || '');
+    if (bodyEl) bodyEl.innerHTML = bodyHTML;
+
+    // link chip
+    if (links) {
+      links.innerHTML = '';
+      const website   = (meta.website || acf.website || '').trim();
+      const instagram = (meta.instagram || acf.instagram || '').trim();
+      const email     = (meta.email || acf.email || '').trim();
+      const push = (label, href) => {
+        if (!href) return;
+        const a = document.createElement('a');
+        a.className = 'chip';
+        a.href = href; a.target = '_blank'; a.rel = 'noopener';
+        a.textContent = label; links.appendChild(a);
+      };
+      push('website', website);
+      push('@instagram', instagram);
+      if (email) push('email', `mailto:${email}`);
+      push('on_wordpress', it.link);
+    }
+
+    // media (logo ACF o featured image)
+    if (media) {
+      media.innerHTML = '';
+      const logoUrl = acf.logo?.url || acf.logo || null;
+      if (logoUrl) {
+        const img = new Image();
+        img.src = logoUrl; img.alt = title;
+        media.appendChild(img);
+      } else if (it._embedded?.['wp:featuredmedia']?.[0]?.source_url) {
+        const img = new Image();
+        img.src = it._embedded['wp:featuredmedia'][0].source_url;
+        img.alt = title; media.appendChild(img);
+      }
+    }
+
+    dlg.showModal();
+  } catch (e) {
+    console.error('[network] openNode error:', e);
+  }
+}
+
