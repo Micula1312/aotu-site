@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import "../styles/archive.css"; // riusa barra, card, griglia
+import networkScriptUrl from "../scripts/network.js?url";
 ---
 <Base>
   <Fragment slot="head-title">Network | Archive of the Untamed</Fragment>
@@ -31,7 +32,5 @@ import "../styles/archive.css"; // riusa barra, card, griglia
   <div id="grid" class="grid" hidden></div>
 
   <!-- import inline: esegue sempre -->
-  <script type="module">
-    import "../scripts/network.js";
-  </script>
+  <script type="module" src={networkScriptUrl}></script>
 </Base>

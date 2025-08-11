@@ -67,6 +67,7 @@ async function fetchNodes() {
 
   try {
     await ensureApi();
+    console.log("[network] API_BASE =", API_BASE);
 
     const params = new URLSearchParams();
     params.set('per_page', '100');
