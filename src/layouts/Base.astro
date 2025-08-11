@@ -9,9 +9,10 @@ import coreScriptUrl from "../scripts/core.js?url";     // ✅ script bundlato
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><slot name="head-title" /></title>
+
   </head>
   <body>
-    <main class="layout container">
+    <main class="layout">
       <Sidebar />
       <section class="content">
         <slot />

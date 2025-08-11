@@ -12,42 +12,44 @@ const links = [
   { href: '#dump', label: 'editorial dump' },
 ];
 
-// normalizza per confronto
 const current = Astro.url.pathname.endsWith('/') ? Astro.url.pathname.slice(0, -1) : Astro.url.pathname;
-function isActive(href) {
+function isActive(href: string) {
   const h = href.endsWith('/') ? href.slice(0, -1) : href;
   return h === '' ? current === '' : current === h;
 }
 ---
 
-<aside class="index" aria-label="Site index">
-  <!-- Titlebar stile Win ’90 -->
+<aside id="sidebar" class="index" aria-label="Site index" tabindex="-1">
   <div class="winbar">
     <p class="title">A#U — index</p>
-    <div class="controls" aria-hidden="true">
-      <span class="dot" title="minimize"></span>
-      <span class="dot" title="maximize"></span>
-      <span class="dot" title="close"></span>
+    <div class="controls">
+      <!-- unico bottone: su desktop collassa, su mobile chiude -->
+      <button id="toggleSidebarDesktop" class="chip" aria-controls="sidebar" aria-expanded="true">
+        ◀ collapse
+      </button>
     </div>
   </div>
 
-  <!-- Lista indice scrollabile -->
-<nav class="index-list" aria-label="Sections">
-  {links.map((l) => {
-    const active = isActive(l.href);
-    return (
-      <a
-        class={`node${active ? ' is-active' : ''}`}
-        href={l.href}
-        aria-current={active ? 'page' : undefined}
-      >
-        {l.label}
-      </a>
-    );
-  })}
-</nav>
+  <!-- subito dopo la .winbar -->
+    <button id="railHandle" class="rail-handle desktop-only" aria-label="Expand sidebar" aria-controls="sidebar" aria-expanded="false">
+      ☰
+    </button>
 
-  <!-- Toolbar (opzionale) -->
+  <nav class="index-list" aria-label="Sections">
+    {links.map((l) => {
+      const active = isActive(l.href);
+      return (
+        <a
+          class={`node${active ? ' is-active' : ''}`}
+          href={l.href}
+          aria-current={active ? 'page' : undefined}
+        >
+          {l.label}
+        </a>
+      );
+    })}
+  </nav>
+
   <div class="controls" style="padding:10px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span class="muted">theme</span>
@@ -56,3 +58,5 @@ function isActive(href) {
     <button id="audioBtn" type="button" class="btn">[ unmute ]</button>
   </div>
 </aside>
+
+<div id="sidebarBackdrop" class="sidebar-backdrop"></div>
