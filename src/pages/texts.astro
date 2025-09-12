@@ -1,0 +1,28 @@
+---
+import Base from "@/layouts/Base.astro";
+import textsScriptUrl from "@/scripts/texts.js?url";
+---
+
+<Base title="AOTU — Texts" current="bibliography">
+  <section class="p-6">
+    <h1 class="mb-2">Texts</h1>
+    <p class="muted mb-3">All bibliography items from the WordPress CPT.</p>
+
+    <!-- barra azioni come per media -->
+    <form id="texts-filters" class="grid gap-2 mb-3" style="grid-template-columns: repeat(12, minmax(0,1fr));">
+      <input class="input col-span-6" type="text" name="q" placeholder="Search title/content…" />
+      <button class="btn col-span-2" type="reset">Reset</button>
+    </form>
+
+    <div id="texts-status" class="mb-2 muted" role="status"></div>
+
+    <div id="texts-list" class="bib-list" aria-live="polite"></div>
+
+    <div class="mt-3 flex gap-2 items-center">
+      <button id="texts-more" class="btn">Load more</button>
+      <span id="texts-count" class="ml-1 muted"></span>
+    </div>
+  </section>
+
+  <script type="module" src={textsScriptUrl}></script>
+</Base>

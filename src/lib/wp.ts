@@ -1,0 +1,3 @@
+export const WP_API_BASE =
+  import.meta.env.PUBLIC_WP_API_BASE ||
+  'https://thearchiveoftheuntamed.xyz/wp/wp-json/wp/v2';

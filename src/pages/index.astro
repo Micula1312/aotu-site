@@ -1,6 +1,37 @@
 ---
-import TypewriterPage from "../components/templates/TypewriterPage.astro";
-import indexScriptUrl from "../scripts/index.js?url";
-const BASE = import.meta.env.BASE_URL || "/";
+import GridPage from "../components/templates/GridPage.astro";
+import archiveScriptUrl from "../scripts/archive.js?url";
 ---
-<TypewriterPage title="ARCHIVE OF THE UNTAMED" scriptUrl={indexScriptUrl} base={BASE} />
+
+
+<!-- Header / breadcrumb -->
+<div class="archive-header">
+  <a class="crumb" href="/taxonomies">← Back to Taxonomies</a>
+  <div id="archive-crumb"></div>
+</div>
+
+
+<GridPage
+  title="ARCHIVE OF THE UNTAMED — ONLINE PLATFORM"
+  subtitle="Headless from WordPress (REST API)"
+  scriptUrl={archiveScriptUrl}
+>
+  <Fragment slot="filters">
+    <select id="type">
+      <option value="">All types</option>
+      <option>image</option><option>video</option><option>audio</option><option>doc</option>
+    </select>
+    <input id="q" placeholder="Search title / notes / tags" />
+    <button id="refresh">Refresh</button>
+  </Fragment>
+</GridPage>
+
+
+<style>
+  .archive-header{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:.75rem}
+  .crumb{opacity:.85;text-decoration:none;border-bottom:1px dotted var(--term-border)}
+  .crumb:hover{opacity:1}
+  #archive-crumb{opacity:.8}
+  #archive-crumb .kv{display:inline-flex;gap:.25rem;margin-right:.5rem}
+  #archive-crumb .kv b{opacity:1}
+</style>

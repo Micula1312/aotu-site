@@ -1,19 +1,24 @@
 ---
-import Sidebar from "../components/Sidebar.astro";
-import "../styles/terminal.css";                    // ✅ styles sta a src/styles
-import soundFile from "../assets/audio/soundscape.mp3"; // ✅ asset bundlato
-import coreScriptUrl from "../scripts/core.js?url";     // ✅ script bundlato
+import Sidebar from "@/components/Sidebar.astro";
+import "@/styles/terminal.css";
+import soundFile from "@/assets/audio/soundscape.mp3";
+import coreScriptUrl from "@/scripts/core.js?url";
+
+// Props opzionali
+const { title = "AOTU", current = "" } = Astro.props;
 ---
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title><slot name="head-title" /></title>
+    <title>{title}</title>
 
+    <!-- Preload audio (valore 'as' valido) -->
+    <link rel="preload" as="audio" href={soundFile} type="audio/mpeg" />
   </head>
   <body>
     <main class="layout">
-      <Sidebar />
+      <Sidebar current={current} />
       <section class="content">
         <slot />
         <audio id="bg-audio" preload="auto" playsinline loop muted>
@@ -22,6 +27,25 @@ import coreScriptUrl from "../scripts/core.js?url";     // ✅ script bundlato
       </section>
     </main>
 
+    <!-- Iniezione sicura dell'endpoint WP per il client -->
+    <script is:inline>
+      (function () {
+        try {
+          // In prod metti PUBLIC_WP_API_URL nel .env(.production), es: https://thearchiveoftheuntamed.xyz
+          var raw = import.meta.env.PUBLIC_WP_API_URL || "";
+          if (raw && typeof window !== "undefined") {
+            var base = String(raw).replace(/\/$/, ""); // rimuove eventuale slash finale
+            // Esempio risultato: https://thearchiveoftheuntamed.xyz/wp-json
+            window.__WP_API_URL = base + "/wp-json";
+            // console.info("[base] window.__WP_API_URL =", window.__WP_API_URL);
+          }
+        } catch (e) {
+          // console.warn("[base] WP API injection failed", e);
+        }
+      })();
+    </script>
+
+    <!-- Core script del sito -->
     <script type="module" src={coreScriptUrl}></script>
   </body>
 </html>

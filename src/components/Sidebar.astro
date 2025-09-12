@@ -1,62 +1,42 @@
 ---
-const base = import.meta.env.BASE_URL || '/';
-const links = [
-  { href: base, label: 'home' },
-  { href: base + 'abstract', label: 'abstract' },
-  { href: base + 'manifesto', label: 'manifesto' },
-  { href: base + 'archive', label: 'online platform' },
-  { href: base + 'network', label: 'network' },
-  { href: '#hardware', label: 'hardware treehouse' },
-  { href: '#logs', label: 'performative logs' },
-  { href: '#narratives', label: 'narrative modes' },
-  { href: '#dump', label: 'editorial dump' },
+const { current = '', base = '/' } = Astro.props;
+
+const items = [
+  // blocco storico
+   { href: base,                   key: 'archive',     label: 'Online Platform' },
+  { href: base + 'abstract',      key: 'abstract',    label: 'Abstract' },
+  { href: base + 'manifesto',     key: 'manifesto',   label: 'Manifesto' },
+//{ href: base,                   key: 'archive',     label: 'Online Platform' },
+  { href: base + 'network',       key: 'network',     label: 'Network' },
+
+  // placeholder/ancore
+  { href: '#hardware',            key: 'hardware',    label: 'Hardware Treehouse' },
+  { href: '#logs',                key: 'logs',        label: 'Performative Logs' },
+  { href: '#narratives',          key: 'narratives',  label: 'Narrative Modes' },
+  { href: '#dump',                key: 'dump',        label: 'Editorial Dump' },
+
+  // nuove sezioni operative
+  { href: base + 'menu',          key: 'menu',        label: 'Index' },
+  { href: base + 'texts',  key: 'bibliography',label: 'Bibliography' },
+  { href: base + 'taxonomies',    key: 'taxonomies',  label: 'Taxonomies' },
+  { href: base + 'lab/p5-experiments', key: 'p5',     label: 'P5 Lab' },
 ];
-
-const current = Astro.url.pathname.endsWith('/') ? Astro.url.pathname.slice(0, -1) : Astro.url.pathname;
-function isActive(href: string) {
-  const h = href.endsWith('/') ? href.slice(0, -1) : href;
-  return h === '' ? current === '' : current === h;
-}
 ---
-
-<aside id="sidebar" class="index" aria-label="Site index" tabindex="-1">
-  <div class="winbar">
-    <p class="title">A#U — index</p>
-    <div class="controls">
-      <!-- unico bottone: su desktop collassa, su mobile chiude -->
-      <button id="toggleSidebarDesktop" class="chip" aria-controls="sidebar" aria-expanded="true">
-        ◀ collapse
-      </button>
-    </div>
-  </div>
-
-  <!-- subito dopo la .winbar -->
-    <button id="railHandle" class="rail-handle desktop-only" aria-label="Expand sidebar" aria-controls="sidebar" aria-expanded="false">
-      ☰
-    </button>
-
-  <nav class="index-list" aria-label="Sections">
-    {links.map((l) => {
-      const active = isActive(l.href);
-      return (
-        <a
-          class={`node${active ? ' is-active' : ''}`}
-          href={l.href}
-          aria-current={active ? 'page' : undefined}
-        >
-          {l.label}
-        </a>
-      );
-    })}
+<aside class="sidebar">
+  <nav>
+    <ul>
+      {items.map(i => (
+        <li class={i.key === current ? 'is-active' : ''}>
+          <a href={i.href}>{i.label}</a>
+        </li>
+      ))}
+    </ul>
   </nav>
-
-  <div class="controls" style="padding:10px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span class="muted">theme</span>
-      <button id="themeBtn" class="chip" aria-pressed="false">terminal</button>
-    </div>
-    <button id="audioBtn" type="button" class="btn">[ unmute ]</button>
-  </div>
 </aside>
 
-<div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+<style>
+  .sidebar{padding:1rem;border-right:1px dashed var(--term-border)}
+  ul{list-style:none;margin:0;padding:0;display:grid;gap:.4rem}
+  li.is-active a{font-weight:700;text-decoration:underline}
+  a{text-decoration:none}
+</style>

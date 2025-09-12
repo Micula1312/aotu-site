@@ -7,13 +7,18 @@
     "dev:gh": "cross-env DEPLOY_TARGET=ghpages astro dev",
     "build": "cross-env DEPLOY_TARGET=domain astro build",
     "build:gh": "cross-env DEPLOY_TARGET=ghpages astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "preview:gh": "cross-env DEPLOY_TARGET=ghpages astro preview",
+    "check": "astro check",
+    "format": "astro format"
   },
   "dependencies": {
     "astro": "^5.12.9"
   },
   "devDependencies": {
     "cross-env": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
-

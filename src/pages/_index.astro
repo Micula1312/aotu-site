@@ -1,0 +1,6 @@
+---
+import TypewriterPage from "../components/templates/TypewriterPage.astro";
+import indexScriptUrl from "../scripts/index.js?url";
+const BASE = import.meta.env.BASE_URL || "/";
+---
+<TypewriterPage title="ARCHIVE OF THE UNTAMED" scriptUrl={indexScriptUrl} base={BASE} />

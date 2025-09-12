@@ -1,0 +1,76 @@
+---
+import Base from '../../layouts/Base.astro';
+import { WP_API_BASE } from '../../lib/wp';
+
+const { slug } = Astro.params;
+
+// 1) Risolvi ID del tag da slug
+const termRes = await fetch(`${WP_API_BASE}/tags?slug=${slug}`, { cache: 'no-cache' });
+const termData = termRes.ok ? await termRes.json() : [];
+const term = termData[0];
+
+// 2) Post collegati
+let posts = [];
+if (term?.id) {
+  const postsRes = await fetch(`${WP_API_BASE}/posts?tags=${term.id}&per_page=50&_embed`, { cache: 'no-cache' });
+  posts = postsRes.ok ? await postsRes.json() : [];
+}
+
+function getFeaturedMedia(post) {
+  const m = post?._embedded?.['wp:featuredmedia']?.[0];
+  return m?.source_url || null;
+}
+---
+<Base title={`${term?.name ?? slug} · Taxonomy · AOTU`} current="taxonomies">
+  <main class="p-6">
+    <h1 class="mb-2">{term?.name ?? slug}</h1>
+    <p class="mb-4 opacity-80">Interactive views of posts tagged with <strong>{term?.name ?? slug}</strong>.</p>
+
+    <section class="grid">
+      {posts.map(p => {
+        const media = getFeaturedMedia(p);
+        return (
+          <article class="card">
+            <header><h3><a href={`/post/${p.slug}`}>{p.title.rendered}</a></h3></header>
+            {media
+              ? <canvas class="p5-canvas" width="480" height="320" data-img={media}></canvas>
+              : <p set:html={p.excerpt.rendered} />}
+          </article>
+        );
+      })}
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js" is:inline></script>
+  <script is:inline>
+    document.querySelectorAll('.p5-canvas').forEach((node) => {
+      const imgUrl = node.dataset.img;
+      new p5((s) => {
+        let img;
+        s.preload = () => { img = s.loadImage(imgUrl); };
+        s.setup = () => {
+          const c = s.createCanvas(node.width, node.height);
+          c.parent(node.parentElement);
+          s.noLoop();
+        };
+        s.draw = () => {
+          if (!img) return;
+          s.image(img, 0, 0, s.width, s.height);
+          s.stroke(0, 40);
+          for (let y = 0; y < s.height; y += 2) s.line(0, y, s.width, y);
+          s.stroke(0, 40);
+          for (let i = 0; i < 800; i++) s.point(s.random(s.width), s.random(s.height));
+          s.noFill(); s.stroke(0,200,0,160); s.rect(2,2, s.width-4, s.height-4, 6);
+        };
+      });
+      node.style.display = 'none';
+    });
+  </script>
+
+  <style>
+    .grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+    .card{border:1px dashed var(--term-border); padding:1rem; border-radius:10px}
+    h3{margin:.2rem 0 .6rem}
+    .p5-canvas{display:block}
+  </style>
+</Base>

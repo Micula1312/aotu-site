@@ -1,0 +1,76 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+<Base title="P5 Experiments · AOTU" current="p5">
+  <main class="p-6">
+    <h1 class="mb-4">P5.js Experiments</h1>
+
+    <section class="mb-4">
+      <h2 class="mb-2">Interactive Noise Grid</h2>
+      <div id="p5-noise" class="p5-holder"></div>
+    </section>
+
+    <section>
+      <h2 class="mb-2">Image Manipulation Slot</h2>
+      <input id="imgUrl" placeholder="http://.../wp-content/uploads/xxxx.jpg" class="input" />
+      <button id="loadImg" class="btn">Load &amp; Render</button>
+      <div id="p5-image" class="p5-holder" style="margin-top:1rem"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js" is:inline></script>
+  <script is:inline>
+    new p5((s)=>{
+      let z = 0;
+      s.setup = ()=>{ const c=s.createCanvas(640,360); c.parent('p5-noise'); };
+      s.draw = ()=>{
+        s.background(0);
+        const step = 20;
+        for(let y=0;y<s.height;y+=step){
+          for(let x=0;x<s.width;x+=step){
+            const n = s.noise(x*0.01, y*0.01, z)*255;
+            s.noStroke(); s.fill(n);
+            s.rect(x,y,step,step);
+          }
+        }
+        z += 0.01;
+      };
+    });
+
+    let imgSketch;
+    document.getElementById('loadImg').addEventListener('click', ()=>{
+      const url = document.getElementById('imgUrl').value.trim();
+      if (!url) return;
+      if (imgSketch) imgSketch.remove();
+
+      imgSketch = new p5((s)=>{
+        let img;
+        s.preload = ()=> img = s.loadImage(url, ()=>{}, ()=>alert('Image load failed'));
+        s.setup = ()=>{ const c=s.createCanvas(640, 400); c.parent('p5-image'); s.noLoop(); };
+        s.draw = ()=>{
+          s.background(0);
+          if (!img) return;
+          s.image(img, 0, 0, s.width, s.height);
+          const step=4; s.loadPixels();
+          for(let y=0;y<s.height;y+=step){
+            for(let x=0;x<s.width;x+=step){
+              const idx = 4*(y*s.width+x);
+              s.pixels[idx]   = 255 - s.pixels[idx];
+              s.pixels[idx+1] = 255 - s.pixels[idx+1];
+              s.pixels[idx+2] = 255 - s.pixels[idx+2];
+            }
+          }
+          s.updatePixels();
+          s.noFill(); s.stroke(0,255,0,140); s.rect(1,1,s.width-2,s.height-2,8);
+        };
+      });
+    });
+  </script>
+
+  <style>
+    .p5-holder{border:1px dashed var(--term-border); padding:.5rem; border-radius:10px}
+    .input{width:100%;max-width:560px;padding:.6rem;border:1px dashed var(--term-border);border-radius:8px}
+    .btn{margin-top:.5rem;border:1px dashed var(--term-border);padding:.6rem 1rem;border-radius:8px;background:transparent;cursor:pointer}
+    .btn:hover{background:var(--term-accent-bg)}
+  </style>
+</Base>
