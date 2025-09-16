@@ -2,8 +2,12 @@ name: Deploy Astro to Hosting (FTP)
 
 on:
   push:
-    branches: [ main ]     # deploy ad ogni push su main
-  workflow_dispatch:        # avvio manuale da Actions
+    branches: [ main ]   # deploy ad ogni push su main
+  workflow_dispatch:      # avvio manuale da Actions
+
+concurrency:
+  group: deploy-ftp-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-deploy:
@@ -17,26 +21,54 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
       - name: Install deps
         run: npm ci
 
-      # Build per il DOMINIO (usa lo script con DEPLOY_TARGET=domain)
+      # Build per il DOMINIO (usa lo script "build" classico: output in ./dist)
       - name: Build (domain target)
         run: npm run build
 
+      - name: Determine FTP deploy eligibility
+        id: ftp_config
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          missing=""
+          for var in FTP_SERVER FTP_USERNAME FTP_PASSWORD; do
+            if [ -z "${!var}" ]; then
+              if [ -n "$missing" ]; then
+                missing="$missing, "
+              fi
+              missing="$missing$var"
+            fi
+          done
+
+          if [ -n "$missing" ]; then
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping FTP deploy: missing secrets $missing."
+            echo "### FTP deploy skipped" >> "$GITHUB_STEP_SUMMARY"
+            echo "Missing secrets: $missing" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "All FTP secrets available. Continuing with deployment."
+          fi
+
       # Deploy via FTP: carica ./dist nella root del dominio
       - name: FTP Deploy
+        if: steps.ftp_config.outputs.should_deploy == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_SERVER }}         # es: ftp.tuodominio.com
-          username: ${{ secrets.FTP_USERNAME }}     # es: u12345678
+          server: ${{ secrets.FTP_SERVER }}       # es: ftp.tuodominio.com
+          username: ${{ secrets.FTP_USERNAME }}   # es: u12345678
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftp                             # ftp | ftps
-          port: 21                                  # 21 (FTP) o 990 (FTPS)
-          local-dir: dist                           # cartella build Astro
-          server-dir: /public_html/                 # root del dominio
-          # opzionali utili:
-          # dry-run: true                           # prova senza upload
-          # dangerous-clean-slate: true             # svuota server-dir prima (ATTENZIONE!)
+          protocol: ftp                           # ftp | ftps
+          port: 21                                # 21 (FTP) o 990 (FTPS)
+          local-dir: dist/                        # cartella build Astro
+          server-dir: /public_html/               # root del dominio
+          # Opzionali utili:
+          # dry-run: true                         # prova senza upload
+          # dangerous-clean-slate: true           # svuota server-dir prima (ATTENZIONE!)
