@@ -1,36 +1,17 @@
 ---
-import Base from '../layouts/Base.astro';
-const BASE = import.meta.env.BASE_URL || '/';
-const PUBLIC_WP_API_BASE = import.meta.env.PUBLIC_WP_API_BASE || ''; // es. "/wp-json/wp/v2"
++ import Base from '../layouts/Base.astro';
++ const BASE = import.meta.env.BASE_URL || '/';
 ---
-
 <Base title="Taxonomies · AOTU" current="taxonomies">
   <main class="p-6">
     <h1 class="mb-4">Taxonomies</h1>
-
-    <ul
-      class="terms"
-      id="taxo-list"
-      data-base={BASE}
-      data-api-base={PUBLIC_WP_API_BASE}
-    ></ul>
-
-    <noscript>Attiva JavaScript per vedere le tassonomie.</noscript>
+    <ul class="terms" id="taxo-list" data-base={BASE}></ul>
   </main>
 
   <style>
     .terms{display:grid;gap:.4rem;padding-left:1rem}
     .terms a{text-decoration:none}
     small{opacity:.7;margin-left:.25rem}
-    .dim{opacity:.7}
-    .group{margin:.5rem 0 1rem}
-    .group h2{font-size:1rem;margin:.75rem 0 .25rem}
   </style>
-
-  <!-- Fallback globale (opzionale) -->
-  <script>
-    window.__WP_API_BASE = {JSON.stringify(PUBLIC_WP_API_BASE)};
-  </script>
-
-  <script type="module" src={(await import("../scripts/taxonomies.js?url")).default}></script>
+   <script type="module" src={(await import("../scripts/taxonomies.js?url")).default}></script>
 </Base>

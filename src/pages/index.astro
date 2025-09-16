@@ -4,11 +4,26 @@ import archiveScriptUrl from "../scripts/archive.js?url";
 ---
 
 
-<!-- Header / breadcrumb -->
-<div class="archive-header">
-  <a class="crumb" href="/taxonomies">← Back to Taxonomies</a>
-  <div id="archive-crumb"></div>
-</div>
+<!-- FILTRI ARCHIVIO -->
+<form id="archive-filters" class="grid gap-2 mb-3" style="grid-template-columns: repeat(12, minmax(0,1fr));">
+  <select id="type" name="mtype" class="input col-span-3" title="Media type">
+    <option value="">All media</option>
+    <option value="image">Images</option>
+    <option value="video">Videos</option>
+    <option value="audio">Audio</option>
+    <option value="doc">Documents</option>
+  </select>
+
+  <input id="q" class="input col-span-6" type="search" placeholder="Search (title, alt, caption)..." />
+
+  <button id="refresh" class="btn col-span-3" type="button">Refresh</button>
+
+  <!-- pill filtri attivi -->
+  <div class="col-span-12 flex gap-2 items-center mt-1">
+    <div id="activeFilters" class="flex gap-2"></div>
+    <button id="clearAllFilters" class="btn btn--ghost small" type="button" hidden>Clear all</button>
+  </div>
+</form>
 
 
 <GridPage
@@ -26,12 +41,3 @@ import archiveScriptUrl from "../scripts/archive.js?url";
   </Fragment>
 </GridPage>
 
-
-<style>
-  .archive-header{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:.75rem}
-  .crumb{opacity:.85;text-decoration:none;border-bottom:1px dotted var(--term-border)}
-  .crumb:hover{opacity:1}
-  #archive-crumb{opacity:.8}
-  #archive-crumb .kv{display:inline-flex;gap:.25rem;margin-right:.5rem}
-  #archive-crumb .kv b{opacity:1}
-</style>
