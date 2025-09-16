@@ -1,17 +1,27 @@
 ---
-+ import Base from '../layouts/Base.astro';
-+ const BASE = import.meta.env.BASE_URL || '/';
----
-<Base title="Taxonomies · AOTU" current="taxonomies">
-  <main class="p-6">
-    <h1 class="mb-4">Taxonomies</h1>
-    <ul class="terms" id="taxo-list" data-base={BASE}></ul>
-  </main>
+import Base from '../layouts/Base.astro';
 
-  <style>
-    .terms{display:grid;gap:.4rem;padding-left:1rem}
-    .terms a{text-decoration:none}
-    small{opacity:.7;margin-left:.25rem}
-  </style>
-   <script type="module" src={(await import("../scripts/taxonomies.js?url")).default}></script>
+// Props della pagina (facoltative)
+const { title = 'Taxonomies', current = 'taxonomies' } = Astro.props;
+
+// Se ti serve il base path di GitHub Pages
+const BASE = import.meta.env.BASE_URL || '/aotu-site/';
+---
+
+<Base title={title} current={current}>
+  <section class="p-6">
+    <h1 class="text-xl mb-4">Taxonomies</h1>
+
+    <!-- Contenuto placeholder: sostituisci con la tua lista -->
+    <ul class="list-disc pl-5 space-y-2">
+      <li>People</li>
+      <li>Places</li>
+      <li>Events</li>
+      <li>Media Types</li>
+    </ul>
+  </section>
+
+  <!-- JS lato client, se ti serve -->
+  <!-- Usa Astro.resolve per bundle lato client -->
+  <!-- <script type="module" src={Astro.resolve('../scripts/taxonomies.ts')}></script> -->
 </Base>
