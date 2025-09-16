@@ -1,33 +1,38 @@
 ---
-const { current = '', base = '/' } = Astro.props;
+// Sidebar.astro — base-safe per dev/prod (domain e GitHub Pages)
+
+const { current = '' } = Astro.props;
+const BASE = import.meta.env.BASE_URL; // "/" in dev, "/aotu-site/" in GH Pages
 
 const items = [
   // blocco storico
-   { href: base,                   key: 'archive',     label: 'Online Platform' },
-  { href: base + 'abstract',      key: 'abstract',    label: 'Abstract' },
-  { href: base + 'manifesto',     key: 'manifesto',   label: 'Manifesto' },
-//{ href: base,                   key: 'archive',     label: 'Online Platform' },
-  { href: base + 'network',       key: 'network',     label: 'Network' },
+  { href: BASE,                 key: 'archive',     label: 'Online Platform' },
+  { href: `${BASE}abstract`,    key: 'abstract',    label: 'Abstract' },
+  { href: `${BASE}manifesto`,   key: 'manifesto',   label: 'Manifesto' },
+  { href: `${BASE}network`,     key: 'network',     label: 'Network' },
 
-  // placeholder/ancore
-  { href: '#hardware',            key: 'hardware',    label: 'Hardware Treehouse' },
-  { href: '#logs',                key: 'logs',        label: 'Performative Logs' },
-  { href: '#narratives',          key: 'narratives',  label: 'Narrative Modes' },
-  { href: '#dump',                key: 'dump',        label: 'Editorial Dump' },
+  // ancore (puntano alla home con hash, così valgono ovunque)
+  { href: `${BASE}#hardware`,   key: 'hardware',    label: 'Hardware Treehouse' },
+  { href: `${BASE}#logs`,       key: 'logs',        label: 'Performative Logs' },
+  { href: `${BASE}#narratives`, key: 'narratives',  label: 'Narrative Modes' },
+  { href: `${BASE}#dump`,       key: 'dump',        label: 'Editorial Dump' },
 
   // nuove sezioni operative
-  { href: base + 'menu',          key: 'menu',        label: 'Index' },
-  { href: base + 'texts',  key: 'bibliography',label: 'Bibliography' },
-  { href: base + 'taxonomies',    key: 'taxonomies',  label: 'Taxonomies' },
-  { href: base + 'lab/p5-experiments', key: 'p5',     label: 'P5 Lab' },
+  { href: `${BASE}menu`,             key: 'menu',         label: 'Index' },
+  { href: `${BASE}texts`,            key: 'bibliography', label: 'Bibliography' },
+  { href: `${BASE}taxonomies`,       key: 'taxonomies',   label: 'Taxonomies' },
+  { href: `${BASE}lab/p5-experiments`, key: 'p5',         label: 'P5 Lab' },
 ];
 ---
+
 <aside class="sidebar">
   <nav>
     <ul>
       {items.map(i => (
         <li class={i.key === current ? 'is-active' : ''}>
-          <a href={i.href}>{i.label}</a>
+          <a href={i.href} aria-current={i.key === current ? 'page' : undefined}>
+            {i.label}
+          </a>
         </li>
       ))}
     </ul>

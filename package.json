@@ -3,12 +3,12 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "cross-env DEPLOY_TARGET=domain astro dev",
-    "dev:gh": "cross-env DEPLOY_TARGET=ghpages astro dev",
-    "build": "cross-env DEPLOY_TARGET=domain astro build",
-    "build:gh": "cross-env DEPLOY_TARGET=ghpages astro build",
-    "preview": "astro preview",
-    "preview:gh": "cross-env DEPLOY_TARGET=ghpages astro preview",
+    "dev": "cross-env NODE_ENV=development DEPLOY_TARGET=domain astro dev --open --port 4321",
+    "dev:gh": "cross-env NODE_ENV=development DEPLOY_TARGET=ghpages astro dev --open --port 4321",
+    "build": "cross-env NODE_ENV=production DEPLOY_TARGET=domain astro build",
+    "build:gh": "cross-env NODE_ENV=production DEPLOY_TARGET=ghpages astro build",
+    "preview": "astro preview --port 4321",
+    "preview:gh": "cross-env DEPLOY_TARGET=ghpages astro preview --port 4321",
     "check": "astro check",
     "format": "astro format"
   },

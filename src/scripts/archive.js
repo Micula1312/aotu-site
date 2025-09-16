@@ -1,7 +1,21 @@
 // AOTU Archive — cards + lightbox con preview image/video/audio
 // Dev/Prod safe:
-// - in prod legge window.__WP_API_URL (iniettata dal layout Base.astro)
-// - in dev usa il proxy Vite su /wp-json
+// - in dev usa SEMPRE il proxy: /wp-json → target .../wp/wp-json
+// - in prod usa window.__WP_API_URL (iniettata dal layout Base.astro)
+
+// ---------- Endpoint WP ----------
+const IS_DEV = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV;
+
+let API_BASE = IS_DEV
+  ? '/wp-json'
+  : (typeof window !== 'undefined' && window.__WP_API_URL)
+      ? window.__WP_API_URL
+      : 'https://thearchiveoftheuntamed.xyz/wp/wp-json';
+
+API_BASE = API_BASE.replace(/\/$/, '');
+const MEDIA_ENDPOINT = `${API_BASE}/wp/v2/media`;
+
+console.log('[archive] API_BASE =', API_BASE);
 
 // ---------- UI refs ----------
 const grid        = document.getElementById('grid');
@@ -25,23 +39,6 @@ const lbNotes = document.getElementById('lbNotes');
 if (!grid || !stateEl) {
   console.warn('[archive] Missing required elements (#grid, #state).');
 }
-
-// ---------- Endpoint WP ----------
-// Ora leggiamo la base già puntata alla v2, es: "/wp-json/wp/v2" o "https://.../wp-json/wp/v2"
-const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
-
-// Preferisci __WP_API_BASE (iniettato dal layout) oppure ENV di dev proxy
-let API_BASE =
-  (typeof window !== 'undefined' && window.__WP_API_BASE)
-    ? window.__WP_API_BASE
-    : (isLocal ? '/wp-json/wp/v2' : 'https://thearchiveoftheuntamed.xyz/wp-json/wp/v2');
-
-// normalizza senza trailing slash
-API_BASE = API_BASE.replace(/\/$/, '');
-
-// Endpoints (già v2): niente /wp/v2 extra qui
-const MEDIA_ENDPOINT = `${API_BASE}/media`;
-
 
 // ---------- URL params ----------
 const urlParams = new URLSearchParams(location.search);

@@ -5,7 +5,7 @@ import Base from '../layouts/Base.astro';
 const { title = 'Taxonomies', current = 'taxonomies' } = Astro.props;
 
 // Se ti serve il base path di GitHub Pages
-const BASE = import.meta.env.BASE_URL || '/aotu-site/';
+const BASE = import.meta.env.BASE_URL
 ---
 
 <Base title={title} current={current}>

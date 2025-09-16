@@ -1,29 +1,31 @@
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 
-const TARGET = process.env.DEPLOY_TARGET || 'domain';
-
-const CFG = {
-  domain: {
-    site: 'https://thearchiveoftheuntamed.xyz',
-    base: '/',
-  },
-  ghpages: {
-    site: 'https://micula1312.github.io',
-    base: '/aotu-site/',
-  },
-}[TARGET];
-
+// ENV & TARGET
+const DEPLOY_TARGET = process.env.DEPLOY_TARGET || 'domain'; // 'ghpages' | 'domain'
 const isProd = process.env.NODE_ENV === 'production';
 
-// WP locale usato SOLO per il proxy in dev
-// (qui è http://localhost perché il tuo WP risponde a http://localhost/wp-json/)
-const WP_TARGET = process.env.WP_TARGET || 'http://localhost';
+// Dominio pubblico del sito (serve a sitemap/links assoluti)
+const SITE_BY_TARGET = {
+  ghpages: 'https://micula1312.github.io',
+  domain: 'https://thearchiveoftheuntamed.xyz',
+};
+const site = SITE_BY_TARGET[DEPLOY_TARGET] || SITE_BY_TARGET.domain;
 
+// Base URL: in dev SEMPRE '/', in prod dipende dal target
+const base = isProd
+  ? (DEPLOY_TARGET === 'ghpages' ? '/aotu-site/' : '/')
+  : '/';
+
+// WordPress headless target (con /wp finale!)
+const WP_TARGET = process.env.WP_TARGET || 'https://thearchiveoftheuntamed.xyz/wp';
+
+// Config Astro
 export default defineConfig({
-  ...CFG,
-  integrations: [],
+  site,
+  base,
+  trailingSlash: 'ignore',
   vite: {
     resolve: {
       alias: {
@@ -31,23 +33,10 @@ export default defineConfig({
       },
     },
     server: {
-      fs: { allow: ['.'] },
-      proxy: isProd ? undefined : {
-        '/wp-json': {
-          target: WP_TARGET,
-          changeOrigin: true,
-          secure: false,
-        },
-        '/wp': {
-          target: WP_TARGET,
-          changeOrigin: true,
-          secure: false,
-        },
-        '/wp-content': {
-          target: WP_TARGET,
-          changeOrigin: true,
-          secure: false,
-        },
+      proxy: process.env.NODE_ENV === 'production' ? undefined : {
+        '/wp-json':    { target: WP_TARGET, changeOrigin: true, secure: false },
+        '/wp':         { target: WP_TARGET, changeOrigin: true, secure: false },
+        '/wp-content': { target: WP_TARGET, changeOrigin: true, secure: false },
       },
     },
   },

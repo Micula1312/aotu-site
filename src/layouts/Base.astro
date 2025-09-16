@@ -4,17 +4,24 @@ import "@/styles/terminal.css";
 import soundFile from "@/assets/audio/soundscape.mp3";
 import coreScriptUrl from "@/scripts/core.js?url";
 
-// Props opzionali
 const { title = "AOTU", current = "" } = Astro.props;
+
+// Risolvi lato build (non nel browser)
+const WP_BASE = import.meta.env.PUBLIC_WP_API_URL
+  ? String(import.meta.env.PUBLIC_WP_API_URL).replace(/\/$/, "")
+  : "";
+const WP_API_URL = WP_BASE ? `${WP_BASE}/wp-json` : "";
 ---
 <html lang="en">
   <head>
+    <!-- Preload audio: solo in prod (in dev avvisa) -->
+    {import.meta.env.DEV ? null : (
+      <link rel="preload" as="audio" href={soundFile} type="audio/mpeg" />
+    )}
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-
-    <!-- Preload audio (valore 'as' valido) -->
-    <link rel="preload" as="audio" href={soundFile} type="audio/mpeg" />
   </head>
   <body>
     <main class="layout">
@@ -27,22 +34,9 @@ const { title = "AOTU", current = "" } = Astro.props;
       </section>
     </main>
 
-    <!-- Iniezione sicura dell'endpoint WP per il client -->
-    <script is:inline>
-      (function () {
-        try {
-          // In prod metti PUBLIC_WP_API_URL nel .env(.production), es: https://thearchiveoftheuntamed.xyz
-          var raw = import.meta.env.PUBLIC_WP_API_URL || "";
-          if (raw && typeof window !== "undefined") {
-            var base = String(raw).replace(/\/$/, ""); // rimuove eventuale slash finale
-            // Esempio risultato: https://thearchiveoftheuntamed.xyz/wp-json
-            window.__WP_API_URL = base + "/wp-json";
-            // console.info("[base] window.__WP_API_URL =", window.__WP_API_URL);
-          }
-        } catch (e) {
-          // console.warn("[base] WP API injection failed", e);
-        }
-      })();
+    <!-- Inietta la stringa già risolta (inline module va benissimo) -->
+    <script is:inline type="module">
+      window.__WP_API_URL = {JSON.stringify(WP_API_URL)};
     </script>
 
     <!-- Core script del sito -->
