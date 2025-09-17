@@ -14,7 +14,7 @@ const WP_API_URL = WP_BASE ? `${WP_BASE}/wp-json` : "";
 ---
 <html lang="en">
   <head>
-    <!-- Preload audio: solo in prod (in dev avvisa) -->
+    <!-- Preload audio: solo in prod (in dev può dare warning) -->
     {import.meta.env.DEV ? null : (
       <link rel="preload" as="audio" href={soundFile} type="audio/mpeg" />
     )}
@@ -34,9 +34,9 @@ const WP_API_URL = WP_BASE ? `${WP_BASE}/wp-json` : "";
       </section>
     </main>
 
-    <!-- Inietta la stringa già risolta (inline module va benissimo) -->
+    <!-- Inietta stringa già risolta -->
     <script is:inline type="module">
-      window.__WP_API_URL = {JSON.stringify(WP_API_URL)};
+      window.__WP_API_URL = "{WP_API_URL}";
     </script>
 
     <!-- Core script del sito -->
