@@ -4,16 +4,17 @@
 // - in prod usa window.__WP_API_URL (iniettata dal layout Base.astro)
 
 // ---------- Endpoint WP ----------
-const IS_DEV = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV;
+const IS_DEV = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
 let API_BASE = IS_DEV
-  ? '/wp-json'
+  ? '/wp-json'  // usa il proxy in dev
   : (typeof window !== 'undefined' && window.__WP_API_URL)
       ? window.__WP_API_URL
-      : 'https://thearchiveoftheuntamed.xyz/wp/wp-json';
+      : 'https://thearchiveoftheuntamed.xyz/wp/wp-json';  // fallback assoluto
 
 API_BASE = API_BASE.replace(/\/$/, '');
 const MEDIA_ENDPOINT = `${API_BASE}/wp/v2/media`;
+
 
 console.log('[archive] API_BASE =', API_BASE);
 
