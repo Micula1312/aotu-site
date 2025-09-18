@@ -1,4 +1,4 @@
-// js/core.js — theme, audio, sidebar (mobile + desktop) + remember state
+// js/core.js — theme, audio, neon, sidebar (mobile + desktop) + drawers state
 
 // ========== THEME ==========
 const THEME_KEY = 'aotuTheme';
@@ -19,6 +19,7 @@ function flipTheme() {
   try { localStorage.setItem(THEME_KEY, next); } catch {}
   applyTheme(next);
 }
+// init theme
 applyTheme((() => { try { return localStorage.getItem(THEME_KEY) || 'terminal'; } catch { return 'terminal'; } })());
 themeBtn?.addEventListener('click', flipTheme);
 
@@ -37,72 +38,81 @@ function toggleAudio() {
 audioBtn?.addEventListener('click', toggleAudio);
 updateAudioBtnLabel();
 
-// ========== SIDEBAR: MOBILE DRAWER ==========
+// ========== NEON MODE ==========
+const NEON_KEY = 'aotuNeon';
+const neonBtn  = document.getElementById('neonBtn');
+
+function applyNeon(on) {
+  document.body.classList.toggle('neon', !!on);
+  neonBtn?.setAttribute('aria-pressed', String(!!on));
+  if (neonBtn) neonBtn.textContent = on ? '★ neon ON' : '★ neon';
+}
+(function initNeon(){
+  let saved = false;
+  try { saved = localStorage.getItem(NEON_KEY) === 'true'; } catch {}
+  applyNeon(saved);
+})();
+neonBtn?.addEventListener('click', () => {
+  const next = !document.body.classList.contains('neon');
+  try { localStorage.setItem(NEON_KEY, String(next)); } catch {}
+  applyNeon(next);
+});
+
+// ========== SIDEBAR: MOBILE DROP-DOWN (dall’alto) ==========
 (() => {
-  const sidebar  = document.getElementById('sidebar');
-  const openBtn  = document.getElementById('openSidebar');   // header (mobile) — se non c'è, il blocco resta harmless
-  const closeBtn = document.getElementById('closeSidebar');  // dentro la sidebar
-  const backdrop = document.getElementById('sidebarBackdrop');
+  const body      = document.body;
+  const sidebar   = document.getElementById('sidebar');
+  const pull      = document.getElementById('sidebarPull');   // linguetta INDEX
+  const closeBtn  = document.getElementById('closeSidebar');  // bottone ✕ nella winbar
+  const backdrop  = document.getElementById('sidebarBackdrop');
 
-  if (!sidebar || !backdrop) return;
+  if (!sidebar || !pull || !backdrop) return;
 
+  let lastFocus = null;
   function open() {
-    document.body.classList.add('sidebar-open');
-    sidebar.classList.add('is-open');
-    backdrop.classList.add('is-visible');
-    openBtn?.setAttribute('aria-expanded', 'true');
-    closeBtn?.setAttribute('aria-expanded', 'true');
-    sidebar.focus();
+    lastFocus = document.activeElement;
+    body.classList.add('sidebar-open');
+    pull.setAttribute('aria-expanded', 'true');
+    setTimeout(() => sidebar.focus(), 0);
+    body.style.overflow = 'hidden'; // blocca scroll sotto
   }
   function close() {
-    document.body.classList.remove('sidebar-open');
-    sidebar.classList.remove('is-open');
-    backdrop.classList.remove('is-visible');
-    openBtn?.setAttribute('aria-expanded', 'false');
-    closeBtn?.setAttribute('aria-expanded', 'false');
-    openBtn?.focus();
+    body.classList.remove('sidebar-open');
+    pull.setAttribute('aria-expanded', 'false');
+    body.style.overflow = '';
+    lastFocus?.focus?.();
   }
 
-  openBtn?.addEventListener('click', open);
+  pull.addEventListener('click', open);
   closeBtn?.addEventListener('click', close);
   backdrop.addEventListener('click', close);
-
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) close();
+    if (e.key === 'Escape' && body.classList.contains('sidebar-open')) close();
   });
-
-  // se si passa a desktop, chiudi il drawer mobile
-  const toDesktop = window.matchMedia('(min-width: 901px)');
-  toDesktop.addEventListener?.('change', () => close());
 })();
 
-// ========== SIDEBAR: DESKTOP COLLAPSE/EXPAND + REMEMBER ==========
+// ========== SIDEBAR: DESKTOP COLLAPSE/EXPAND (con persistenza) ==========
 (() => {
+  const body       = document.body;
   const sidebar    = document.getElementById('sidebar');
   const desktopBtn = document.getElementById('toggleSidebarDesktop');
-  const railHandle = document.getElementById('railHandle');   // ← opzionale (la maniglia sulla rail)
-  const backdrop   = document.getElementById('sidebarBackdrop');
-  if (!sidebar || !desktopBtn) return;
+  const railHandle = document.getElementById('railHandle'); // maniglia sulla rail
+  if (!sidebar || !desktopBtn || !railHandle) return;
 
   const COLLAPSE_KEY = 'aotuSidebarCollapsed';
-  const mqMobile = window.matchMedia('(max-width: 900px)');
+  const mqMobile = window.matchMedia('(max-width: 880px)');
 
-  // su mobile: chiudi il drawer
-  const closeMobile = () => {
-    document.body.classList.remove('sidebar-open');
-    sidebar.classList.remove('is-open');
-    backdrop?.classList.remove('is-visible');
-    desktopBtn.setAttribute('aria-expanded', 'true');
-  };
-
-  function setCollapsed(on) {
-    document.body.classList.toggle('sidebar-collapsed', !!on);
-    // ARIA + label per entrambi i controlli
-    const expanded = on ? 'false' : 'true';
+  function setDesktopCollapsed(collapsed) {
+    body.classList.toggle('sidebar-collapsed', !!collapsed);
+    const expanded = collapsed ? 'false' : 'true';
     desktopBtn.setAttribute('aria-expanded', expanded);
-    railHandle?.setAttribute('aria-expanded', expanded);
-    desktopBtn.textContent = on ? '☰ expand' : '◀ collapse';
-    try { localStorage.setItem(COLLAPSE_KEY, String(!!on)); } catch {}
+    railHandle.setAttribute('aria-expanded', expanded);
+    desktopBtn.textContent = collapsed ? '☰ expand' : '◀ collapse';
+    // mostra la rail solo quando collassata e non in mobile
+    const showRail = collapsed && !mqMobile.matches && !body.classList.contains('sidebar-open');
+    railHandle.style.opacity = showRail ? '1' : '0';
+    railHandle.style.pointerEvents = showRail ? 'auto' : 'none';
+    try { localStorage.setItem(COLLAPSE_KEY, String(!!collapsed)); } catch {}
   }
 
   // init
@@ -110,44 +120,59 @@ updateAudioBtnLabel();
     let saved = false;
     try { saved = localStorage.getItem(COLLAPSE_KEY) === 'true'; } catch {}
     if (mqMobile.matches) {
-      // su mobile ignoriamo stato collapsed
-      document.body.classList.remove('sidebar-collapsed');
-      desktopBtn.textContent = 'close ✕';
+      body.classList.remove('sidebar-collapsed');
+      desktopBtn.textContent = '◀ collapse';
       desktopBtn.setAttribute('aria-expanded', 'true');
-      railHandle?.setAttribute('aria-expanded', 'true');
+      railHandle.setAttribute('aria-expanded', 'true');
+      railHandle.style.opacity = '0';
+      railHandle.style.pointerEvents = 'none';
     } else {
-      setCollapsed(saved);
+      setDesktopCollapsed(saved);
     }
   })();
 
-  // click: su mobile chiude; su desktop collassa/espande
   desktopBtn.addEventListener('click', () => {
+    if (mqMobile.matches) return; // su mobile non collassiamo (c’è il drawer)
+    const willCollapse = !body.classList.contains('sidebar-collapsed');
+    setDesktopCollapsed(willCollapse);
+  });
+
+  railHandle.addEventListener('click', () => {
+    if (!mqMobile.matches) setDesktopCollapsed(false);
+  });
+
+  mqMobile.addEventListener?.('change', () => {
+    // ricalcola visibilità rail e stato pulsante al cambio layout
+    const saved = (() => { try { return localStorage.getItem(COLLAPSE_KEY) === 'true'; } catch { return false; } })();
     if (mqMobile.matches) {
-      closeMobile();
-    } else {
-      const willCollapse = !document.body.classList.contains('sidebar-collapsed');
-      setCollapsed(willCollapse);
-    }
-  });
-
-  // la maniglia sulla rail riapre
-  railHandle?.addEventListener('click', () => {
-    if (!mqMobile.matches) setCollapsed(false);
-  });
-
-  // sync su resize
-  mqMobile.addEventListener?.('change', (e) => {
-    if (e.matches) {
-      document.body.classList.remove('sidebar-collapsed');
-      desktopBtn.textContent = 'close ✕';
+      body.classList.remove('sidebar-collapsed');
+      desktopBtn.textContent = '◀ collapse';
       desktopBtn.setAttribute('aria-expanded', 'true');
-      railHandle?.setAttribute('aria-expanded', 'true');
+      railHandle.style.opacity = '0';
+      railHandle.style.pointerEvents = 'none';
     } else {
-      let saved = false;
-      try { saved = localStorage.getItem(COLLAPSE_KEY) === 'true'; } catch {}
-      setCollapsed(saved);
+      setDesktopCollapsed(saved);
     }
   });
 })();
 
+// ========== SIDEBAR: DRAWERS <details> (persistenza open/close) ==========
+(() => {
+  const KEY = 'aotu:drawers';
+  /** @type {Record<string,boolean>} */
+  const state = (() => {
+    try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; }
+  })();
 
+  document.querySelectorAll('aside#index, aside#sidebar, aside.sidebar') // robusto rispetto ai nomi
+    .forEach(aside => {
+      aside.querySelectorAll('details.drawer').forEach($d => {
+        const name = $d.dataset.drawer || 'drawer';
+        if (name in state) $d.open = !!state[name];
+        $d.addEventListener('toggle', () => {
+          state[name] = $d.open;
+          try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+        });
+      });
+    });
+})();

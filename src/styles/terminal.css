@@ -166,6 +166,7 @@ main.layout {
   body.sidebar-collapsed .index .controls {
     opacity: 0;
     pointer-events: none;
+    display: none;
   }
   body.sidebar-collapsed #sidebarBackdrop {
     display: none !important;
@@ -181,8 +182,9 @@ main.layout {
 .rail-handle{
   position: absolute;
   top: 10px;
-  right: 10px;
-  width: 32px; height: 32px;
+  right: 0px;
+  /* width: 32px;  */
+  height: 32px;
   display: none;                 /* default: nascosto */
   align-items: center; justify-content: center;
   border: 1px solid var(--border);
@@ -297,49 +299,7 @@ dialog::backdrop { background: rgba(0,0,0,.6); }
   cursor: pointer;
 }
 
-/* ---------- MOBILE: off-canvas sidebar ---------- */
-@media (max-width: 900px) {
-  /* layout a colonna: content full-width */
-  main.layout {
-    display: block;              /* evita flex su mobile */
-    padding: 16px;
-    min-height: auto;            /* lascia crescere */
-  }
 
-  /* sidebar diventa drawer */
-  .index {
-    position: fixed;
-    top: 0; left: 0;
-    width: min(86vw, 420px);
-    height: 100vh;
-    transform: translateX(-100%);
-    transition: transform .22s ease-out;
-    z-index: 1000;         /* sopra al contenuto solo su mobile */
-    border-radius: 0;
-    overflow: hidden;
-  }
-  .index.is-open { transform: translateX(0); }
-
-  /* la scrollbar resta sulla lista */
-  .index .index-list { overflow: auto; }
-
-  /* backdrop */
-  .sidebar-backdrop {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.55);
-    opacity: 0; pointer-events: none;
-    transition: opacity .2s ease;
-    z-index: 900; /* sotto alla sidebar mobile */
-  }
-  .sidebar-backdrop.is-visible {
-    opacity: 1; pointer-events: auto;
-  }
-
-  /* blocca lo scroll del body quando il drawer è aperto */
-  body.sidebar-open { overflow: hidden; }
-}
-
-/* (RIMOSSO il chip flottante nel <head> — ora il toggle è nella winbar) */
 
 
 
@@ -414,3 +374,216 @@ dialog::backdrop { background: rgba(0,0,0,.6); }
 
 /* small utility to keep spacing tidy near counters */
 .muted { opacity: .75; }
+
+
+
+/* ===== Neon Mode (toggle con body.neon) ===== */
+body.neon {
+  text-shadow: 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent),
+               0 0 14px rgba(0,255,120,.18);
+}
+body.neon .btn,
+body.neon .chip,
+body.neon .index,
+body.neon section.content,
+body.neon .card,
+body.neon dialog,
+body.neon .index .index-list a {
+  box-shadow: var(--shadow-inset), 0 0 22px rgba(0,255,120,.20), 0 10px 36px rgba(0,0,0,.45);
+  border-color: color-mix(in srgb, var(--border) 70%, var(--accent));
+}
+body.neon .btn:hover,
+body.neon .chip:hover,
+body.neon .index .index-list a:hover,
+body.neon .card:hover {
+  box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 45%, transparent), 0 14px 38px rgba(0,0,0,.5);
+  transform: translateY(-1px);
+}
+body.neon .section-title::before { color: var(--accent); }
+body.neon *::-webkit-scrollbar-thumb { background: var(--accent); }
+
+/* lieve bagliore per i gridlines */
+body.neon {
+  --gridline: rgba(0, 255, 120, 0.12);
+}
+
+/* pulsante stato */
+#neonBtn { font-weight: 800; letter-spacing: .02em; }
+
+
+/* ========== Sidebar “cassetto” (details/summary) ========== */
+.index details.drawer{
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  margin: 8px 0;
+  background: color-mix(in srgb, var(--chip-bg) 90%, #000 10%);
+  overflow: clip;
+}
+.index details.drawer[open]{
+  background: color-mix(in srgb, var(--chip-bg) 82%, #000 18%);
+}
+.index details.drawer > summary{
+  cursor: pointer; list-style: none;
+  padding: 8px 10px; display: flex; align-items: center; gap: 8px;
+  font-weight: 800; color: var(--dim);
+  border-bottom: 1px dashed transparent;
+}
+.index details.drawer > summary::-webkit-details-marker{ display:none; }
+.index details.drawer > summary::before{
+  content: '▸'; color: var(--accent);
+  transform: rotate(0deg); transition: transform .18s ease;
+}
+.index details.drawer[open] > summary::before{ transform: rotate(90deg); }
+.index details.drawer ul{
+  margin: 0; padding: 8px; display: grid; gap: 6px;
+}
+.index details.drawer ul a{
+  display:block; text-decoration:none; color:var(--fg);
+  padding: 6px 8px; border:1px dashed transparent; border-radius: var(--radius-s);
+}
+.index details.drawer ul li.is-active a{ border-color: var(--border); }
+.index details.drawer ul a:hover{ border-color: var(--border); box-shadow: var(--shadow-neon); }
+
+body.neon .index details.drawer{ box-shadow: 0 0 18px rgba(0,255,120,.18) inset; }
+body.neon .index details.drawer[open]{ box-shadow: 0 0 24px rgba(0,255,120,.22) inset; }
+
+
+
+
+/* ——— Mobile drop-down ———————————————————————————————— */
+.mobile-only{ display:none; }
+.desktop-only{ display:initial; }
+
+@media (max-width: 880px){
+  .mobile-only{ display:initial; }
+  .desktop-only{ display:none; }
+
+  /* Tab “INDEX ▾” fissato in alto (quando sidebar è chiusa) */
+  .sidebar-pull{
+    position: fixed; top: env(safe-area-inset-top, 8px); left: 50%;
+    /* transform: translateX(-50%); */
+    z-index: 60;
+    border: 1px dashed var(--border);
+    background: var(--chip-bg);
+    color: var(--fg);
+    padding: .5rem .8rem;
+    box-shadow: var(--shadow);
+  }
+
+  
+
+  /* Backdrop */
+  .sidebar-backdrop{
+    position: fixed; inset: 0; background: rgba(0,0,0,.5);
+    z-index: 80; opacity: 0; pointer-events: none; transition: opacity .18s ease;
+  }
+  body.sidebar-open .sidebar-backdrop{ opacity: 1; pointer-events: auto; }
+
+  /* Sidebar come pannello “calante” dall’alto */
+  #sidebar{
+    position: fixed; left: 0; right: 0; top: 0;
+    height: 85vh; max-height: calc(100vh - 12px);
+    transform: translateY(-100%);
+    transition: transform .22s ease;
+    z-index: 90;
+    overflow: auto;
+    border: 1px dashed var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    background: var(--surface, #0a0f0a);
+    box-shadow: 0 16px 40px rgba(0,0,0,.45);
+  }
+  body.sidebar-open #sidebar{ transform: translateY(0); }
+
+  /* Nascondi il tab quando aperto (opzionale) */
+  body.sidebar-open .sidebar-pull{ display:none; }
+
+  /* Header dentro la sidebar (barra pulsanti) */
+  #sidebar .winbar{
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .6rem .8rem .3rem;
+    border-bottom: 1px dashed var(--border);
+    position: sticky; top: 0; background: inherit; z-index: 1;
+  }
+}
+
+/* Neon love (glow anche sul tab/backdrop attivi) */
+body.neon .sidebar-pull{ box-shadow: 0 0 22px rgba(0,255,120,.22), var(--shadow); }
+
+
+
+/* ========== MOBILE: linguetta INDEX full-width + cassetto fullscreen ========== */
+@media (max-width: 880px){
+  /* Linguetta in alto a tutta la viewport */
+  .sidebar-pull{
+    position: fixed; left: 0; right: 0; top: 0;
+    height: 44px;
+    display: grid; place-items: center;
+    z-index: 60;
+    border: 0; border-bottom: 1px dashed var(--border);
+    background: var(--chip-bg);
+    color: var(--fg);
+    font-weight: 800; letter-spacing: .02em;
+    box-shadow: var(--shadow);
+  }
+  .sidebar-pull::after{
+    /* grip decorativo */
+    content: '⋯';
+    position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+    font-size: 18px; color: var(--dim);
+  }
+
+  /* Backdrop */
+  .sidebar-backdrop{
+    position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    z-index: 80; opacity: 0; pointer-events: none; transition: opacity .18s ease;
+  }
+  body.sidebar-open .sidebar-backdrop{ opacity: 1; pointer-events: auto; }
+
+  /* Sidebar: pannello FULL viewport che cala dall’alto */
+  #sidebar{
+    position: fixed; inset: 0 0 0 0;
+    height: 100vh; max-height: 100vh;
+    transform: translateY(-100%);
+    transition: transform .22s ease;
+    z-index: 90; overflow: auto;
+    background: var(--surface, #0a0f0a);
+    border: none;
+    box-shadow: 0 16px 40px rgba(0,0,0,.45);
+  }
+  body.sidebar-open #sidebar{ transform: translateY(0); }
+
+  /* Nascondi la linguetta quando aperto */
+  body.sidebar-open .sidebar-pull{ display: none; }
+
+  /* Header sticky dentro al cassetto */
+  #sidebar .winbar{
+    position: sticky; top: 0; z-index: 1;
+    background: inherit;
+    border-bottom: 1px dashed var(--border);
+    padding: .6rem .8rem .4rem;
+  }
+}
+
+/* ========== DESKTOP: mostra la rail solo da collassata, mai quando aperta ========== */
+/* di base la rail è visibile solo desktop */
+.rail-handle.desktop-only{
+  display: none;
+  position: sticky; top: 12px; left: 0;
+  opacity: 0; pointer-events: none;
+  transition: opacity .18s ease;
+  border: 1px dashed var(--border);
+  background: var(--chip-bg);
+  color: var(--fg);
+  padding: .35rem .55rem; border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin: 8px;
+}
+/* quando collassata → mostra la rail */
+body.sidebar-collapsed .rail-handle.desktop-only{
+  opacity: 1; pointer-events: auto;
+}
+/* quando sidebar aperta (mobile) → rail sempre nascosta */
+body.sidebar-open .rail-handle.desktop-only{
+  opacity: 0; pointer-events: none;
+}

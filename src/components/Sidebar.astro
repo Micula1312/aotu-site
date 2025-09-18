@@ -1,47 +1,80 @@
 ---
-// Sidebar.astro — base-safe per dev/prod (domain e GitHub Pages)
-
 const { current = '' } = Astro.props;
-const BASE = import.meta.env.BASE_URL; // "/" in dev, "/aotu-site/" in GH Pages
-
-const items = [
-  // blocco storico
-  { href: BASE,                 key: 'archive',     label: 'Online Platform' },
-  { href: `${BASE}abstract`,    key: 'abstract',    label: 'Abstract' },
-  { href: `${BASE}manifesto`,   key: 'manifesto',   label: 'Manifesto' },
-  { href: `${BASE}network`,     key: 'network',     label: 'Network' },
-
-  // ancore (puntano alla home con hash, così valgono ovunque)
-  { href: `${BASE}#hardware`,   key: 'hardware',    label: 'Hardware Treehouse' },
-  { href: `${BASE}#logs`,       key: 'logs',        label: 'Performative Logs' },
-  { href: `${BASE}#narratives`, key: 'narratives',  label: 'Narrative Modes' },
-  { href: `${BASE}#dump`,       key: 'dump',        label: 'Editorial Dump' },
-
-  // nuove sezioni operative
-  { href: `${BASE}menu`,             key: 'menu',         label: 'Index' },
-  { href: `${BASE}texts`,            key: 'bibliography', label: 'Bibliography' },
-  { href: `${BASE}taxonomies`,       key: 'taxonomies',   label: 'Taxonomies' },
-  { href: `${BASE}lab/p5-experiments`, key: 'p5',         label: 'P5 Lab' },
-];
+const BASE = import.meta.env.BASE_URL;
 ---
 
-<aside class="sidebar">
-  <nav>
-    <ul>
-      {items.map(i => (
-        <li class={i.key === current ? 'is-active' : ''}>
-          <a href={i.href} aria-current={i.key === current ? 'page' : undefined}>
-            {i.label}
-          </a>
-        </li>
-      ))}
-    </ul>
-  </nav>
-</aside>
+<!-- Backdrop per il drawer mobile -->
+<div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
 
-<style>
-  .sidebar{padding:1rem;border-right:1px dashed var(--term-border)}
-  ul{list-style:none;margin:0;padding:0;display:grid;gap:.4rem}
-  li.is-active a{font-weight:700;text-decoration:underline}
-  a{text-decoration:none}
-</style>
+<!-- Tab mobile per aprire la sidebar “a caduta” -->
+<button
+  id="sidebarPull"
+  class="sidebar-pull mobile-only"
+  aria-controls="sidebar"
+  aria-expanded="false"
+  type="button"
+>
+  INDEX ▾
+</button>
+
+<!-- Sidebar (desktop sticky / mobile drop-down) -->
+<aside id="sidebar" class="index" tabindex="-1" aria-label="Site navigation">
+  <!-- Barra titolo + controlli finestra -->
+  <div class="winbar">
+    <h2 class="title">AOTU · Index</h2>
+    <div class="btns">
+      <!-- desktop: collassa/espandi ; mobile: chiudi cassetto -->
+      <button id="toggleSidebarDesktop" class="btn small desktop-only" aria-expanded="true" type="button">◀ collapse</button>
+      <button id="closeSidebar" class="btn small mobile-only" type="button" aria-label="Close sidebar">close ✕</button>
+    </div>
+  </div>
+
+  <!-- maniglia che appare sulla rail quando collassato (desktop) -->
+  <button id="railHandle" class="rail-handle desktop-only" title="Expand sidebar" aria-expanded="false">☰</button>
+
+  <!-- NAV a cassetti -->
+  <nav class="index-list">
+    <!-- Gruppo: Pages -->
+    <details class="drawer" data-drawer="pages" open>
+      <summary>Pages</summary>
+      <ul>
+        <li class={current==='archive'    ? 'is-active' : ''}><a href={`${BASE}`}               data-nav="hard">Online Platform</a></li>
+        <li class={current==='abstract'   ? 'is-active' : ''}><a href={`${BASE}abstract/`}     data-nav="hard">Abstract</a></li>
+        <li class={current==='manifesto'  ? 'is-active' : ''}><a href={`${BASE}manifesto/`}    data-nav="hard">Manifesto</a></li>
+        <li class={current==='network'    ? 'is-active' : ''}><a href={`${BASE}network/`}      data-nav="hard">Network</a></li>
+      </ul>
+    </details>
+
+    <!-- Gruppo: Sections (ancore alla home)
+    <details class="drawer" data-drawer="sections">
+      <summary>Sections</summary>
+      <ul>
+        <li><a href={`${BASE}#hardware`}   data-nav="hard">Hardware Treehouse</a></li>
+        <li><a href={`${BASE}#logs`}       data-nav="hard">Performative Logs</a></li>
+        <li><a href={`${BASE}#narratives`} data-nav="hard">Narrative Modes</a></li>
+        <li><a href={`${BASE}#dump`}       data-nav="hard">Editorial Dump</a></li>
+      </ul>
+    </details> -->
+
+    <!-- Gruppo: Tools -->
+    <details class="drawer" data-drawer="tools">
+      <summary>Tools</summary>
+      <ul>
+        <li class={current==='menu'         ? 'is-active' : ''}><a href={`${BASE}menu/`}             data-nav="hard">Index</a></li>
+        <li class={current==='texts'        ? 'is-active' : ''}><a href={`${BASE}texts/`}            data-nav="hard">Texts</a></li>
+        <li class={current==='bibliography' ? 'is-active' : ''}><a href={`${BASE}bibliography/`}     data-nav="hard">Bibliography</a></li>
+        <li class={current==='taxonomies'   ? 'is-active' : ''}><a href={`${BASE}taxonomies/`}       data-nav="hard">Taxonomies</a></li>
+        <li class={current==='p5'           ? 'is-active' : ''}><a href={`${BASE}lab/p5-experiments/`} data-nav="hard">P5 Lab</a></li>
+      </ul>
+    </details>
+
+
+  </nav>
+
+      <!-- Controlli -->
+    <div class="controls" style="display:grid; gap:8px; margin-top:12px;">
+      <button id="themeBtn" class="btn">terminal</button>
+      <button id="audioBtn" class="btn">[ mute ]</button>
+      <button id="neonBtn"  class="btn" aria-pressed="false" title="Neon mode">★ neon</button>
+    </div>
+</aside>

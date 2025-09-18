@@ -1,4 +1,4 @@
-// AOTU Archive — cards + lightbox con preview image/video/audio
+// AOTU Archive — cards + lightbox (image/video/audio) + TAG FILTER (post_tag)
 // Dev/Prod safe:
 // - in dev usa SEMPRE il proxy: /wp-json → target .../wp/wp-json
 // - in prod usa window.__WP_API_URL (iniettata dal layout Base.astro)
@@ -7,14 +7,13 @@
 const IS_DEV = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
 let API_BASE = IS_DEV
-  ? '/wp-json'  // usa il proxy in dev
+  ? '/wp-json' // proxy in dev
   : (typeof window !== 'undefined' && window.__WP_API_URL)
-      ? window.__WP_API_URL
-      : 'https://thearchiveoftheuntamed.xyz/wp/wp-json';  // fallback assoluto
+    ? window.__WP_API_URL
+    : 'https://thearchiveoftheuntamed.xyz/wp/wp-json'; // fallback
 
 API_BASE = API_BASE.replace(/\/$/, '');
 const MEDIA_ENDPOINT = `${API_BASE}/wp/v2/media`;
-
 
 console.log('[archive] API_BASE =', API_BASE);
 
@@ -45,8 +44,8 @@ if (!grid || !stateEl) {
 const urlParams = new URLSearchParams(location.search);
 const param = (k) => (urlParams.get(k) || '').trim();
 
-let CURRENT_TAG  = param('mtag');
-let CURRENT_KIND = param('mkind');
+let CURRENT_TAG  = param('mtag');   // può essere id, slug o nome
+let CURRENT_KIND = param('mkind');  // riservato (non usato qui)
 let CURRENT_TYPE = param('mtype');
 
 if (typeFilter && CURRENT_TYPE) typeFilter.value = CURRENT_TYPE;
@@ -59,24 +58,11 @@ const STATE = {
   pages: 1,
   perPage: 24,
   lastQuery: null,
+  tagId: null,      // ID di post_tag usato per filtrare
+  tagLabel: null,   // nome leggibile del tag (per la pill)
 };
 
 // ---------- Utils ----------
-const sanitize = (html = '') => {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  tmp.querySelectorAll('*').forEach(el => {
-    const name = el.nodeName.toLowerCase();
-    if (!['em','strong','i','b','br','p','a'].includes(name)) {
-      el.replaceWith(document.createTextNode(el.textContent || ''));
-    } else if (name === 'a') {
-      el.setAttribute('target','_blank');
-      el.setAttribute('rel','noopener');
-    }
-  });
-  return tmp.innerHTML;
-};
-
 const escapeHtml = (s='') =>
   s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
@@ -88,12 +74,15 @@ const mapType = (item) => {
   return 'doc';
 };
 
+// Per un look più "pixel" senza zoom, preferiamo miniature piccole in preview
+const PIXELATE_PREVIEW = true;
+
 const thumb = (item) => {
   const s = item.media_details && item.media_details.sizes;
   if (s) {
-    if (s.medium?.source_url) return s.medium.source_url;
-    if (s.thumbnail?.source_url) return s.thumbnail.source_url;
-    if (s.full?.source_url) return s.full.source_url;
+    if (PIXELATE_PREVIEW && s.thumbnail?.source_url) return s.thumbnail.source_url; // mini → upscaling naturale
+    if (s.medium?.source_url)    return s.medium.source_url;
+    if (s.full?.source_url)      return s.full.source_url;
   }
   return item.source_url;
 };
@@ -102,6 +91,46 @@ const setStatus = (txt) => {
   if (stateEl) { stateEl.hidden = !txt; stateEl.textContent = txt || ''; }
 };
 const showGrid = (yes) => { if (grid) grid.hidden = !yes; };
+
+// ---------- Tag resolve (name/slug -> ID per filtrare) ----------
+const TAG_CACHE = new Map(); // key: lowercased name/slug -> { id, name, slug }
+
+async function resolveTagId(query) {
+  // Se è già un numero, usalo direttamente
+  if (/^\d+$/.test(String(query))) {
+    return { id: Number(query), name: null, slug: null };
+  }
+  const key = String(query).trim().toLowerCase();
+  if (TAG_CACHE.has(key)) return TAG_CACHE.get(key);
+
+  const url = `${API_BASE}/wp/v2/tags?search=${encodeURIComponent(query)}&_fields=id,name,slug`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const arr = await res.json();
+
+  // prova match su slug, poi su name, altrimenti prendi il primo
+  const bySlug = arr.find(t => t.slug?.toLowerCase() === key);
+  const byName = arr.find(t => t.name?.toLowerCase() === key);
+  const found = bySlug || byName || arr[0] || null;
+
+  if (found) {
+    const val = { id: Number(found.id), name: found.name, slug: found.slug };
+    TAG_CACHE.set(key, val);
+    return val;
+  }
+  return null;
+}
+
+async function ensureTagIdIfNeeded() {
+  STATE.tagId = null;
+  STATE.tagLabel = null;
+  if (!CURRENT_TAG) return;
+  const resolved = await resolveTagId(CURRENT_TAG);
+  if (resolved?.id) {
+    STATE.tagId = resolved.id;
+    STATE.tagLabel = resolved.name || CURRENT_TAG;
+  }
+}
 
 // ---------- URL sync + pills ----------
 function syncURL() {
@@ -118,9 +147,10 @@ function syncURL() {
 function renderActivePills() {
   if (!pillsWrap) return;
   const parts = [];
-  if (CURRENT_TYPE) parts.push(`<button type="button" class="pill" data-x="type">${CURRENT_TYPE} ✕</button>`);
-  if (CURRENT_TAG)  parts.push(`<button type="button" class="pill" data-x="mtag">tag: ${CURRENT_TAG} ✕</button>`);
-  if (CURRENT_KIND) parts.push(`<button type="button" class="pill" data-x="mkind">kind: ${CURRENT_KIND} ✕</button>`);
+  if (CURRENT_TYPE) parts.push(`<button type="button" class="pill" data-x="type">${CURRENT_TYPE} </button>`);
+  const tagLabel = STATE.tagLabel || CURRENT_TAG;
+  if (tagLabel)   parts.push(`<button type="button" class="pill" data-x="mtag">tag: ${escapeHtml(tagLabel)} </button>`);
+  if (CURRENT_KIND) parts.push(`<button type="button" class="pill" data-x="mkind">kind: ${CURRENT_KIND} </button>`);
   pillsWrap.innerHTML = parts.join('') || '<span class="muted">No active filters</span>';
   if (clearAllBtn) clearAllBtn.hidden = !(CURRENT_TYPE || CURRENT_TAG || CURRENT_KIND);
 
@@ -128,7 +158,7 @@ function renderActivePills() {
     btn.addEventListener('click', () => {
       const which = btn.dataset.x;
       if (which === 'type') { CURRENT_TYPE = ''; if (typeFilter) typeFilter.value = ''; }
-      if (which === 'mtag') CURRENT_TAG = '';
+      if (which === 'mtag') { CURRENT_TAG = ''; STATE.tagId = null; STATE.tagLabel = null; }
       if (which === 'mkind') CURRENT_KIND = '';
       syncURL();
       fetchPage({ append: false });
@@ -140,9 +170,15 @@ function renderActivePills() {
 function buildQuery({ page = 1 } = {}) {
   const base = MEDIA_ENDPOINT.startsWith('http') ? MEDIA_ENDPOINT : new URL(MEDIA_ENDPOINT, location.origin).toString();
   const url = new URL(base);
+
   url.searchParams.set('per_page', String(STATE.perPage));
   url.searchParams.set('page', String(page));
-  url.searchParams.set('_fields', 'id,date,mime_type,media_type,source_url,title,alt_text,caption,media_details');
+
+  // Campi necessari + termini embedded per leggere i tag (post_tag) + 'tags' (ID) per fallback
+  url.searchParams.set('_fields',
+    'id,date,mime_type,media_type,source_url,title,alt_text,caption,media_details,_embedded,tags'
+  );
+  url.searchParams.set('_embed', '1');
 
   const q = (searchInput?.value || '').trim();
   if (q) url.searchParams.set('search', q);
@@ -150,8 +186,8 @@ function buildQuery({ page = 1 } = {}) {
   const wanted = (typeFilter?.value || '').trim();
   if (wanted) url.searchParams.set('media_type', wanted === 'doc' ? 'file' : wanted);
 
-  if (CURRENT_TAG)  url.searchParams.set('aotu_media_tag',  CURRENT_TAG);
-  if (CURRENT_KIND) url.searchParams.set('aotu_media_kind', CURRENT_KIND);
+  // *** filtro per TAG (post_tag) — WP vuole l'ID ***
+  if (STATE.tagId) url.searchParams.set('tags', String(STATE.tagId));
 
   return url.toString();
 }
@@ -162,6 +198,9 @@ async function fetchPage({ append = false } = {}) {
     syncURL();
     setStatus('Loading…');
     showGrid(false);
+
+    // risolvi l'ID del tag se l'utente ha messo nome/slug
+    await ensureTagIdIfNeeded();
 
     const url = buildQuery({ page: append ? STATE.page + 1 : 1 });
     STATE.lastQuery = url;
@@ -190,6 +229,42 @@ async function fetchPage({ append = false } = {}) {
   }
 }
 
+// ---------- Tag helpers (embed → fallback IDs) ----------
+
+// Cache per nomi: id -> { id, name, slug }
+const TAG_NAME_CACHE = new Map();
+
+async function fetchTagMetaByIds(ids = []) {
+  const missing = ids.filter(id => !TAG_NAME_CACHE.has(id));
+  if (!missing.length) return;
+  const url = `${API_BASE}/wp/v2/tags?per_page=100&include=${missing.join(',')}&_fields=id,name,slug`;
+  const res = await fetch(url);
+  if (!res.ok) return;
+  const arr = await res.json();
+  arr.forEach(t => TAG_NAME_CACHE.set(Number(t.id), { id: Number(t.id), name: t.name, slug: t.slug || '' }));
+}
+
+// Ritorna sempre [{id, name, slug}].
+// 1) Prova da _embedded['wp:term'] (taxonomy === 'post_tag')
+// 2) Fallback: usa item.tags (array di ID) e risolvi via /wp/v2/tags
+async function getPostTags(item) {
+  const terms = item._embedded?.['wp:term'];
+  if (terms?.length) {
+    const embedded = terms.flat()
+      .filter(t => t.taxonomy === 'post_tag' && t.name)
+      .map(t => ({ id: Number(t.id), name: t.name, slug: t.slug || '' }));
+    if (embedded.length) return embedded;
+  }
+
+  const ids = Array.isArray(item.tags) ? item.tags.map(n => Number(n)).filter(Boolean) : [];
+  if (!ids.length) return [];
+
+  await fetchTagMetaByIds(ids);
+  return ids
+    .map(id => TAG_NAME_CACHE.get(id))
+    .filter(Boolean);
+}
+
 // ---------- Render ----------
 function renderList() {
   if (!grid) return;
@@ -209,7 +284,6 @@ function renderList() {
     el.dataset.id = item.id;
 
     const title = escapeHtml(item.title?.rendered || 'Untitled');
-    const date = (item.date || '').slice(0,10);
 
     let previewHTML = '';
     if (t === 'image') {
@@ -233,28 +307,31 @@ function renderList() {
       previewHTML = `<div class="ph" aria-hidden="true">DOC</div>`;
     }
 
+    // Card: solo immagine + titolo overlay
     el.innerHTML = `
       <a href="#" data-id="${item.id}" aria-label="Open ${title} (${t})">
         ${previewHTML}
-        <div class="meta">
-          <h3 class="title">${title}</h3>
-          <div class="muted">${[t, date].filter(Boolean).join(' · ')}</div>
-        </div>
+        <h3 class="title">${title}</h3>
       </a>`;
 
     const link = el.querySelector('a');
     link.addEventListener('click', e => { e.preventDefault(); openLightbox(item, link); });
-    link.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(item, link); } });
+    link.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(item, link); }
+    });
 
     if (t === 'audio') {
       const wrap = el.querySelector('.audio-wrap');
-      const btn = el.querySelector('.audio-play');
-      const au  = el.querySelector('audio.pv');
+      const btn  = el.querySelector('.audio-play');
+      const au   = el.querySelector('audio.pv');
       if (wrap && btn && au) {
         const stop = () => { try { au.pause(); au.currentTime = 0; } catch {} };
         wrap.addEventListener('mouseenter', () => { au.play().catch(()=>{}); });
         wrap.addEventListener('mouseleave', stop);
-        btn.addEventListener('click', e => { e.preventDefault(); au.paused ? au.play().catch(()=>{}) : au.pause(); });
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+          au.paused ? au.play().catch(()=>{}) : au.pause();
+        });
       }
     } else if (t === 'video') {
       const v = el.querySelector('video.pv');
@@ -273,39 +350,116 @@ function renderList() {
 
 // ---------- Lightbox ----------
 let lastFocus = null;
-function openLightbox(item, openerEl) {
+async function openLightbox(item, openerEl) {
   if (!lb) return;
   lastFocus = openerEl || document.activeElement;
 
   const t = mapType(item);
-  lbTitle && (lbTitle.textContent = item.title?.rendered || 'Untitled');
-  lbInfo  && (lbInfo.textContent  = [t, (item.date || '').slice(0,10)].filter(Boolean).join(' · '));
-  lbTags  && (lbTags.textContent  = item.alt_text || '');
-  lbNotes && (lbNotes.innerHTML   = sanitize(item.caption?.rendered || ''));
 
+  // Titolo
+  if (lbTitle) lbTitle.textContent = item.title?.rendered || 'Untitled';
+
+  // Data upload (formattata IT)
+  const dateStr = item.date
+    ? new Date(item.date).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })
+    : (item.date || '').slice(0,10);
+  if (lbInfo) lbInfo.textContent = dateStr;
+
+  // TAG: post_tag (embed → fallback IDs), cliccabili -> filtro
+  const tags = await getPostTags(item);
+  if (lbTags) {
+    lbTags.innerHTML = tags.length
+      ? tags.map(tg => `<button type="button" class="tag-pill" data-id="${tg.id}" data-name="${escapeHtml(tg.name)}">#${escapeHtml(tg.name)}</button>`).join(' ')
+      : '';
+  }
+
+  // Niente note/caption
+  if (lbNotes) { lbNotes.hidden = true; lbNotes.innerHTML = ''; }
+
+  // Media
   if (lbMedia) {
     lbMedia.innerHTML = '';
     if (t === 'image') {
-      const img = new Image(); img.src = item.source_url; img.alt = item.title?.rendered || ''; lbMedia.appendChild(img);
+      const img = new Image();
+      img.src = item.source_url;
+      img.alt = item.title?.rendered || '';
+      lbMedia.appendChild(img);
     } else if (t === 'video') {
-      const v = document.createElement('video'); v.src = item.source_url; v.controls = true; v.playsInline = true; lbMedia.appendChild(v);
+      const v = document.createElement('video');
+      v.src = item.source_url; v.controls = true; v.playsInline = true;
+      lbMedia.appendChild(v);
     } else if (t === 'audio') {
-      const a = document.createElement('audio'); a.src = item.source_url; a.controls = true; lbMedia.appendChild(a);
+      const a = document.createElement('audio');
+      a.src = item.source_url; a.controls = true;
+      lbMedia.appendChild(a);
     } else {
-      const p = document.createElement('p'); p.innerHTML = `Document: <a href="${item.source_url}" target="_blank" rel="noopener">open</a>`; lbMedia.appendChild(p);
+      const p = document.createElement('p');
+      p.innerHTML = `Document: <a href="${item.source_url}" target="_blank" rel="noopener">open</a>`;
+      lbMedia.appendChild(p);
     }
   }
 
   lb.showModal();
+
+  // ESC / click fuori
+  const onKey = (e) => { if (e.key === 'Escape') lb.close(); };
+  const onClickOutside = (e) => {
+    const rect = lb.getBoundingClientRect();
+    const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+    if (!inside) lb.close();
+  };
+  lb.addEventListener('keydown', onKey, { once: true });
+  lb.addEventListener('click', onClickOutside, { once: true });
+
   lb.addEventListener('close', () => { lastFocus && lastFocus.focus?.(); }, { once: true });
 }
 
-lb?.addEventListener('click', (e) => {
-  const rect = lb.getBoundingClientRect();
-  const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
-  if (!inside) lb.close();
+// Tag pill nel lightbox → applica filtro
+lbTags?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.tag-pill');
+  if (!btn) return;
+  CURRENT_TAG = String(btn.dataset.id); // memorizzo come ID (valido per ?tags=)
+  STATE.tagId = Number(btn.dataset.id);
+  STATE.tagLabel = btn.dataset.name || CURRENT_TAG;
+  if (typeFilter) typeFilter.value = '';
+  lb.close();
+  fetchPage({ append: false });
 });
-lb?.addEventListener('keydown', (e) => { if (e.key === 'Escape') lb.close(); });
+
+// ---------- Tag Cloud (post_tag) ----------
+async function renderTagList() {
+  const wrap = document.getElementById('tagList');
+  if (!wrap) return;
+
+  wrap.innerHTML = '<span class="muted">loading tags…</span>';
+  try {
+    const res = await fetch(`${API_BASE}/wp/v2/tags?per_page=100&_fields=id,name,slug,count`);
+    if (!res.ok) throw new Error(res.status);
+    const tags = await res.json();
+
+    // Ordina per usage (discendente)
+    tags.sort((a,b) => (b.count||0) - (a.count||0));
+
+    wrap.innerHTML = tags.map(t =>
+      `<button class="pill" data-tag-id="${t.id}" data-tag-name="${escapeHtml(t.name)}">#${escapeHtml(t.name)} (${t.count||0})</button>`
+    ).join(' ');
+
+    // Click su un tag → applica filtro (usa ID, come richiede /wp/v2/media?tags=<ID>)
+    wrap.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-tag-id]');
+      if (!btn) return;
+      CURRENT_TAG        = String(btn.dataset.tagId);
+      STATE.tagId        = Number(btn.dataset.tagId);
+      STATE.tagLabel     = btn.dataset.tagName;
+      if (typeFilter) typeFilter.value = '';
+      fetchPage({ append: false });
+    }, { once: true }); // attach una sola volta
+  } catch (err) {
+    console.error(err);
+    wrap.innerHTML = '<span class="muted">no tags</span>';
+  }
+}
+
 
 // ---------- Events ----------
 const debounce = (fn, ms=250) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(null,a),ms); }; };
@@ -317,6 +471,7 @@ searchInput?.addEventListener('keypress', e => { if (e.key === 'Enter') fetchPag
 
 clearAllBtn?.addEventListener('click', () => {
   CURRENT_TYPE = CURRENT_TAG = CURRENT_KIND = '';
+  STATE.tagId = null; STATE.tagLabel = null;
   if (typeFilter)  typeFilter.value  = '';
   if (searchInput) searchInput.value = '';
   fetchPage({ append: false });
@@ -326,4 +481,5 @@ moreBtn?.addEventListener('click', () => { if (STATE.page < STATE.pages) fetchPa
 
 // ---------- Kick-off ----------
 renderActivePills();
+renderTagList(); 
 fetchPage({ append: false });
