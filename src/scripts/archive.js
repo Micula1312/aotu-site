@@ -481,5 +481,5 @@ moreBtn?.addEventListener('click', () => { if (STATE.page < STATE.pages) fetchPa
 
 // ---------- Kick-off ----------
 renderActivePills();
-renderTagList(); 
+//renderTagList(); 
 fetchPage({ append: false });
