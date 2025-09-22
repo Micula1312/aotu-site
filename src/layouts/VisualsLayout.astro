@@ -1,0 +1,39 @@
+
+---
+interface Props { title?: string; current?: string }
+const { title = 'Visuals', current } = Astro.props;
+
+import VisualsFX from '../components/VisualsFX.astro';
+import VisualsFilters from '../components/VisualsFilters.astro';
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <style>
+      :root { --ui-z: 10000; }
+      /* assicurati che i pannelli stiano sopra i canvas delle pagine */
+      #fx-fab, #vf-fab, #fx-panel, #vf-panel, #fx-duo-overlay {
+        z-index: var(--ui-z);
+      }
+      /* nascondi UI in fullscreen */
+      :is(:fullscreen, :-webkit-full-screen) #fx-fab,
+      :is(:fullscreen, :-webkit-full-screen) #vf-fab,
+      :is(:fullscreen, :-webkit-full-screen) #fx-panel,
+      :is(:fullscreen, :-webkit-full-screen) #vf-panel,
+      :is(:fullscreen, :-webkit-full-screen) #fx-duo-overlay {
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+    </style>
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+    <!-- UI montata dal layout -->
+    <VisualsFX />
+    <VisualsFilters />
+  </body>
+</html>

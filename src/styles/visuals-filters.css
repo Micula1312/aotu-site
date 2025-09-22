@@ -1,0 +1,53 @@
+
+/* src/styles/visuals-filters.css */
+#vf-fab{
+  position: fixed;
+  top: 12px; right: 64px;
+  z-index: 10010;
+  height: 44px; padding: 0 14px;
+  display: grid; place-items: center;
+  font: 600 13px/1 ui-sans-serif, system-ui;
+  color: #111; background: #ffd500;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  cursor: pointer; user-select:none;
+}
+
+#vf-panel{
+  position: fixed;
+  top: 64px; right: 12px;
+  z-index: 10010;
+  width: min(360px, calc(100vw - 24px));
+  max-height: calc(100vh - 88px);
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(20,20,20,.95);
+  color: #e2e2e2;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  backdrop-filter: blur(4px);
+  overflow: auto;
+  transform: translateY(-8px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+#vf-panel.open{ opacity:1; transform: translateY(0); pointer-events:auto; }
+
+#vf-panel header{ font: 700 14px/1 ui-sans-serif, system-ui; margin-bottom: 8px; letter-spacing:.02em; }
+#vf-panel .row{ display:flex; gap:8px; align-items:center; margin:8px 0; flex-wrap: wrap; }
+#vf-panel input[type="text"], #vf-panel input[type="number"], #vf-panel select{
+  background:#101010; color:#f0f0f0; border:1px solid rgba(255,255,255,.12);
+  padding:8px 10px; border-radius:10px; min-width: 140px;
+}
+#vf-panel footer{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+#vf-panel button{
+  background:#1f1f1f; color:#eee; border:1px solid rgba(255,255,255,.1);
+  padding:8px 10px; border-radius:10px; cursor:pointer;
+}
+#vf-panel button:hover{ background:#2a2a2a; }
+
+:is(:fullscreen, :-webkit-full-screen) #vf-fab,
+:is(:fullscreen, :-webkit-full-screen) #vf-panel{
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

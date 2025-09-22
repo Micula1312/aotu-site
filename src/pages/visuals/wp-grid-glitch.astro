@@ -1,0 +1,152 @@
+---
+import Layout from '../../layouts/VisualsLayout.astro';
+
+const title = 'Visuals — Grid Glitch';
+const current = 'visuals-grid';
+---
+
+<Layout {title} {current}>
+  <style slot="head">
+    html,body{margin:0;height:100%;background:#000;color:#00ffc8}
+    body{overflow:hidden;font:12px ui-monospace,Menlo,Consolas,monospace}
+    .stage{position:fixed;inset:0;display:grid;gap:2px;background:#000}
+    /* grid dinamica con var cols/rows */
+    .stage{ grid-template-columns: repeat(var(--cols,6), 1fr); grid-template-rows: repeat(var(--rows,4), 1fr); }
+    .cell.shot{position:relative; overflow:hidden; background:#050505;}
+    .cell .inner, .cell .vimg{position:absolute; inset:0}
+    .cell .vimg{ width:100%; height:100%; object-fit:cover; filter:blur(var(--fx-blur)); }
+    /* pixelate vero: su grid va bene la variante “> img” */
+    .fx-pixelate .shot{transform:scale(calc(1/var(--fx-px)));transform-origin:center}
+    .fx-pixelate .shot > img.vimg,
+    .fx-pixelate .shot .inner > img.vimg{transform:scale(var(--fx-px));transform-origin:center;image-rendering:pixelated}
+
+    /* glitch keyframes */
+    @keyframes glitch {
+      0% { transform: translate(0,0) skew(0deg); filter: hue-rotate(0deg) contrast(1); clip-path: inset(0 0 0 0); }
+      20%{ transform: translate(-2px,1px) skew(0.3deg); filter: hue-rotate(20deg) contrast(1.1); clip-path: inset(5% 0 0 0); }
+      40%{ transform: translate(2px,-1px) skew(-0.4deg); filter: hue-rotate(300deg) contrast(1.2); clip-path: inset(0 0 6% 0); }
+      60%{ transform: translate(-1px,2px) skew(0.2deg); filter: hue-rotate(140deg) contrast(1.15); clip-path: inset(3% 0 0 0); }
+      80%{ transform: translate(1px,0) skew(-0.3deg); filter: hue-rotate(260deg) contrast(1.25); clip-path: inset(0 0 4% 0); }
+      100%{ transform: translate(0,0) skew(0deg); filter: hue-rotate(0deg) contrast(1); clip-path: inset(0 0 0 0); }
+    }
+    .cell.glitch .vimg{ animation: glitch 160ms steps(6) 1; }
+
+    /* scanlines overlay */
+    .cell::after{
+      content:""; position:absolute; inset:0; pointer-events:none; opacity:.08;
+      background: repeating-linear-gradient( to bottom, rgba(255,255,255,.2) 0 1px, transparent 1px 3px );
+      mix-blend-mode: overlay;
+    }
+
+    .hud{position:fixed;left:12px;right:12px;bottom:8px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;pointer-events:none}
+    .hud .pill{pointer-events:auto;padding:6px 10px;border:1px solid rgba(0,255,200,.35);border-radius:999px;background:rgba(0,0,0,.45);color:#00ffc8}
+    .loading{position:fixed;left:12px;bottom:42px;color:#00ffc8;opacity:.75}
+    :is(:fullscreen, :-webkit-full-screen) .hud{opacity:0;pointer-events:none}
+  </style>
+
+  <div id="stage" class="stage"></div>
+  <div id="loading" class="loading">Loading…</div>
+
+  <div class="hud">
+    <span class="pill">F / dbl-click: fullscreen</span>
+    <span class="pill">G: glitch now</span>
+    <span class="pill">+ / −: glitch freq</span>
+    <span class="pill">C: shuffle cells</span>
+    <span class="pill" id="hudStat">—</span>
+  </div>
+
+  <script type="module">
+    const P = new URLSearchParams(location.search);
+    const site    = (P.get('site') || 'https://thearchiveoftheuntamed.xyz/wp').replace(/\/$/,'');
+    const perPage = Math.max(1, parseInt(P.get('perPage')||'60',10));
+    const orderby = P.get('orderby')||'date';
+    const order   = P.get('order')  ||'desc';
+    const search  = P.get('search') ||'';
+
+    let cols      = Math.max(2, parseInt(P.get('cols') || '6', 10));
+    let rows      = Math.max(2, parseInt(P.get('rows') || '4', 10));
+    let interval  = Math.max(120, parseInt(P.get('glitchEvery') || '350', 10)); // ms
+
+    const stage   = document.getElementById('stage');
+    const loading = document.getElementById('loading');
+    const hudStat = document.getElementById('hudStat');
+
+    // applica variabili di grid
+    function applyGrid(){ stage?.style.setProperty('--cols', String(cols)); stage?.style.setProperty('--rows', String(rows)); }
+    applyGrid();
+
+    const ep = new URL(site + '/wp-json/wp/v2/media');
+    ep.searchParams.set('per_page', String(perPage));
+    ep.searchParams.set('orderby', orderby);
+    ep.searchParams.set('order',   order);
+    ep.searchParams.set('media_type','image');
+    ep.searchParams.set('_fields','id,source_url,media_details,alt_text');
+    if (search) ep.searchParams.set('search', search);
+
+    const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+    const fsEl = ()=>document.fullscreenElement||document.webkitFullscreenElement;
+    const enterFS = el=>(el.requestFullscreen||el.webkitRequestFullscreen)?.call(el);
+    const exitFS  = ()=> (document.exitFullscreen||document.webkitExitFullscreen)?.call(document);
+    const toggleFS= ()=>{ const t=stage||document.documentElement; if(!fsEl()) enterFS(t); else exitFS(); };
+    stage?.addEventListener('dblclick', toggleFS);
+
+    fetch(ep.toString(),{cache:'no-store'})
+    .then(r=>{ if(!r.ok) throw new Error('WP '+r.status); return r.json(); })
+    .then(items=>{
+      if(!Array.isArray(items)||!items.length) throw new Error('Nessuna immagine');
+      items = shuffle(items);
+      loading?.remove();
+
+      // costruisci grid
+      const total = cols*rows;
+      for (let i=0;i<total;i++){
+        const it = items[i % items.length];
+        const cell = document.createElement('div'); cell.className='cell shot';
+        const inner = document.createElement('div'); inner.className='inner';
+        const img = new Image(); img.className='vimg'; img.decoding='async'; img.loading='eager'; img.alt=it.alt_text||''; img.src = it.source_url;
+        inner.appendChild(img); cell.appendChild(inner); stage?.appendChild(cell);
+      }
+
+        function glitchOnce(){
+        if (!stage) return;
+        const cells = Array.from(stage.children);
+        if (!cells.length) return;
+        const n = Math.max(1, Math.floor(cells.length * 0.08)); // 8% celle
+        for (let i = 0; i < n; i++){
+            const c = cells[Math.floor(Math.random() * cells.length)];
+            c.classList.add('glitch');
+            c.addEventListener('animationend', () => c.classList.remove('glitch'), { once: true });
+        }
+        }
+
+      let timer = setInterval(glitchOnce, interval);
+      const restart = ()=>{ clearInterval(timer); timer=setInterval(glitchOnce, interval); };
+
+      function shuffleCells(){
+        if (!stage) return;
+        const cells = Array.from(stage.children);
+        shuffle(cells);
+        cells.forEach(c=>stage.appendChild(c)); // riordina
+      }
+
+      const updateHud=()=> hudStat && (hudStat.textContent = `grid ${cols}×${rows} · glitchEvery ${interval}ms · cells ${cols*rows}`);
+
+      updateHud();
+
+      addEventListener('keydown',(e)=>{
+        if (e.repeat) return;
+        const k=e.key;
+        if (k==='g'||k==='G'){ glitchOnce(); }
+        else if (k==='+'){ interval=Math.max(80, interval-50); restart(); updateHud(); }
+        else if (k==='-'){ interval=interval+50; restart(); updateHud(); }
+        else if (k==='c'||k==='C'){ shuffleCells(); }
+        else if (k==='f'||k==='F'){ toggleFS(); }
+        else if (k==='Escape'){ exitFS(); }
+      });
+
+      addEventListener('resize', ()=>{/* le celle sono responsive di natura */});
+    })
+    .catch(err=>{ console.error('[GRID ERR]',err); loading && (loading.textContent='Error: '+(err?.message||err)); });
+  </script>
+</Layout>

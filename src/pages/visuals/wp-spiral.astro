@@ -1,0 +1,152 @@
+---
+import Layout from '../../layouts/VisualsLayout.astro';
+
+const title = 'Visuals — Spiral Orbit';
+const current = 'visuals-spiral';
+---
+
+<Layout {title} {current}>
+  <style slot="head">
+    html,body{margin:0;height:100%;background:#000;color:#00ffc8}
+    body{overflow:hidden;font:12px ui-monospace,Menlo,Consolas,monospace}
+    .stage{position:fixed;inset:0;background:#000;contain:layout}
+    .shot{position:absolute;left:0;top:0;will-change:transform}
+    .shot .inner{will-change:transform}
+    .shot .inner > img.vimg{
+      display:block;width:var(--wpx);height:var(--hpx);object-fit:contain;filter:blur(var(--fx-blur));
+      max-width:var(--capvw,22vw);max-height:var(--capvh,22vh);box-shadow:0 8px 28px rgba(0,0,0,.55)
+    }
+    .fx-pixelate .shot{transform:scale(calc(1/var(--fx-px)));transform-origin:top left}
+    .fx-pixelate .shot > img.vimg,
+    .fx-pixelate .shot .inner > img.vimg{transform:scale(var(--fx-px));transform-origin:top left;image-rendering:pixelated}
+
+    .hud{position:fixed;left:12px;right:12px;bottom:8px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;pointer-events:none}
+    .hud .pill{pointer-events:auto;padding:6px 10px;border:1px solid rgba(0,255,200,.35);border-radius:999px;background:rgba(0,0,0,.45);color:#00ffc8}
+    .loading{position:fixed;left:12px;bottom:42px;color:#00ffc8;opacity:.75}
+    :is(:fullscreen, :-webkit-full-screen) .hud{opacity:0;pointer-events:none}
+  </style>
+
+  <div id="stage" class="stage"></div>
+  <div id="loading" class="loading">Loading…</div>
+
+  <div class="hud">
+    <span class="pill">F / dbl-click: fullscreen</span>
+    <span class="pill">Space: play/pause</span>
+    <span class="pill">+ / −: speed</span>
+    <span class="pill">[ / ]: size</span>
+    <span class="pill">← / →: orbit speed</span>
+    <span class="pill">X: clear</span>
+    <span class="pill" id="hudStat">—</span>
+  </div>
+
+  <script type="module">
+    const P = new URLSearchParams(location.search);
+    const site    = (P.get('site') || 'https://thearchiveoftheuntamed.xyz/wp').replace(/\/$/,'');
+    const perPage = Math.max(1, parseInt(P.get('perPage')||'60',10));
+    const orderby = P.get('orderby')||'date';
+    const order   = P.get('order')  ||'desc';
+    const search  = P.get('search') ||'';
+
+    let every     = Math.max(120, parseInt(P.get('every') || '500', 10)); // spawn
+    let SCALE     = Math.min(1, Math.max(0.12, parseFloat(P.get('scale') || '0.28')));
+    const nMax    = Math.max(1, parseInt(P.get('max')  || '120', 10));
+    let  orbitVel = parseFloat(P.get('orbit') || '0.9'); // velocità orbitale
+
+    const cap  = Math.min(90, Math.max(5, parseInt(P.get('cap')  || '22', 10)));
+    const capH = Math.min(90, Math.max(5, parseInt(P.get('capH') || String(cap), 10)));
+    document.documentElement.style.setProperty('--capvw', cap  + 'vw');
+    document.documentElement.style.setProperty('--capvh', capH + 'vh');
+
+    const stage   = document.getElementById('stage');
+    const loading = document.getElementById('loading');
+    const hudStat = document.getElementById('hudStat');
+
+    const ep = new URL(site + '/wp-json/wp/v2/media');
+    ep.searchParams.set('per_page', String(perPage));
+    ep.searchParams.set('orderby', orderby);
+    ep.searchParams.set('order',   order);
+    ep.searchParams.set('media_type','image');
+    ep.searchParams.set('_fields','id,source_url,media_details,alt_text');
+    if (search) ep.searchParams.set('search', search);
+
+    const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+    const sizeFor=(nw,nh)=>{
+      const capWpx=Math.floor(innerWidth*(cap/100));
+      const capHpx=Math.floor(innerHeight*(capH/100));
+      const maxW=Math.min(Math.max(120,Math.floor(innerWidth*SCALE)),capWpx);
+      const maxH=Math.min(Math.max(120,Math.floor(innerHeight*SCALE)),capHpx);
+      const r=Math.min(maxW/nw,maxH/nh,1);
+      return {w:Math.round(nw*r),h:Math.round(nh*r)};
+    };
+
+    const fsEl = ()=>document.fullscreenElement||document.webkitFullscreenElement;
+    const enterFS = el=>(el.requestFullscreen||el.webkitRequestFullscreen)?.call(el);
+    const exitFS  = ()=> (document.exitFullscreen||document.webkitExitFullscreen)?.call(document);
+    const toggleFS= ()=>{ const t=stage||document.documentElement; if(!fsEl()) enterFS(t); else exitFS(); };
+    stage?.addEventListener('dblclick', toggleFS);
+
+    fetch(ep.toString(),{cache:'no-store'})
+    .then(r=>{ if(!r.ok) throw new Error('WP '+r.status); return r.json(); })
+    .then(items=>{
+      if(!Array.isArray(items)||!items.length) throw new Error('Nessuna immagine');
+      loading?.remove();
+      items = shuffle(items);
+
+      let idx=0, paused=false, timer=null;
+      const nodes=[]; // {el, ang, rad, w,h}
+
+      function addNode(){
+        const it = items[idx % items.length]; idx++;
+        const nw=it.media_details?.width||1024, nh=it.media_details?.height||768;
+        const {w,h}=sizeFor(nw,nh);
+
+        const wrap=document.createElement('div'); wrap.className='shot'; wrap.style.setProperty('--wpx',w+'px'); wrap.style.setProperty('--hpx',h+'px');
+        const inner=document.createElement('div'); inner.className='inner';
+        const img=new Image(); img.className='vimg'; img.decoding='async'; img.loading='eager'; img.alt=it.alt_text||''; img.src=it.source_url;
+        inner.appendChild(img); wrap.appendChild(inner); stage?.appendChild(wrap);
+
+        nodes.push({el:wrap, inner, ang:Math.random()*Math.PI*2, rad:20, w, h});
+        if (nodes.length>nMax){ const old=nodes.shift(); old?.el.remove(); }
+      }
+
+      function layout(t){
+        const cx=innerWidth/2, cy=innerHeight/2;
+        const k = Math.min(innerWidth, innerHeight) * 0.45; // r max
+        nodes.forEach((n,i)=>{
+          n.ang += (orbitVel*0.01) * (i%2?1:-1);
+          n.rad = Math.min(k, n.rad + 0.6); // progressivo verso il bordo
+          const x = cx + Math.cos(n.ang) * n.rad - n.w/2;
+          const y = cy + Math.sin(n.ang) * n.rad - n.h/2;
+          n.el.style.transform = `translate3d(${x}px,${y}px,0)`;
+          n.inner.style.transform = `rotate(${n.ang}rad)`;
+        });
+        hudStat && (hudStat.textContent = `items ${nodes.length}/${nMax} · every ${every}ms · scale ${(SCALE*100)|0}% · orbit ${orbitVel.toFixed(2)}`);
+        requestAnimationFrame(layout);
+      }
+      requestAnimationFrame(layout);
+
+      function play(){ stop(); timer=setInterval(addNode, every); }
+      function stop(){ if(timer) clearInterval(timer); timer=null; }
+      play();
+
+      addEventListener('keydown',(e)=>{
+        if (e.repeat) return;
+        const k=e.key;
+        if (k===' '){ paused=!paused; if (paused) stop(); else { addNode(); play(); } }
+        else if (k==='+'){ every=Math.max(80,every-80); play(); }
+        else if (k==='-'){ every=every+80; play(); }
+        else if (k==='['){ SCALE=Math.max(0.10, +(SCALE-0.05).toFixed(2)); }
+        else if (k===']'){ SCALE=Math.min(1.00, +(SCALE+0.05).toFixed(2)); }
+        else if (k==='ArrowRight'){ orbitVel = Math.min(3, orbitVel + 0.1); }
+        else if (k==='ArrowLeft'){  orbitVel = Math.max(0.1, orbitVel - 0.1); }
+        else if (k==='x'||k==='X'){ nodes.splice(0).forEach(n=>n.el.remove()); }
+        else if (k==='f'||k==='F'){ toggleFS(); }
+        else if (k==='Escape'){ exitFS(); }
+      });
+
+      addEventListener('resize',()=>{/* le nuove rispettano la nuova viewport */});
+    })
+    .catch(err=>{ console.error('[SPIRAL ERR]',err); loading && (loading.textContent='Error: '+(err?.message||err)); });
+  </script>
+</Layout>

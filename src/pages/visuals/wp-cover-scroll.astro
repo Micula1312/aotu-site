@@ -1,0 +1,97 @@
+
+---
+import Layout from '../../layouts/VisualsLayout.astro';
+const title = 'Visuals — WP Cover Scroll (Infinite)';
+const current = 'visuals-cover-scroll';
+---
+
+<Layout {title} {current}>
+  <style slot="head">
+
+html,body{margin:0;padding:0;background:#000;color:#fff}
+
+    body{overflow:auto}
+    .track{position:relative; width:100vw; min-height:100vh; overflow:hidden; background:#000}
+    .slide{position:relative; width:100vw; height:100vh; display:grid; place-items:center}
+    .slide img{width:100%; height:100%; object-fit:var(--fit, cover);}
+    .hint{position:fixed; left:12px; bottom:12px; color:#aaa; font:12px ui-monospace,monospace; opacity:.8}
+    /* horizontal mode */
+    .track.x{ display:flex; flex-direction:row; width:auto; min-height:100vh; }
+    .track.x .slide{ width:100vw; height:100vh; flex:0 0 100vw; }
+  </style>
+
+  <div id="track" class="track"></div>
+  <div class="hint">scroll <span id="dirlbl">vertical</span> · arrows switch</div>
+
+  <script type="module">
+    const P = new URLSearchParams(location.search);
+    const site    = (P.get('site') || 'https://thearchiveoftheuntamed.xyz/wp').replace(/\/$/, '');
+    const perPage = Math.max(1, parseInt(P.get('perPage') || '20', 10));
+    const orderby = P.get('orderby') || 'date';
+    const order   = P.get('order')   || 'desc';
+    const search  = P.get('search')  || '';
+    const dir     = (P.get('dir') || 'y').toLowerCase(); // 'y' or 'x'
+    const fit     = (P.get('fit') || 'cover').toLowerCase(); // 'cover' or 'contain'
+    const preload = Math.max(1, parseInt(P.get('preload') || '8', 10));
+
+    document.documentElement.style.setProperty('--fit', fit);
+
+    const track = document.getElementById('track');
+    const dirlbl = document.getElementById('dirlbl');
+    if (dir === 'x') { track?.classList.add('x'); if (dirlbl) dirlbl.textContent = 'horizontal'; }
+
+    let page = 1, ended = false, loading = false;
+
+    function endpoint(p) {
+      const ep = new URL(site + '/wp-json/wp/v2/media');
+      ep.searchParams.set('per_page', String(perPage));
+      ep.searchParams.set('page', String(p));
+      ep.searchParams.set('orderby', orderby);
+      ep.searchParams.set('order',   order);
+      ep.searchParams.set('media_type', 'image');
+      ep.searchParams.set('_fields', 'id,source_url,alt_text');
+      if (search) ep.searchParams.set('search', search);
+      return ep.toString();
+    }
+
+    async function loadNext() {
+      if (loading || ended) return;
+      loading = true;
+      try {
+        const r = await fetch(endpoint(page), { cache:'no-store' });
+        if (!r.ok) throw new Error('WP ' + r.status);
+        const items = await r.json();
+        if (!Array.isArray(items) || items.length === 0) { ended = true; return; }
+        for (const it of items) {
+          const slide = document.createElement('section');
+          slide.className = 'slide';
+          const img = new Image();
+          img.decoding='async'; img.loading='lazy';
+          img.src = it.source_url; img.alt = it.alt_text || '';
+          slide.appendChild(img);
+          track?.appendChild(slide);
+        }
+        page++;
+      } catch (e) {
+        console.error(e);
+      } finally { loading = false; }
+    }
+
+    // Preload first chunk
+    for (let k=0; k<preload; k++) await loadNext();
+
+    // Infinite scroll
+    const nearEnd = () => {
+      if (dir === 'x') { return (scrollX + innerWidth*2) >= (document.body.scrollWidth); }
+      return (scrollY + innerHeight*2) >= (document.body.scrollHeight);
+    };
+
+    addEventListener('scroll', () => { if (nearEnd()) loadNext(); }, { passive: true });
+
+    // Toggle dir via arrows (optional)
+    addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { /* vertical */ }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { /* horizontal */ }
+    });
+  </script>
+</Layout>

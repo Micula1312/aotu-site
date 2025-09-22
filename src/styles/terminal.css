@@ -23,7 +23,8 @@
   --panel-grad-top: var(--surface);
   --panel-grad-bot: #000;
 
-  --border: #00e36b;
+  /* --border: #00e36b; */
+  --border:transparent;
   --gridline: rgba(0, 255, 120, 0.06);
 
   --radius-s: 0px;
@@ -32,7 +33,7 @@
   --shadow-neon: 0 0 24px rgba(0,255,120,.25), 0 6px 18px rgba(0,0,0,.6);
   --shadow-inset: inset 0 0 0 1px rgba(0,255,120,.15);
 
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-mono: Helvetica, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 /* ---------- LIGHT THEME TOKENS ---------- */
@@ -204,7 +205,8 @@ main.layout {
 /* ---------- CONTENT PANEL (scroll solo se serve) ---------- */
 section.content {
   flex: 1 1 auto;                            /* prende lo spazio rimanente */
-  min-height: calc(100vh - 32px);            /* stessa altezza della sidebar */
+  height: calc(100vh - 32px);  /* fisso, non min-height */
+  min-height: 0;             /* stessa altezza della sidebar */
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: linear-gradient(180deg, var(--panel-grad-top), var(--panel-grad-bot));
@@ -300,8 +302,15 @@ dialog::backdrop { background: rgba(0,0,0,.6); }
 }
 
 
+h1 {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
 
-
+.sub {
+  margin-block-start: 0;
+  margin-block-end: 2em;
+}
 
 .input {
   background: transparent;
@@ -517,7 +526,8 @@ body.neon .sidebar-pull{ box-shadow: 0 0 22px rgba(0,255,120,.22), var(--shadow)
   /* Linguetta in alto a tutta la viewport */
   .sidebar-pull{
     position: fixed; left: 0; right: 0; top: 0;
-    height: 44px;
+    height: 30px;
+    padding: 0 0;
     display: grid; place-items: center;
     z-index: 60;
     border: 0; border-bottom: 1px dashed var(--border);
@@ -525,12 +535,6 @@ body.neon .sidebar-pull{ box-shadow: 0 0 22px rgba(0,255,120,.22), var(--shadow)
     color: var(--fg);
     font-weight: 800; letter-spacing: .02em;
     box-shadow: var(--shadow);
-  }
-  .sidebar-pull::after{
-    /* grip decorativo */
-    content: '⋯';
-    position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
-    font-size: 18px; color: var(--dim);
   }
 
   /* Backdrop */

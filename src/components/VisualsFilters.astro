@@ -1,0 +1,27 @@
+
+---
+const coreScriptUrl = '/src/scripts/visuals/filters-ui.ts';
+
+import '../styles/visuals-filters.css';
+
+---
+<button id="vf-fab" aria-label="Open filters">Filters</button>
+<form id="vf-panel" class="closed" role="dialog" aria-modal="false" onsubmit="return false;">
+  <header>Archive Filters</header>
+  <div class="row"><label>Search</label><input id="vf-search" type="text" placeholder="query…" /></div>
+  <div class="row">
+    <label>Order by</label>
+    <select id="vf-orderby"><option value="date">date</option><option value="title">title</option><option value="id">id</option></select>
+    <label>Order</label>
+    <select id="vf-order"><option value="desc">desc</option><option value="asc">asc</option></select>
+  </div>
+  <div class="row"><label>Per page</label><input id="vf-perpage" type="number" min="1" max="100" step="1" value="60" /></div>
+  <div class="row"><label>Taxonomy</label><input id="vf-tax" type="text" placeholder="es. aotu_media_tag" /></div>
+  <div class="row"><label>Term</label><input id="vf-term" type="text" placeholder="es. prati-di-caprara" /></div>
+  <footer><button id="vf-close" type="button">Close</button><button id="vf-reset" type="button">Reset</button><button id="vf-apply" type="submit">Apply</button></footer>
+</form>
+
+
+
+<!-- ...markup del pannello Filtri... -->
+<script type="module" src={coreScriptUrl}></script>

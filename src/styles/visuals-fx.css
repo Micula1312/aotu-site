@@ -1,0 +1,88 @@
+
+/* src/styles/visuals-fx.css */
+:root{
+  --fx-px: 4;
+  --fx-blur: 0px;
+  --fx-duo-a: #00ffc8;
+  --fx-duo-b: #6b00ff;
+  --fx-duo-o: .5;
+}
+
+/* Overlay for duotone */
+#fx-duo-overlay{
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: color;
+  background: linear-gradient(135deg, var(--fx-duo-a), var(--fx-duo-b));
+  opacity: var(--fx-duo-o);
+}
+
+/* Apply blur/pixelate to images in visuals scope */
+.fx-scope .vimg{ filter: blur(var(--fx-blur)); will-change: filter; }
+.fx-scope.fx-pixelate .vimg{
+  image-rendering: pixelated;
+}
+
+/* Floating action button (FX) */
+#fx-fab{
+  position: fixed;
+  top: 12px; right: 12px;
+  z-index: 10010;
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  font: 600 14px/1 ui-sans-serif, system-ui;
+  color: #111; background: #00ffc8;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Panel */
+#fx-panel{
+  position: fixed;
+  top: 64px; right: 12px;
+  z-index: 10010;
+  width: min(320px, calc(100vw - 24px));
+  max-height: calc(100vh - 88px);
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(20,20,20,.95);
+  color: #e2e2e2;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  backdrop-filter: blur(4px);
+  overflow: auto;
+  transform: translateY(-8px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+#fx-panel.open{ opacity:1; transform: translateY(0); pointer-events:auto; }
+#fx-panel header{ font: 700 14px/1 ui-sans-serif, system-ui; margin-bottom: 8px; letter-spacing:.02em; }
+#fx-panel section{ padding: 8px 0; border-top: 1px solid rgba(255,255,255,.06); }
+#fx-panel section:first-of-type{ border-top: none; }
+#fx-panel .row{ display: flex; gap: 10px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
+#fx-panel .chip{ display:inline-flex; align-items:center; gap:6px; padding:6px 8px; border-radius:999px;
+  background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); }
+#fx-panel input[type="range"]{ width: 160px; }
+#fx-panel footer{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px;}
+#fx-panel button{
+  background:#1f1f1f; color:#eee; border:1px solid rgba(255,255,255,.1);
+  padding:8px 10px; border-radius:10px; cursor:pointer;
+}
+#fx-panel button:hover{ background:#2a2a2a; }
+
+/* Hide controls in fullscreen */
+:is(:fullscreen, :-webkit-full-screen) #fx-fab,
+:is(:fullscreen, :-webkit-full-screen) #fx-panel,
+:is(:fullscreen, :-webkit-full-screen) #fx-duo-overlay{
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+
+/* === Pixelate pienamente parametrico per la Sequence === */
+.fx-pixelate .shot { transform: scale(calc(1 / var(--fx-px))); transform-origin: top left; }
+.fx-pixelate .shot > img.vimg,
+.fx-pixelate .shot .inner > img.vimg { transform: scale(var(--fx-px)); transform-origin: top left; image-rendering: pixelated; }

@@ -1,0 +1,3 @@
+/* append to src/styles/visuals-fx.css */
+.fx-pixelate .shot { transform: scale(calc(1 / var(--fx-px))); transform-origin: top left; }
+.fx-pixelate .shot > img.vimg { transform: scale(var(--fx-px)); transform-origin: top left; image-rendering: pixelated; }

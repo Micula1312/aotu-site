@@ -1,6 +1,28 @@
 ---
+/* Sidebar.astro — versione robusta con BASE + URL builder */
 const { current = '' } = Astro.props;
-const BASE = import.meta.env.BASE_URL;
+
+/** BASE gestisce eventuale sottocartella in produzione (es. /aotu/) */
+const BASE = (import.meta.env.BASE_URL ?? '/') as string;
+
+/** Prefissa il BASE e normalizza gli slash */
+const link = (p: string) => BASE + p.replace(/^\//, '');
+
+/** Query di default per i template Visuals: override con secondo argomento */
+function buildQS(over: Record<string, string | number | undefined> = {}) {
+  const base: Record<string, string> = {
+    site: 'https://thearchiveoftheuntamed.xyz/wp',
+    perPage: '60',
+    orderby: 'date',
+    order: 'desc',
+  };
+  for (const [k, v] of Object.entries(over)) {
+    if (v === undefined || v === null || String(v).trim() === '') delete base[k];
+    else base[k] = String(v);
+  }
+  const q = new URLSearchParams(base);
+  return `?${q.toString()}`;
+}
 ---
 
 <!-- Backdrop per il drawer mobile -->
@@ -11,7 +33,7 @@ const BASE = import.meta.env.BASE_URL;
   id="sidebarPull"
   class="sidebar-pull mobile-only"
   aria-controls="sidebar"
-  aria-expanded="false"
+  aria-expanded="true"
   type="button"
 >
   INDEX ▾
@@ -23,7 +45,6 @@ const BASE = import.meta.env.BASE_URL;
   <div class="winbar">
     <h2 class="title">AOTU · Index</h2>
     <div class="btns">
-      <!-- desktop: collassa/espandi ; mobile: chiudi cassetto -->
       <button id="toggleSidebarDesktop" class="btn small desktop-only" aria-expanded="true" type="button">◀ collapse</button>
       <button id="closeSidebar" class="btn small mobile-only" type="button" aria-label="Close sidebar">close ✕</button>
     </div>
@@ -34,47 +55,77 @@ const BASE = import.meta.env.BASE_URL;
 
   <!-- NAV a cassetti -->
   <nav class="index-list">
-    <!-- Gruppo: Pages -->
-    <details class="drawer" data-drawer="pages" open>
-      <summary>Pages</summary>
-      <ul>
-        <li class={current==='archive'    ? 'is-active' : ''}><a href={`${BASE}`}               data-nav="hard">Online Platform</a></li>
-        <li class={current==='abstract'   ? 'is-active' : ''}><a href={`${BASE}abstract/`}     data-nav="hard">Abstract</a></li>
-        <li class={current==='manifesto'  ? 'is-active' : ''}><a href={`${BASE}manifesto/`}    data-nav="hard">Manifesto</a></li>
-        <li class={current==='network'    ? 'is-active' : ''}><a href={`${BASE}network/`}      data-nav="hard">Network</a></li>
-      </ul>
-    </details>
-
-    <!-- Gruppo: Sections (ancore alla home)
-    <details class="drawer" data-drawer="sections">
-      <summary>Sections</summary>
-      <ul>
-        <li><a href={`${BASE}#hardware`}   data-nav="hard">Hardware Treehouse</a></li>
-        <li><a href={`${BASE}#logs`}       data-nav="hard">Performative Logs</a></li>
-        <li><a href={`${BASE}#narratives`} data-nav="hard">Narrative Modes</a></li>
-        <li><a href={`${BASE}#dump`}       data-nav="hard">Editorial Dump</a></li>
-      </ul>
-    </details> -->
 
     <!-- Gruppo: Tools -->
-    <details class="drawer" data-drawer="tools">
+    <details class="drawer" data-drawer="pages" open>
       <summary>Tools</summary>
       <ul>
-        <li class={current==='menu'         ? 'is-active' : ''}><a href={`${BASE}menu/`}             data-nav="hard">Index</a></li>
-        <li class={current==='texts'        ? 'is-active' : ''}><a href={`${BASE}texts/`}            data-nav="hard">Texts</a></li>
-        <li class={current==='bibliography' ? 'is-active' : ''}><a href={`${BASE}bibliography/`}     data-nav="hard">Bibliography</a></li>
-        <li class={current==='taxonomies'   ? 'is-active' : ''}><a href={`${BASE}taxonomies/`}       data-nav="hard">Taxonomies</a></li>
-        <li class={current==='p5'           ? 'is-active' : ''}><a href={`${BASE}lab/p5-experiments/`} data-nav="hard">P5 Lab</a></li>
+        <li class={current==='archive' ? 'is-active' : ''}><a href={link('/')}                data-nav="hard">Mediarchive</a></li>
+        <li class={current==='network' ? 'is-active' : ''}><a href={link('/network/')}       data-nav="hard">Network</a></li>
+        <li class={current==='texts'   ? 'is-active' : ''}><a href={link('/texts/')}         data-nav="hard">Bibliography</a></li>
+        <li class={current==='p5'      ? 'is-active' : ''}><a href={link('/lab/p5-experiments/')} data-nav="hard">P5 Lab</a></li>
       </ul>
     </details>
 
+    <!-- Gruppo: Pages -->
+    <details class="drawer" data-drawer="tools">
+      <summary>Pages</summary>
+      <ul>
+        <li class={current==='abstract'  ? 'is-active' : ''}><a href={link('/abstract/')}   data-nav="hard">About</a></li>
+        <li class={current==='manifesto' ? 'is-active' : ''}><a href={link('/manifesto/')}  data-nav="hard">Manifesto</a></li>
+      </ul>
+    </details>
+
+    <!-- Gruppo: Visuals -->
+    <details class="drawer" data-drawer="visuals" open>
+      <summary>Visuals</summary>
+      <ul>
+        <li class={current==='visuals-seq' ? 'is-active' : ''}>
+          <a href={link('/visuals/wp-sequence-accum') + buildQS({ perPage: 60 })}
+             data-nav="hard">Sequence (accum · shuffle)</a>
+        </li>
+        <li class={current==='visuals-carousel' ? 'is-active' : ''}>
+          <a href={link('/visuals/wp-carousel') + buildQS({ perPage: 30, interval: 4000, transition: 500, autoplay: 1 })}
+             data-nav="hard">Carousel (one-at-a-time)</a>
+        </li>
+        <li class={current==='visuals-cover-scroll' ? 'is-active' : ''}>
+          <a href={link('/visuals/wp-cover-scroll') + buildQS({ perPage: 50, dir: 'y', preload: 12 })}
+             data-nav="hard">Cover Scroll (infinite)</a>
+        </li>
+        <li class={current==='visuals-chaos' ? 'is-active' : ''}>
+          <a
+            href={link('/visuals/wp-sequence-chaos') + buildQS({ perPage: 60, every: 900, scale: 0.27, seed: 5, max: 220, tilt: 14 })}
+            data-nav="hard"
+          >Sequence (chaos · collage)</a>
+        </li>
+
+        <li class={current==='visuals-rain' ? 'is-active' : ''}>
+  <a href={link('/visuals/wp-rainfall') + buildQS({ perPage: 60, every: 350, scale: 0.22, cap: 18, max: 250, blend: 'screen' })} data-nav="hard">
+    Rainfall (neon)
+  </a>
+</li>
+
+<li class={current==='visuals-spiral' ? 'is-active' : ''}>
+  <a href={link('/visuals/wp-spiral') + buildQS({ perPage: 60, every: 500, scale: 0.28, max: 120, orbit: 0.9, cap: 22 })} data-nav="hard">
+    Spiral (orbit)
+  </a>
+</li>
+
+<li class={current==='visuals-grid' ? 'is-active' : ''}>
+  <a href={link('/visuals/wp-grid-glitch') + buildQS({ perPage: 60, cols: 6, rows: 4, glitchEvery: 350 })} data-nav="hard">
+    Grid (glitch)
+  </a>
+</li>
+
+      </ul>
+    </details>
 
   </nav>
 
-      <!-- Controlli -->
-    <div class="controls" style="display:grid; gap:8px; margin-top:12px;">
-      <button id="themeBtn" class="btn">terminal</button>
-      <button id="audioBtn" class="btn">[ mute ]</button>
-      <button id="neonBtn"  class="btn" aria-pressed="false" title="Neon mode">★ neon</button>
-    </div>
+  <!-- Controlli -->
+  <div class="controls" style="display:grid; gap:8px; margin-top:12px;">
+    <button id="themeBtn" class="btn">terminal</button>
+    <button id="audioBtn" class="btn">[ mute ]</button>
+    <button id="neonBtn"  class="btn" aria-pressed="false" title="Neon mode">★ neon</button>
+  </div>
 </aside>

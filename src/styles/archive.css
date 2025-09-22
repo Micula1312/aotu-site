@@ -43,14 +43,28 @@ flex: auto;
   padding: 8px 0;
 }
 
-/* Responsive card grid */
-#grid.grid {
-  --min: 240px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(var(--min), 1fr));
-  gap: 14px;
-  padding: 4px 0 8px;
+/* Grid fluida a colonne percentuali */
+#grid {
+  --cols: 5;            /* numero di colonne desktop */
+  --gap: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  justify-content: flex-start;
+  align-content: flex-start;
 }
+
+/* Card: occupa 1/--cols della riga (meno il gap) */
+#grid .card {
+  flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  max-width: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
+}
+
+/* Responsive: riduci colonne per evitare buchi/over-shrink */
+@media (max-width: 1280px) { #grid { --cols: 4; } }
+@media (max-width: 1024px) { #grid { --cols: 3; } }
+@media (max-width: 720px)  { #grid { --cols: 2; } }
+@media (max-width: 440px)  { #grid { --cols: 1; } } /* su mobile è ok full-width */
 
 /* Card — immagine full + titolo overlay */
 .card {
@@ -61,6 +75,7 @@ flex: auto;
   background: #000;                          /* fallback */
   box-shadow: var(--shadow-inset), 0 10px 28px rgba(0,0,0,.25);
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  
 }
 .card:hover {
   transform: translateY(-3px);
@@ -81,6 +96,7 @@ flex: auto;
   border-radius: 0;
   background: var(--surface);
 
+
   /* pixel look: forza upscaling + pixel rendering */
   image-rendering: pixelated;
   image-rendering: crisp-edges; /* fallback */
@@ -88,6 +104,9 @@ flex: auto;
   /* transform-origin: center;
   will-change: transform; */
 }
+
+.card img, .card video { filter: blur(8px); }
+
 
 /* La card ora è full-bleed: il link non ha padding */
 .card a { display: block; padding: 0; }
@@ -101,13 +120,13 @@ flex: auto;
   bottom: 0; left: 0; width: 100%;
   margin: 0;
   padding: 0.6rem 0.8rem;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1.25;
   color: var(--fg);
   text-align: center;
-  background: rgba(0,0,0,.55);
-  backdrop-filter: blur(2px);
+  /* background: rgba(0,0,0,.55);
+  backdrop-filter: blur(2px); */
 }
 .card .title::before { content: none; }
 
