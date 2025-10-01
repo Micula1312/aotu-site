@@ -70,7 +70,7 @@ function isHttpUrl(u: string | undefined): u is string {
   }
 }
 
-const prox = (u: string) => `/api/img?src=${encodeURIComponent(u)}&base=${encodeURIComponent(site)}`;
+const prox = (u: string) => `/api/img?src=${encodeURIComponent(u)}`;
 
 const images: ImgItem[] = media
   .filter((m) => m?.media_type === 'image' || m?.mime_type?.startsWith?.('image/'))

@@ -1,28 +1,46 @@
 ---
-import Base from "@/layouts/Base.astro";
-import textsScriptUrl from "@/scripts/texts.js?url";
+import ListPage from "../components/templates/ListPage.astro";
+import textsScriptUrl from "../scripts/texts.js?url";
 ---
 
-<Base title="AOTU — Texts" current="bibliography">
-  <section class="p-6">
-    <h1 class="mb-2">Texts</h1>
-    <p class="muted mb-3">All bibliography items from the WordPress CPT.</p>
+<ListPage
+  title="ARCHIVE OF THE UNTAMED : BIBLIOGRAPHY"
+  subtitle="texts :: [title] [authors] [year] [type/venue]"
+  scriptUrl={textsScriptUrl}
+>
+  <!-- FILTRI (come Network, ma per texts) -->
+  <div slot="filters" style="display:grid; grid-template-columns: 1fr 1fr auto auto auto; gap:10px; align-items:center;">
+    <input id="q" placeholder="Search title/content…" aria-label="Search text" />
+    <input id="author" placeholder="Author (e.g., Haraway)" aria-label="Filter by author" />
 
-    <!-- barra azioni come per media -->
-    <form id="texts-filters" class="grid gap-2 mb-3" style="grid-template-columns: repeat(12, minmax(0,1fr));">
-      <input class="input col-span-6" type="text" name="q" placeholder="Search title/content…" />
-      <button class="btn col-span-2" type="reset">Reset</button>
-    </form>
+    <select id="type" aria-label="Type">
+      <option value="">All types</option>
+      <!-- riempito via JS -->
+    </select>
 
-    <div id="texts-status" class="mb-2 muted" role="status"></div>
+    <select id="tag" aria-label="Tag">
+      <option value="">All tags</option>
+      <!-- riempito via JS -->
+    </select>
 
-    <div id="texts-list" class="bib-list" aria-live="polite"></div>
-
-    <div class="mt-3 flex gap-2 items-center">
-      <button id="texts-more" class="btn">Load more</button>
-      <span id="texts-count" class="ml-1 muted"></span>
+    <div style="display:flex; gap:10px;">
+      <select id="sort" aria-label="Sort">
+        <option value="year_desc">year ↓</option>
+        <option value="year_asc">year ↑</option>
+        <option value="title_az">A→Z</option>
+        <option value="title_za">Z→A</option>
+        <option value="date_new">recent</option>
+      </select>
+      <button id="refresh" type="button">Refresh</button>
     </div>
-  </section>
+  </div>
 
-  <script type="module" src={textsScriptUrl}></script>
-</Base>
+
+  <!-- HEADER LISTA (4 colonne, come Network) -->
+  <div slot="list-header" class="network-header">
+    <div>Title</div>
+    <div>Authors</div>
+    <div>Year</div>
+    <div>Type / Venue</div>
+  </div>
+</ListPage>

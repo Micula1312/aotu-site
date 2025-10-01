@@ -1,44 +1,21 @@
 ---
-import Base from "@/layouts/Base.astro";
-import bibScriptUrl from "@/scripts/bibliography.js?url";
+import ListPage from "../components/templates/ListPage.astro";
+import bibScriptUrl from "../scripts/bibliography.js?url";
 ---
 
-<Base title="AOTU — Bibliography" current="bibliography">
-  <form id="bib-filters" class="grid gap-2 mb-4" style="grid-template-columns: repeat(12, minmax(0,1fr));">
-  <input class="input col-span-4" type="text" name="q" placeholder="Search title/abstract…" />
-  <input class="input col-span-3" type="text" name="author" placeholder="Author (e.g., Haraway)" />
-  <input class="input col-span-2" type="text" name="year" placeholder="Year (e.g., 2016)" inputmode="numeric" />
+<ListPage
+  title="ARCHIVE OF THE UNTAMED : BIBLIOGRAPHY"
+  subtitle="texts :: [title] [authors] [year] [type/venue]"
+  scriptUrl={bibScriptUrl}
+>
+  <!-- nessun filtro -->
+  <div slot="filters"></div>
 
-  <!-- autocomplete da WP REST -->
-  <input class="input col-span-3" type="text" name="tag"  placeholder="Tag (slug)"  list="dl-tag" />
-  <input class="input col-span-3" type="text" name="type" placeholder="Type (slug)" list="dl-type" />
-
-  <select class="input col-span-2" name="orderby" title="Order by">
-    <option value="year" selected>year</option>
-    <option value="title">title</option>
-    <option value="date">date (WP)</option>
-  </select>
-  <select class="input col-span-2" name="order" title="Order">
-    <option value="desc" selected>desc</option>
-    <option value="asc">asc</option>
-  </select>
-
-  <button class="btn col-span-2" type="reset" id="bib-reset">Reset</button>
-  <div class="col-span-3 flex gap-2">
-    <button class="btn" type="button" id="bib-export-csv">Export CSV</button>
-    <button class="btn" type="button" id="bib-export-bib">Export BibTeX</button>
+  <!-- header a 4 colonne (come Network) -->
+  <div slot="list-header" class="network-header">
+    <div>Title</div>
+    <div>Authors</div>
+    <div>Year</div>
+    <div>Type / Venue</div>
   </div>
-
-  <!-- datalist per autocomplete -->
-  <datalist id="dl-tag"></datalist>
-  <datalist id="dl-type"></datalist>
-</form>
-   <!-- carica lo script della pagina -->
-  <script type="module" src={bibScriptUrl}></script>
-
-</Base>
-
-
-
-
-
+</ListPage>

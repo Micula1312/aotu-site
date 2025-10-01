@@ -1,0 +1,24 @@
+---
+import P5Canvas from "../../components/P5Canvas.astro";
+import VisualUI from "../../components/visualUI.astro";
+
+const url = new URL(Astro.request.url);
+const count = Number(url.searchParams.get('count') ?? 300);
+const speed = Number(url.searchParams.get('speed') ?? 1.6);
+const noiseScale = Number(url.searchParams.get('noiseScale') ?? 0.0016);
+
+const sketchPath = "/src/scripts/visuals/ribbon-flowfield.ts";
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AOTU — Ribbon Flowfield (Full)</title>
+    <style>html,body{height:100%;margin:0} body{background:#000;overflow:hidden}</style>
+  </head>
+  <body>
+    <P5Canvas ui sketchPath={sketchPath} props={{ count, speed, noiseScale }}>
+      <Fragment slot="ui"><VisualUI /></Fragment>
+    </P5Canvas>
+  </body>
+</html>

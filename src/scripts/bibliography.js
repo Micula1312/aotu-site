@@ -1,89 +1,138 @@
-// ---------- Config base ----------
-const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+// AOTU Bibliography — ES module (lista infinita, nessun filtro / no single view)
 
-let API_BASE;
-if (typeof window !== 'undefined' && window.__WP_API_URL) {
-  API_BASE = window.__WP_API_URL.replace(/\/$/, '');
-} else if (isLocal) {
-  API_BASE = '/wp-json'; // dev → proxy Vite
-} else {
-  API_BASE = 'https://thearchiveoftheuntamed.xyz/wp-json';
-}
+// ---------- DOM compat con ListPage ----------
+const listEl =
+  document.getElementById('networkList') || // se ListPage lo espone così
+  document.getElementById('list') ||
+  document.getElementById('grid');
+const stateEl = document.getElementById('state'); // barra di stato di ListPage, se presente
 
-const ENDPOINT = `${API_BASE}/aotu/v1/texts`;
-const TAGS_EP  = `${API_BASE}/wp/v2/aotu_bib_tag?_fields=name,slug&per_page=100`;
-const TYPES_EP = `${API_BASE}/wp/v2/aotu_bib_type?_fields=name,slug&per_page=100`;
+if (!listEl) console.warn('[bibliography] Missing list container (#networkList|#list|#grid)');
 
-console.info('[bibliography] API_BASE:', API_BASE);
-console.info('[bibliography] ENDPOINT:', ENDPOINT);
-console.info('[bibliography] TAGS_EP:', TAGS_EP);
-console.info('[bibliography] TYPES_EP:', TYPES_EP);
-
-// ---------- UI refs ----------
-const $form   = document.getElementById('bib-filters');
-const $list   = document.getElementById('bib-results');
-const $more   = document.getElementById('bib-loadmore');
-const $count  = document.getElementById('bib-count');
-const $status = document.getElementById('bib-status');
-const $reset  = document.getElementById('bib-reset');
-const $expCSV = document.getElementById('bib-export-csv');
-const $expBIB = document.getElementById('bib-export-bib');
-const $dlTag  = document.getElementById('dl-tag');
-const $dlType = document.getElementById('dl-type');
-
-// se il form non c'è, esci con un messaggio chiaro
-if (!$form || !$list) {
-  console.warn('[bibliography] Missing #bib-filters or #bib-results in HTML');
-}
-
-// Blocca submit/enter
-$form?.addEventListener('submit', (e) => { e.preventDefault(); e.stopPropagation(); });
-$form?.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); scheduleFetch(); }
-});
-
-// ---------- Stato ----------
-let state = {
-  page: 1,
-  pages: 1,
-  per_page: 24,
-  itemsCache: [],
-  lastParams: {}
-};
-
-// ---------- Utils ----------
-const qs = (params) => new URLSearchParams(params).toString();
-const setStatus = (msg) => { if ($status) { $status.textContent = msg || ''; $status.hidden = !msg; } };
-const escapeHTML = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-// ---------- Autocomplete (tags/types) ----------
-async function loadTaxonomies() {
-  setStatus('Loading vocab…');
+// ---------- API base (usa le env che già hai) ----------
+function computeApiBase() {
+  // PUBLIC_WP_API_URL = https://thearchiveoftheuntamed.xyz/wp
+  let fromEnv = '';
   try {
-    const [rTags, rTypes] = await Promise.all([fetch(TAGS_EP), fetch(TYPES_EP)]);
-    console.info('[bibliography] taxo status:', rTags.status, rTypes.status);
-    if (!rTags.ok || !rTypes.ok) throw new Error(`HTTP tags=${rTags.status} types=${rTypes.status}`);
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PUBLIC_WP_API_URL) {
+      fromEnv = String(import.meta.env.PUBLIC_WP_API_URL);
+    }
+  } catch {}
+  if (fromEnv) return fromEnv.replace(/\/$/, '') + '/wp-json';
 
-    const [tags, types] = await Promise.all([rTags.json(), rTypes.json()]);
-    if ($dlTag)  $dlTag.innerHTML  = tags.map(t => `<option value="${t.slug}">${escapeHTML(t.name)}</option>`).join('');
-    if ($dlType) $dlType.innerHTML = types.map(t => `<option value="${t.slug}">${escapeHTML(t.name)}</option>`).join('');
-    setStatus('');
+  if (typeof window !== 'undefined' && window.__WP_API_URL) {
+    return String(window.__WP_API_URL).replace(/\/$/, '') + '/wp-json';
+  }
+  if (typeof location !== 'undefined' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    return '/wp-json'; // proxy dev
+  }
+  return 'https://thearchiveoftheuntamed.xyz/wp/wp-json';
+}
+const API_BASE = computeApiBase();
+const ENDPOINT = `${API_BASE}/aotu/v1/texts`;
+
+console.log('[bibliography] boot', { API_BASE, ENDPOINT });
+
+// ---------- Stato infinito ----------
+let page = 1;
+const PER_PAGE = 40;
+let loading = false;
+let endReached = false;
+
+// ---------- Helpers ----------
+const esc = (s) => s ? String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])) : '';
+
+function setState(msg = '', show = true) {
+  if (!stateEl) return;
+  stateEl.textContent = msg || '';
+  stateEl.hidden = !show;
+}
+
+function pick(...vals) {
+  return vals.find(v => v !== undefined && v !== null && String(v).trim() !== '') || '';
+}
+
+// Campi tipici dell’endpoint texts
+function getYear(it)   { return pick(it?.meta?.year, it?.year, it?.date?.slice?.(0,4)); }
+function getTitle(it)  { return pick(it?.title?.rendered, it?.title, 'Untitled'); }
+function getAuthors(it){
+  if (Array.isArray(it?.authors)) return it.authors.join(', ');
+  return pick(it?.author, it?.authors);
+}
+function getType(it)   { return pick(it?.type, it?.post_type); }
+function getVenue(it)  { return pick(it?.venue, it?.publisher); }
+
+// ---------- Render di una riga (4 colonne, come Network) ----------
+function renderRow(item) {
+  const row = document.createElement('div');
+  row.className = 'network-card'; // riusa lo stile a 4 colonne (già presente)
+  row.innerHTML = `
+    <div data-label="Title">${esc(getTitle(item))}</div>
+    <div data-label="Authors">${esc(getAuthors(item) || '—')}</div>
+    <div data-label="Year">${esc(getYear(item) || '—')}</div>
+    <div data-label="Type / Venue">${esc([getType(item), getVenue(item)].filter(Boolean).join(' · ') || '—')}</div>
+  `;
+  // niente click: non apriamo nessuna scheda singola
+  return row;
+}
+
+// ---------- Fetch + append ----------
+async function fetchPage() {
+  if (loading || endReached) return;
+  loading = true;
+  setState('Loading…', true);
+
+  const params = new URLSearchParams({
+    per_page: String(PER_PAGE),
+    page: String(page),
+    orderby: 'year', // se non supportato dal tuo endpoint: sostituisci con 'date'
+    order: 'desc',
+    _embed: '1'
+  });
+
+  try {
+    const url = `${ENDPOINT}?${params.toString()}`;
+    const r = await fetch(url, { cache: 'no-cache' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const items = await r.json();
+
+    if (Array.isArray(items) && items.length) {
+      const frag = document.createDocumentFragment();
+      items.forEach(it => frag.appendChild(renderRow(it)));
+      listEl?.appendChild(frag);
+      page += 1;
+      setState('', false);
+
+      // se la pagina è corta, autopopola finché riempie lo schermo
+      maybeAutofillViewport();
+    } else {
+      endReached = true;
+      setState(listEl?.children.length ? 'End.' : 'No entries.', true);
+      observer.disconnect();
+    }
   } catch (e) {
-    console.warn('[bibliography] autocomplete failed:', e);
-    setStatus('Autocomplete unavailable (api).');
+    console.error('[bibliography] fetch error', e);
+    setState('Error loading bibliography.', true);
+  } finally {
+    loading = false;
   }
 }
 
-// ---------- First load ----------
-(async function init() {
-  // 1) autocomplete
-  loadTaxonomies();
+// ---------- Infinite scroll ----------
+const sentinel = document.createElement('div');
+sentinel.id = 'bib-sentinel';
+sentinel.style.height = '1px';
+(listEl?.parentElement || document.body).appendChild(sentinel);
 
-  // 2) params da URL → form
-  const urlParams = readParamsFromURL();
-  state.per_page = urlParams.per_page || state.per_page;
-  fillForm(urlParams);
+const observer = new IntersectionObserver((entries) => {
+  if (entries.some(e => e.isIntersecting)) fetchPage();
+}, { rootMargin: '800px 0px 800px 0px' });
 
-  // 3) prima fetch
-  await fetchPage(urlParams, false);
-})();
+function maybeAutofillViewport() {
+  const room = document.documentElement.scrollHeight - window.innerHeight;
+  if (!endReached && room < 1600 && !loading) setTimeout(() => fetchPage(), 0);
+}
+
+// ---------- Kick-off ----------
+observer.observe(sentinel);
+fetchPage();

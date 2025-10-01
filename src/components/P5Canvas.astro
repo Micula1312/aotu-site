@@ -1,0 +1,63 @@
+---
+const { sketchPath, props = {}, ui = false } = Astro.props;
+---
+<div id="p5-root" data-sketch={sketchPath} data-props={JSON.stringify(props)} style="display:block;width:100%;height:100%;position:relative"></div>
+{ui && (<slot name="ui" />)}
+
+
+<script type="module" is:inline>
+  (function(){
+    const root = document.getElementById('p5-root');
+    if (!root) { console.error('[P5Canvas] #p5-root non trovato'); return; }
+
+    async function loadP5(){
+      try {
+        const mod = await import('p5');              // usa npm se c'è
+        return mod.default || mod;
+      } catch (err) {
+        console.warn('[P5Canvas] import p5 fallito, uso CDN', err);
+        const mod = await import('https://esm.sh/p5@1.9.0?bundle'); // fallback
+        return mod.default || mod;
+      }
+    }
+
+    async function boot(){
+      const sketchPath = root.getAttribute('data-sketch');
+      const rawProps = root.getAttribute('data-props') || '{}';
+      let props = {}; try { props = JSON.parse(rawProps); } catch(_) {}
+      console.log('[P5Canvas] boot', { sketchPath, props });
+
+      const p5 = await loadP5();
+
+      // importa il manifest (qui Vite compila il glob correttamente)
+      const { sketches } = await import('/src/scripts/visuals/manifest.ts');
+
+      if (!sketches || !sketches[sketchPath]) {
+        console.error('[P5Canvas] Sketch non trovato nel manifest:', sketchPath);
+        console.info('Chiavi disponibili:', sketches ? Object.keys(sketches) : '(manifest vuoto)');
+        return;
+      }
+
+      const mod = await sketches[sketchPath](); // carica lo sketch
+      const sketchFactory = mod && mod.default;
+      if (typeof sketchFactory !== 'function') {
+        console.error(`[P5Canvas] Il modulo "${sketchPath}" non esporta default function`);
+        return;
+      }
+
+      const instance = new p5((p) => sketchFactory(p, props), root);
+      root.__p5 = instance;
+      window.addEventListener('beforeunload', () => { try { instance.remove(); } catch(_) {} });
+      console.log('[P5Canvas] p5 instanziato');
+    }
+
+    boot();
+  })();
+</script>
+
+
+
+
+<style>
+  :host, #p5-root { min-height: 100%; }
+</style>

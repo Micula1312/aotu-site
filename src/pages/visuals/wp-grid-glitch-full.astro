@@ -1,12 +1,13 @@
 ---
 import P5Canvas from "../../components/P5Canvas.astro";
+import VisualUI from "../../components/visualUI.astro";
 import type { ImgItem } from "../../scripts/visuals/sketch-types";
 import { buildMediaURL } from "./helpers/wp-media";
 
 const url = new URL(Astro.request.url);
 const site = url.searchParams.get('site') ?? 'https://thearchiveoftheuntamed.xyz/wp';
 const q = {
-  per_page: Number(url.searchParams.get('perPage') ?? 24),
+  per_page: Number(url.searchParams.get('perPage') ?? 48),
   orderby: url.searchParams.get('orderby') ?? 'date',
   order: url.searchParams.get('order') ?? 'desc',
   search: url.searchParams.get('search') ?? undefined,
@@ -23,7 +24,11 @@ const glitchEvery = Number(url.searchParams.get('glitchEvery') ?? 350);
 
 const mediaRes = await fetch(buildMediaURL(site, q));
 const media = (await mediaRes.json()) as any[];
-const images: ImgItem[] = media.map(m => ({ id: m.id, src: m.media_details?.sizes?.medium?.source_url || m.source_url, title: m.title?.rendered }));
+const images: ImgItem[] = media.map(m => ({
+  id: m.id,
+  src: m.media_details?.sizes?.large?.source_url || m.media_details?.sizes?.medium?.source_url || m.source_url,
+  title: m.title?.rendered
+}));
 
 const sketchPath = "/src/scripts/visuals/grid-glitch.ts";
 ---
@@ -31,10 +36,12 @@ const sketchPath = "/src/scripts/visuals/grid-glitch.ts";
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AOTU — WP Grid Glitch</title>
-    <style>html,body{height:100%;margin:0} body{background:#000;}</style>
+    <title>AOTU — Grid Glitch (Full)</title>
+    <style>html,body{height:100%;margin:0} body{background:#000;overflow:hidden}</style>
   </head>
   <body>
-    <P5Canvas sketchPath={sketchPath} props={{ images, cols, rows, glitchEvery }} />
+    <P5Canvas ui sketchPath={sketchPath} props={{ images, cols, rows, glitchEvery }}>
+      <Fragment slot="ui"><VisualUI /></Fragment>
+    </P5Canvas>
   </body>
 </html>

@@ -76,49 +76,49 @@ function buildQS(over: Record<string, string | number | undefined> = {}) {
       </ul>
     </details>
 
-    <!-- Gruppo: Visuals -->
+    <!-- Gruppo: Visuals (solo le route presenti) -->
     <details class="drawer" data-drawer="visuals" open>
       <summary>Visuals</summary>
       <ul>
+        <!-- Sequence Accum -->
         <li class={current==='visuals-seq' ? 'is-active' : ''}>
-          <a href={link('/visuals/wp-sequence-accum') + buildQS({ perPage: 60 })}
-             data-nav="hard">Sequence (accum · shuffle)</a>
+          <a href={link('/visuals/wp-sequence-accum') + buildQS({ perPage: 60, scale: 0.5, interval: 1200 })} data-nav="hard">
+            Sequence (accum)
+          </a>
         </li>
-        <li class={current==='visuals-carousel' ? 'is-active' : ''}>
-          <a href={link('/visuals/wp-carousel') + buildQS({ perPage: 30, interval: 4000, transition: 500, autoplay: 1 })}
-             data-nav="hard">Carousel (one-at-a-time)</a>
-        </li>
-        <li class={current==='visuals-cover-scroll' ? 'is-active' : ''}>
-          <a href={link('/visuals/wp-cover-scroll') + buildQS({ perPage: 50, dir: 'y', preload: 12 })}
-             data-nav="hard">Cover Scroll (infinite)</a>
-        </li>
-        <li class={current==='visuals-chaos' ? 'is-active' : ''}>
-          <a
-            href={link('/visuals/wp-sequence-chaos') + buildQS({ perPage: 60, every: 900, scale: 0.27, seed: 5, max: 220, tilt: 14 })}
-            data-nav="hard"
-          >Sequence (chaos · collage)</a>
+        <li class={current==='visuals-seq-full' ? 'is-active' : ''}>
+          <a href={link('/visuals/wp-sequence-accum-full') + buildQS({ perPage: 60, scale: 0.55, interval: 1100 })} data-nav="hard">
+            Sequence (accum · full UI)
+          </a>
         </li>
 
-        <li class={current==='visuals-rain' ? 'is-active' : ''}>
-  <a href={link('/visuals/wp-rainfall') + buildQS({ perPage: 60, every: 350, scale: 0.22, cap: 18, max: 250, blend: 'screen' })} data-nav="hard">
-    Rainfall (neon)
-  </a>
-</li>
+        <!-- Grid Glitch -->
+        <li class={current==='visuals-grid' ? 'is-active' : ''}>
+          <a href={link('/visuals/wp-grid-glitch') + buildQS({ perPage: 48, cols: 6, rows: 4, glitchEvery: 350 })} data-nav="hard">
+            Grid (glitch)
+          </a>
+        </li>
+        <li class={current==='visuals-grid-full' ? 'is-active' : ''}>
+          <a href={link('/visuals/wp-grid-glitch-full') + buildQS({ perPage: 48, cols: 6, rows: 4, glitchEvery: 350 })} data-nav="hard">
+            Grid (glitch · full UI)
+          </a>
+        </li>
 
-<li class={current==='visuals-spiral' ? 'is-active' : ''}>
-  <a href={link('/visuals/wp-spiral') + buildQS({ perPage: 60, every: 500, scale: 0.28, max: 120, orbit: 0.9, cap: 22 })} data-nav="hard">
-    Spiral (orbit)
-  </a>
-</li>
-
-<li class={current==='visuals-grid' ? 'is-active' : ''}>
-  <a href={link('/visuals/wp-grid-glitch') + buildQS({ perPage: 60, cols: 6, rows: 4, glitchEvery: 350 })} data-nav="hard">
-    Grid (glitch)
-  </a>
-</li>
-
+        <!-- Ribbon Flowfield (non usa WP: rimuovo il param "site") -->
+        <li class={current==='visuals-ribbon' ? 'is-active' : ''}>
+          <a href={link('/visuals/ribbon-flowfield') + buildQS({ site: undefined, count: 300, speed: 1.6, noiseScale: 0.0016 })} data-nav="hard">
+            Ribbon Flowfield
+          </a>
+        </li>
+        <li class={current==='visuals-ribbon-full' ? 'is-active' : ''}>
+          <a href={link('/visuals/ribbon-flowfield-full') + buildQS({ site: undefined, count: 300, speed: 1.6, noiseScale: 0.0016 })} data-nav="hard">
+            Ribbon Flowfield (full UI)
+          </a>
+        </li>
       </ul>
     </details>
+
+
 
   </nav>
 

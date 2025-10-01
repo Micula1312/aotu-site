@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AOTU · Machine Reader (live)</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; font:16px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#0b0b0b; color:#eaeaea; }
+    header { padding:16px 20px; border-bottom:1px solid #222; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    button, select { background:#151515; color:#eee; border:1px solid #333; padding:8px 12px; border-radius:8px; cursor:pointer; }
+    button[disabled] { opacity:.5; cursor:not-allowed; }
+    main { display:grid; grid-template-columns: 1fr 380px; gap:16px; padding:16px; }
+    @media (max-width: 900px){ main{ grid-template-columns:1fr; } }
+    .caption { min-height: 8lh; padding:16px; background:#0f0f0f; border:1px solid #222; border-radius:12px; white-space:pre-wrap; }
+    .cue-list { max-height: 70vh; overflow:auto; padding:8px; background:#0f0f0f; border:1px solid #222; border-radius:12px; }
+    .cue { padding:8px 10px; border-radius:8px; border:1px solid transparent; margin:6px 4px; cursor:pointer; }
+    .cue[aria-current="true"] { background:#121a12; border-color:#1d3a1d; }
+    .small { opacity:.7; font-size:12px; }
+    footer { padding:10px 16px; border-top:1px solid #222; opacity:.8; }
+    kbd { background:#222; padding:2px 6px; border-radius:4px; border:1px solid #333; }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="btnPlay">▶︎ Play</button>
+    <button id="btnPause" disabled>⏸︎ Pause</button>
+    <button id="btnStop" disabled>■ Stop</button>
+    <button id="btnPrev">⟵ Prev</button>
+    <button id="btnNext">Next ⟶</button>
+    <label class="small">Voce
+      <select id="voiceSelect" aria-label="Seleziona voce"></select>
+    </label>
+    <label class="small">Velocità
+      <select id="rate">
+        <option>0.8</option><option selected>1.0</option><option>1.15</option><option>1.3</option>
+      </select>
+    </label>
+    <span class="small">Space=Play/Pause · N/P=Next/Prev · C=Captions ON/OFF</span>
+  </header>
+
+  <main>
+    <section aria-live="polite" aria-atomic="true">
+      <div id="caption" class="caption" role="region" aria-label="Sottotitoli"></div>
+    </section>
+    <aside class="cue-list" id="cueList" role="listbox" aria-label="Sezioni">
+      <!-- cues render here -->
+    </aside>
+  </main>
+
+  <footer class="small">
+    “Machine Reader” — AOTU live · Web Speech API. In caso di assenza TTS, prepara file audio pre-renderizzati.
+  </footer>
+
+  <script>
+    // ------- SCENEGGIATURA: EDITA QUI -------
+    // Ogni cue ha: id, titolo, testo (la macchina legge "text")
+    // Usa il tuo linguaggio protocollare e i passaggi chiave della tesi
+    const SCRIPT = [
+      {
+        id: "intro",
+        title: "INTRO",
+        text: `archive_of_the_untamed => situated_artistic_research
+author.position = { hydro_feminist, eco_political, pro_palestine }
+purpose.run({ archive, wildness })`
+      },
+      {
+        id: "ricerca",
+        title: "PARTE I / RICERCA",
+        text: `crash_of_truth_protocol()
+reboot_contemporary_flows()
+memory_power_kernel()`
+      },
+      {
+        id: "data_fluxus",
+        title: "DATA FLUXUS (protocol)",
+        text: `input.history()
+  → EXIT x Prati di Caprara
+  → “Soft Data Foraging” @ Casa dei Colori (installazione + live AV)
+  → residenza @ Pastificio: bootstrap archivio web (WP+Astro) + treehouse.practice()
+
+input.present()
+  → Montesacro/Aniene: camminare | sostare | afa | registrare
+  → tracce = { foto, audio, appunti, conversazioni }
+
+indexing()
+  → ricerca = #hashtag_non_gerarchici
+  → percorsi_rizomatici(); connessioni_aperte()
+
+access()
+  → interfacce_leggere(); multilingua(); low_bandwidth(); export_offline()
+  → consenso(); credito_visibile(); right_to_disappear(soft_delete + log)
+
+flow()
+  → fisico⇄digitale: spazio → server → output{web, mostra, performance} → nuovo_input
+  → piattaforma_ibrida = sito_rete_di_link ⊕ treehouse_spazio_di_sosta
+
+store()
+  → archivio_beta(versioning, provenance, note_di_contesto, oblio_curato)
+
+activate()
+  → workshop(); assemblee(); live_AV(); restituzioni_pubbliche()
+  → feedback_loop → revisioni_leggere()`
+      },
+      {
+        id: "platform_treehouse",
+        title: "PIATTAFORMA ⊕ TREEHOUSE",
+        text: `piattaforma_ibrida = { interfaccia digitale rizomatica (#hashtag) } ⊕ { casa_sull’albero: rifugio poroso }
+entrambi = dispositivi di accesso e sosta → attivazione, non accumulo`
+      },
+      {
+        id: "manifesto",
+        title: "MANIFESTO",
+        text: `authorize_without_censoring()
+remember_without_freezing()
+commoning()
+care()`
+      },
+      {
+        id: "coda",
+        title: "CODA",
+        text: `l’archivio non chiude: apre
+oblio_curato(); nuova_iterazione();`
+      }
+    ];
+    // ----------------------------------------
+
+    // Stato
+    const synth = window.speechSynthesis;
+    let voices = [];
+    let current = 0;
+    let speaking = false;
+    let captionsOn = true;
+    let utter; // utterance corrente
+
+    // UI refs
+    const voiceSelect = document.getElementById('voiceSelect');
+    const rate = document.getElementById('rate');
+    const caption = document.getElementById('caption');
+    const cueList = document.getElementById('cueList');
+    const btnPlay = document.getElementById('btnPlay');
+    const btnPause = document.getElementById('btnPause');
+    const btnStop = document.getElementById('btnStop');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+
+    // Render elenco cues
+    function renderCues(){
+      cueList.innerHTML = "";
+      SCRIPT.forEach((c, i) => {
+        const div = document.createElement('div');
+        div.className = 'cue';
+        div.role = 'option';
+        div.id = 'cue-' + c.id;
+        div.dataset.idx = i;
+        div.textContent = `${i+1}. ${c.title}`;
+        if (i === current) div.setAttribute('aria-current','true');
+        div.addEventListener('click', () => { stop(); current = i; play(); });
+        cueList.appendChild(div);
+      });
+    }
+
+    function markActive(){
+      document.querySelectorAll('.cue').forEach(el => el.removeAttribute('aria-current'));
+      const el = document.querySelector(`.cue[data-idx="${current}"]`);
+      if (el) el.setAttribute('aria-current','true');
+    }
+
+    function updateCaption(text){
+      caption.textContent = captionsOn ? text : "";
+    }
+
+    // Cues → eventi per sincronizzare visual/p5 ecc.
+    function fireCueEvent(phase, payload={}) {
+      window.dispatchEvent(new CustomEvent('aotu-cue', { detail: { phase, idx: current, id: SCRIPT[current].id, ...payload } }));
+    }
+
+    // Voci
+    function populateVoices(){
+      voices = synth.getVoices().filter(v => v.lang.startsWith('it') || v.lang.startsWith('en'));
+      voiceSelect.innerHTML = "";
+      voices.forEach((v, i) => {
+        const opt = document.createElement('option');
+        opt.value = i; opt.textContent = `${v.name} — ${v.lang}`;
+        if (v.lang.startsWith('it')) opt.selected = true;
+        voiceSelect.appendChild(opt);
+      });
+    }
+    populateVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = populateVoices;
+    }
+
+    // Riproduzione
+    function play(){
+      if (!('speechSynthesis' in window)) {
+        alert('Text-to-Speech non supportato dal browser. Usa Chrome/Edge o prepara file audio.');
+        return;
+      }
+      stop(true); // cancella eventuali code
+      const cue = SCRIPT[current];
+      updateCaption(cue.text);
+      markActive();
+
+      utter = new SpeechSynthesisUtterance(cue.text);
+      const v = voices[voiceSelect.value|0];
+      if (v) utter.voice = v;
+      utter.rate = parseFloat(rate.value) || 1.0;
+      utter.onstart = () => {
+        speaking = true;
+        btnPlay.disabled = true; btnPause.disabled = false; btnStop.disabled = false;
+        fireCueEvent('start');
+      };
+      utter.onend = () => {
+        speaking = false;
+        btnPlay.disabled = false; btnPause.disabled = true; btnStop.disabled = true;
+        fireCueEvent('end');
+        // autoplay: vai al prossimo
+        if (current < SCRIPT.length - 1) { current++; play(); }
+      };
+      utter.onerror = (e) => { console.error(e); speaking = false; };
+      synth.speak(utter);
+    }
+
+    function pause(){
+      if (!speaking) return;
+      if (synth.paused) { synth.resume(); btnPause.textContent = '⏸︎ Pause'; fireCueEvent('resume'); }
+      else { synth.pause(); btnPause.textContent = '▶︎ Resume'; fireCueEvent('pause'); }
+    }
+
+    function stop(skipCancel){
+      if (!skipCancel) synth.cancel();
+      speaking = false;
+      btnPlay.disabled = false; btnPause.disabled = true; btnStop.disabled = true;
+      btnPause.textContent = '⏸︎ Pause';
+      fireCueEvent('stop');
+    }
+
+    function next(){ stop(); current = Math.min(SCRIPT.length-1, current+1); play(); }
+    function prev(){ stop(); current = Math.max(0, current-1); play(); }
+
+    // Controls
+    btnPlay.onclick = play;
+    btnPause.onclick = pause;
+    btnStop.onclick = () => stop();
+    btnNext.onclick = next;
+    btnPrev.onclick = prev;
+    voiceSelect.onchange = () => { if (speaking) { stop(); play(); } };
+    rate.onchange = () => { if (speaking) { stop(); play(); } };
+
+    // Hotkeys
+    window.addEventListener('keydown', (e) => {
+      if (e.key === ' '){ e.preventDefault(); synth.speaking ? pause() : play(); }
+      if (e.key === 'n' || e.key === 'N') next();
+      if (e.key === 'p' || e.key === 'P') prev();
+      if (e.key === 'c' || e.key === 'C'){ captionsOn = !captionsOn; updateCaption(SCRIPT[current].text); }
+    });
+
+    // Avvio da hash ?cue=id
+    const url = new URL(window.location.href);
+    const cueId = url.searchParams.get('cue');
+    if (cueId){
+      const idx = SCRIPT.findIndex(c => c.id === cueId);
+      if (idx >= 0) current = idx;
+    }
+    renderCues(); updateCaption("");
+  </script>
+</body>
+</html>

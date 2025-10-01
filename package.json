@@ -13,7 +13,8 @@
     "format": "astro format"
   },
   "dependencies": {
-    "astro": "^5.13.9"
+    "astro": "^5.13.9",
+    "p5": "^2.0.5"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",

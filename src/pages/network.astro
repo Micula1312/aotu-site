@@ -3,20 +3,31 @@ import ListPage from "../components/templates/ListPage.astro";
 import networkScriptUrl from "../scripts/network.js?url";
 ---
 <ListPage
-  title="ARCHIVE OF THE UNTAMED — NETWORK"
+  title="ARCHIVE OF THE UNTAMED : NETWORK"
   subtitle="mapping :: [collectives] [associations] [nodes]"
   scriptUrl={networkScriptUrl}
 >
   <Fragment slot="filters">
-    <select id="kind" aria-label="Kind"><option value="">All kinds</option></select>
-    <input id="q" placeholder="Search name / city / tags" aria-label="Search" />
-    <div style="display:flex; gap:10px; align-items:center; justify-content:flex-end">
-      <select id="sort" aria-label="Sort">
-        <option value="az">A→Z</option><option value="za">Z→A</option><option value="new">recenti</option>
+    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap:10px; align-items:center;">
+      <input id="q" placeholder="Search name / content…" aria-label="Search" />
+      <input id="city" placeholder="City (client-side)" aria-label="Filter by city" />
+      <input id="tag" placeholder="Tag (client-side)" aria-label="Filter by tag" />
+
+      <select id="kind" aria-label="Kind">
+        <option value="">All kinds</option>
       </select>
-      <button id="refresh">Refresh</button>
+
+      <div style="display:flex; gap:10px; align-items:center; justify-content:flex-end">
+        <select id="sort" aria-label="Sort">
+          <option value="az">A→Z</option>
+          <option value="za">Z→A</option>
+          <option value="new">recenti</option>
+        </select>
+        <button id="refresh" type="button">Refresh</button>
+      </div>
     </div>
   </Fragment>
+
 
   <Fragment slot="list-header">
     <div class="network-header">

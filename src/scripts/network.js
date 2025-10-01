@@ -1,5 +1,5 @@
-// AOTU Network — ES module
-// Lista a 4 colonne (Name | Location | Kind | Website) + dialog dettagli opzionale
+// AOTU Network — lista 4 colonne con barra filtri su una riga
+// Server-side: search + kind  |  Client-side: city + tag  |  Sort: A→Z / Z→A / recenti
 
 // ---------- DOM refs ----------
 const listEl =
@@ -7,30 +7,35 @@ const listEl =
   document.getElementById('list') ||
   document.getElementById('grid');
 const state = document.getElementById('state');
-const kindSel = document.getElementById('kind');
-const qInput = document.getElementById('q');
-const refreshBtn = document.getElementById('refresh');
-const sortSel = document.getElementById('sort');
 
-// ---------- API base (dev/prod via .env) ----------
+const qInput    = document.getElementById('q');
+const cityInput = document.getElementById('city');
+const tagInput  = document.getElementById('tag');
+const kindSel   = document.getElementById('kind');
+const sortSel   = document.getElementById('sort');
+const refreshBtn= document.getElementById('refresh');
+
+// ---------- API base (dev/prod via .env già esistente) ----------
 const API_BASE =
   (import.meta.env && import.meta.env.PUBLIC_WP_API_BASE)
     ? import.meta.env.PUBLIC_WP_API_BASE.replace(/\/$/, '')
     : 'https://thearchiveoftheuntamed.xyz/wp/wp-json/wp/v2';
 
-// Endpoint custom (come da tuo repo precedente)
+// Endpoints WP REST (CPT + Taxonomy)
 const EP_KINDS = `${API_BASE}/aotu_kind`;
-const EP_NODES = `${API_BASE}/aotu_node`;
+const EP_NODES = `${API_BASE}/aotu_node`; // CPT "Network Nodes" esposto via wp/v2
+console.log('[network] API_BASE', API_BASE);
 
 // ---------- Helpers ----------
 const esc = (s) => s ? String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])) : '';
 const debounce = (fn, ms=250) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
-
-// Leggi campi noti da meta/ACF
 const pick = (...vals) => vals.find(v => v !== undefined && v !== null && String(v).trim() !== '') || '';
+
 function getCity(it){ return pick(it?.meta?.city, it?.acf?.city); }
 function getCountry(it){ return pick(it?.meta?.country, it?.acf?.country); }
 function getWebsite(it){ return pick(it?.meta?.website, it?.acf?.website, it?.link); }
+function getTags(it){ return (pick(it?.meta?.tags, it?.acf?.tags) || '').toLowerCase(); }
+
 function getKindName(it){
   const term = it?._embedded?.['wp:term']?.flat()?.find(t => t.taxonomy === 'aotu_kind');
   return term?.name || pick(it?.meta?.kind, it?.acf?.kind, '—');
@@ -57,7 +62,8 @@ async function fetchKinds() {
 }
 
 // ---------- NODES ----------
-let CACHE = [];
+let RAW = [];   // risposta server (tutta)
+let CACHE = []; // dopo filtri client-side (city/tag) e sort
 
 async function fetchNodes() {
   try {
@@ -70,31 +76,48 @@ async function fetchNodes() {
     params.set('_embed', '1'); // include termini + featured
 
     const kind = kindSel?.value || '';
-    if (kind) params.set('aotu_kind', kind);
+    if (kind) params.set('aotu_kind', kind); // filtro server-side per tassonomia
 
     const q = (qInput?.value || '').trim();
-    if (q) params.set('search', q);
+    if (q) params.set('search', q); // WP core: cerca su title+content+excerpt
 
     const url = `${EP_NODES}?${params.toString()}`;
     const r = await fetch(url, { cache: 'no-cache' });
     if (!r.ok) throw new Error(`HTTP ${r.status} on ${url}`);
 
     const data = await r.json();
-    CACHE = Array.isArray(data) ? data : [];
+    RAW = Array.isArray(data) ? data : [];
 
-    // ordinamento
-    const mode = sortSel?.value || 'az';
-    const byTitle = (a,b) => (a.title?.rendered || '').localeCompare(b.title?.rendered || '', undefined, {sensitivity:'base'});
-    const byDate  = (a,b) => new Date(b.date) - new Date(a.date);
-    if (mode === 'az')  CACHE.sort(byTitle);
-    if (mode === 'za')  CACHE.sort((a,b)=>byTitle(b,a));
-    if (mode === 'new') CACHE.sort(byDate);
-
-    renderList();
+    applyClientFiltersAndRender();
   } catch (e) {
     console.error('[network] fetchNodes error:', e);
     if (state) { state.hidden = false; state.textContent = 'Error loading network.'; }
   }
+}
+
+// Applica filtri client-side (city, tag) + ordinamento e render
+function applyClientFiltersAndRender(){
+  const cityQ = (cityInput?.value || '').trim().toLowerCase();
+  const tagQ  = (tagInput ?.value || '').trim().toLowerCase();
+
+  // filtra per city/tag leggendo i meta esposti in REST
+  CACHE = RAW.filter(it => {
+    const city = (getCity(it) || '').toLowerCase();
+    const tags = getTags(it); // stringa "forest, urban, legal" → match .includes
+    const okCity = cityQ ? city.includes(cityQ) : true;
+    const okTag  = tagQ  ? tags.includes(tagQ) : true;
+    return okCity && okTag;
+  });
+
+  // ordinamento
+  const mode = sortSel?.value || 'az';
+  const byTitle = (a,b) => (a.title?.rendered || '').localeCompare(b.title?.rendered || '', undefined, {sensitivity:'base'});
+  const byDate  = (a,b) => new Date(b.date) - new Date(a.date);
+  if (mode === 'az')  CACHE.sort(byTitle);
+  if (mode === 'za')  CACHE.sort((a,b)=>byTitle(b,a));
+  if (mode === 'new') CACHE.sort(byDate);
+
+  renderList();
 }
 
 function renderList() {
@@ -130,9 +153,8 @@ function renderList() {
   });
 }
 
-// ---------- DIALOG DETTAGLIO ----------
+// ---------- DIALOG DETTAGLIO (come tua versione attuale) ----------
 async function openNode(id){
-  // se non c'è dialog, esci silenziosamente
   const dlg = document.getElementById('node');
   if (!dlg) return;
 
@@ -141,18 +163,17 @@ async function openNode(id){
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const it = await r.json();
 
-    // header
-    const title = it?.title?.rendered || '—';
-    const kind = getKindName(it);
-    const city = getCity(it), country = getCountry(it);
-    const website = getWebsite(it);
-
     const nodeTitle = document.getElementById('nodeTitle');
     const nodeInfo  = document.getElementById('nodeInfo');
     const nodeTerms = document.getElementById('nodeTerms');
     const nodeLinks = document.getElementById('nodeLinks');
     const media     = document.getElementById('nodeMedia');
     const body      = document.getElementById('nodeBody');
+
+    const title = it?.title?.rendered || '—';
+    const kind  = getKindName(it);
+    const city  = getCity(it), country = getCountry(it);
+    const website = getWebsite(it);
 
     if (nodeTitle) nodeTitle.innerHTML = esc(title);
     if (nodeInfo)  nodeInfo.textContent = [city, country].filter(Boolean).join(' · ');
@@ -166,20 +187,16 @@ async function openNode(id){
         a.textContent = 'website';
         nodeLinks.appendChild(a);
       }
-      // puoi aggiungere social, email, ecc. se in meta/ACF
     }
 
-    // body (excerpt)
     if (body) body.innerHTML = it?.excerpt?.rendered || '';
 
-    // media (logo ACF o featured image)
     if (media) {
       media.innerHTML = '';
       const logoUrl = pick(it?.meta?.logo?.source_url, it?.acf?.logo?.url);
       if (logoUrl) {
         const img = new Image();
-        img.src = logoUrl; img.alt = title;
-        media.appendChild(img);
+        img.src = logoUrl; img.alt = title; media.appendChild(img);
       } else if (it._embedded?.['wp:featuredmedia']?.[0]?.source_url) {
         const img = new Image();
         img.src = it._embedded['wp:featuredmedia'][0].source_url;
@@ -194,10 +211,13 @@ async function openNode(id){
 }
 
 // ---------- Events ----------
+const doFetch = debounce(fetchNodes, 250);
+qInput   ?.addEventListener('input', doFetch);     // server-side
+kindSel  ?.addEventListener('change', fetchNodes); // server-side
+sortSel  ?.addEventListener('change', applyClientFiltersAndRender); // client-side
+cityInput?.addEventListener('input', debounce(applyClientFiltersAndRender, 150)); // client-side
+tagInput ?.addEventListener('input', debounce(applyClientFiltersAndRender, 150)); // client-side
 refreshBtn?.addEventListener('click', fetchNodes);
-kindSel?.addEventListener('change', fetchNodes);
-sortSel?.addEventListener('change', fetchNodes);
-qInput?.addEventListener('input', debounce(fetchNodes, 300));
 
 // ---------- Boot ----------
 console.log('[network] boot');

@@ -1,0 +1,260 @@
+<script is:inline>
+  if (typeof window !== "undefined") {
+    let cues = Array.isArray(window.AOTU_CUES) ? window.AOTU_CUES : [];
+    const countEl = document.getElementById("count");
+    const statusEl = document.getElementById("status");
+    const nowTitleEl = document.getElementById("nowTitle");
+    const snippetEl = document.getElementById("snippet");
+    const barEl = document.getElementById("bar");
+
+    const btnPrev = document.getElementById("prev");
+    const btnPlay = document.getElementById("play");
+    const btnPause = document.getElementById("pause");
+    const btnNext = document.getElementById("next");
+    const rateInput = document.getElementById("rate");
+    const voiceSelect = document.getElementById("voice");
+
+    let idx = 0;
+    let voices = [];
+    let speaking = false;
+    let canceled = false;
+    let chunkQueue = [];
+    let chunkIndex = 0;
+    let progressTimer = null;
+
+    function setStatus(s){ statusEl.textContent = s; }
+    function setCount(){ countEl.textContent = `${cues.length} cues`; }
+    function setNow(){
+      const c = cues[idx];
+      nowTitleEl.textContent = c ? `${c.order ?? idx+1}. ${c.title}` : "—";
+      snippetEl.textContent = c ? c.text.slice(0, 200) + (c.text.length>200?'…':'') : "—";
+      barEl.style.width = "0%";
+    }
+
+    // ————————————————————————————————————————
+    // VOCI
+    function loadVoices() {
+      voices = (window.speechSynthesis?.getVoices?.() || []).filter(v =>
+        /^(it|en|es|fr)/i.test(v.lang || "")
+      );
+      voiceSelect.innerHTML = "";
+      for (const v of voices) {
+        const opt = document.createElement("option");
+        opt.value = v.name;
+        opt.textContent = `${v.name} (${v.lang})`;
+        voiceSelect.appendChild(opt);
+      }
+      const prefer = cues[idx]?.voice || "it";
+      const pick = voices.find(v => v.lang?.toLowerCase().startsWith(prefer)) || voices[0];
+      if (pick) voiceSelect.value = pick.name;
+    }
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+      // iOS/Chrome workaround: un "resume" periodico può sbloccare pause fantasma
+      const resumeHack = setInterval(() => {
+        if (!window.speechSynthesis) return;
+        if (speaking && window.speechSynthesis.paused) {
+          try { window.speechSynthesis.resume(); } catch {}
+        }
+      }, 1000);
+      window.addEventListener("pagehide", () => clearInterval(resumeHack), { once: true });
+    }
+
+    // ————————————————————————————————————————
+    // CHUNKING: spezza testo in porzioni digeribili
+    function chunkText(text, max = 240) {
+      // preferisci split su punteggiatura/frasi
+      const parts = [];
+      let remaining = text.replace(/\s+/g, ' ').trim();
+      const re = /([\.!\?…]+)\s+/g;
+      let lastIndex = 0, m;
+      const sentences = [];
+      while ((m = re.exec(remaining)) !== null) {
+        sentences.push(remaining.slice(lastIndex, m.index + m[1].length));
+        lastIndex = re.lastIndex;
+      }
+      if (lastIndex < remaining.length) sentences.push(remaining.slice(lastIndex));
+
+      let buf = "";
+      for (const s of sentences) {
+        if ((buf + " " + s).length <= max) {
+          buf = buf ? buf + " " + s : s;
+        } else {
+          if (buf) parts.push(buf);
+          if (s.length <= max) {
+            buf = s;
+          } else {
+            // parola troppo lunga o frase lunghissima → split duro
+            for (let i = 0; i < s.length; i += max) {
+              parts.push(s.slice(i, i + max));
+            }
+            buf = "";
+          }
+        }
+      }
+      if (buf) parts.push(buf);
+      return parts;
+    }
+
+    function disableControls(disabled) {
+      [btnPrev, btnNext, rateInput, voiceSelect].forEach(el => el.disabled = disabled);
+      btnPlay.disabled = disabled;
+      btnPause.disabled = !disabled; // pausa attiva solo durante il parlato
+    }
+
+    function resetProgress() {
+      if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+      barEl.style.width = "0%";
+    }
+    function startProgress(totalMs = 10000) {
+      resetProgress();
+      let t = 0;
+      const step = 200;
+      progressTimer = setInterval(() => {
+        t += step;
+        const p = Math.min(100, (t / totalMs) * 100);
+        barEl.style.width = p + "%";
+        if (p >= 100) { clearInterval(progressTimer); progressTimer = null; }
+      }, step);
+    }
+
+    function pickVoice() {
+      const chosen = voices.find(v => v.name === voiceSelect.value);
+      return chosen || voices[0] || null;
+    }
+
+    function cancelSpeak() {
+      canceled = true;
+      if (window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch {}
+      }
+      speaking = false;
+      resetProgress();
+      setStatus("idle");
+      disableControls(false);
+    }
+
+    async function speakChunks(text, rate = 1.0) {
+      // Prepara coda di chunk
+      chunkQueue = chunkText(text);
+      chunkIndex = 0;
+      speaking = true;
+      canceled = false;
+      disableControls(true);
+      setStatus("speaking");
+      // stima rozza durata totale: ~60 char/sec → ms
+      const estimatedMs = Math.max(3000, Math.min(60000, Math.ceil(text.length / (rate * 10)) * 1000));
+      startProgress(estimatedMs);
+
+      while (chunkIndex < chunkQueue.length && !canceled) {
+        const part = chunkQueue[chunkIndex];
+        const u = new SpeechSynthesisUtterance(part);
+        u.rate = Number(rate);
+        const v = pickVoice();
+        if (v) u.voice = v;
+
+        const res = await new Promise((resolve) => {
+          let settled = false;
+          u.onstart = () => { setStatus(`speaking (${chunkIndex+1}/${chunkQueue.length})`); };
+          u.onend = () => { if (!settled) { settled = true; resolve({ ok: true }); } };
+          u.onerror = (e) => { 
+            console.error("[TTS] error:", e?.error || e);
+            if (!settled) { settled = true; resolve({ ok: false, error: e?.error || "unknown" }); }
+          };
+          try {
+            window.speechSynthesis.speak(u);
+          } catch (e) {
+            console.error("[TTS] speak() threw:", e);
+            resolve({ ok: false, error: "exception" });
+          }
+        });
+
+        if (!res.ok) {
+          // error “interrupted” o altro → prova una volta a riprendere
+          if (res.error === "interrupted") {
+            // Se era un nostro cancel esplicito, esci subito
+            if (canceled) break;
+            // small retry
+            await new Promise(r => setTimeout(r, 200));
+            continue;
+          } else {
+            // altro errore: interrompi pulito
+            break;
+          }
+        }
+        chunkIndex++;
+      }
+
+      speaking = false;
+      disableControls(false);
+      setStatus(canceled ? "canceled" : "ended");
+      barEl.style.width = "100%";
+    }
+
+    function playCurrent() {
+      if (!cues.length) return;
+      if (speaking) return; // evita overlap
+      const c = cues[idx];
+      const rate = Number(rateInput.value || c.rate || 1.0);
+      speakChunks(c.text, rate);
+    }
+
+    // Controls
+    btnPlay.addEventListener("click", () => playCurrent());
+    btnPause.addEventListener("click", () => {
+      try {
+        if (window.speechSynthesis?.speaking && !window.speechSynthesis.paused) {
+          window.speechSynthesis.pause();
+          setStatus("paused");
+        } else if (window.speechSynthesis?.paused) {
+          window.speechSynthesis.resume();
+          setStatus("speaking");
+        }
+      } catch {}
+    });
+    btnNext.addEventListener("click", () => {
+      cancelSpeak();
+      idx = (idx + 1) % cues.length;
+      setNow();
+      playCurrent();
+    });
+    btnPrev.addEventListener("click", () => {
+      cancelSpeak();
+      idx = (idx - 1 + cues.length) % cues.length;
+      setNow();
+      playCurrent();
+    });
+    rateInput.addEventListener("change", () => {
+      if (speaking) { cancelSpeak(); playCurrent(); }
+    });
+    voiceSelect.addEventListener("change", () => {
+      if (speaking) { cancelSpeak(); playCurrent(); }
+    });
+
+    // Auto-resume se la pagina torna visibile (Chrome a volte “freeza”)
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && speaking && window.speechSynthesis?.paused) {
+        try { window.speechSynthesis.resume(); setStatus("speaking"); } catch {}
+      }
+    });
+
+    // Boot
+    function boot(list){
+      cues = Array.isArray(list) ? list : [];
+      setCount();
+      setNow();
+      setStatus("ready");
+      loadVoices();
+    }
+    if (Array.isArray(cues) && cues.length) {
+      console.log("[MachineReader] boot with", cues.length, "cues");
+      boot(cues);
+    } else {
+      console.log("[MachineReader] waiting for cues…");
+      window.addEventListener("aotu:cues-ready", (e) => {
+        console.log("[MachineReader] got cues", e.detail?.length);
+        boot(e.detail);
+      }, { once: true });
+    }
+  }
+</script>

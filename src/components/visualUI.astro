@@ -1,0 +1,60 @@
+---
+// Overlay controls for p5 sketches. Plain JS (no TS assertions).
+const { show = true } = Astro.props;
+---
+{show && (
+  <div id="visual-ui" style="position:fixed;left:0;right:0;bottom:0;display:flex;gap:.5rem;align-items:center;backdrop-filter:blur(6px);padding:.6rem 1rem;border-top:1px dashed rgba(255,255,255,.2);font:14px/1.1 ui-monospace,Menlo,Consolas;background:rgba(0,0,0,.35);color:#eee;z-index:9999">
+    <button data-act="play" title="Play/Pause">⏯</button>
+    <button data-act="save" title="Save PNG">💾</button>
+    <button data-act="shuffle" title="Shuffle/Reload">🔀</button>
+    <label>Speed <input data-prop="speed" type="range" min="0" max="5" step="0.1" value="1.3"></label>
+    <label>Density <input data-prop="count" type="range" min="30" max="800" step="10" value="220"></label>
+    <label>Glitch ms <input data-prop="glitchEvery" type="number" min="50" max="3000" step="50" value="350" style="width:6rem"></label>
+    <label><input data-css="invert" type="checkbox"> Invert</label>
+    <button data-act="fs" title="Fullscreen">⤢</button>
+    <style>
+      #visual-ui button, #visual-ui input { background:rgba(255,255,255,.1); color:#eee; border:1px solid rgba(255,255,255,.25); border-radius:10px; padding:.35rem .6rem; }
+      #visual-ui label { display:flex; align-items:center; gap:.4rem }
+      #visual-ui input[type=range] { width:120px }
+    </style>
+  </div>
+)}
+<script is:inline>
+  (function(){
+    const bar = document.currentScript.previousElementSibling;
+    if (!bar) return;
+    const root = document.querySelector('#p5-root');
+    const getP5 = () => (root && root.__p5) || null;
+
+    bar.addEventListener('click', (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLElement)) return;
+      const act = t.getAttribute('data-act');
+      if (!act) return;
+      const inst = getP5();
+      if (!inst) return;
+      if (act === 'play') {
+        if (inst._loop) { inst.noLoop(); inst._loop = false; } else { inst.loop(); inst._loop = true; }
+      }
+      if (act === 'save') { inst.saveCanvas('aotu-visual', 'png'); }
+      if (act === 'shuffle') { location.reload(); }
+      if (act === 'fs') {
+        if (!document.fullscreenElement) { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }
+        else { if (document.exitFullscreen) document.exitFullscreen(); }
+      }
+    });
+
+    bar.addEventListener('input', (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLInputElement)) return;
+      if (t.hasAttribute('data-prop')){
+        const key = t.getAttribute('data-prop');
+        const inst = getP5();
+        if (inst && key){ inst[key] = (t.type === 'range' || t.type === 'number') ? Number(t.value) : t.value; }
+      }
+      if (t.getAttribute('data-css') === 'invert'){
+        document.body.style.filter = t.checked ? 'invert(1)' : 'none';
+      }
+    });
+  })();
+</script>

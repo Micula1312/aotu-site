@@ -1,4 +1,5 @@
 // astro.config.mjs
+
 import { defineConfig } from 'astro/config';
 import { fileURLToPath } from 'node:url';
 
