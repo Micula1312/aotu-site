@@ -1,5 +1,5 @@
 ---
-import scriptUrl from '../../scripts/visuals/mosaic/index.js?url';
+import mosaicUrl from '../../scripts/visuals/mosaic.js?url';
 
 const wp = import.meta.env.PUBLIC_WP_API_URL;
 const audio = import.meta.env.PUBLIC_MOSAIC_AUDIO_URL;
@@ -11,12 +11,8 @@ const audio = import.meta.env.PUBLIC_MOSAIC_AUDIO_URL;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
-    <div
-      id="mosaic-root"
-      data-wp={wp}
-      data-audio={audio}
-    ></div>
+    <div id="mosaic-root" data-wp={wp} data-audio={audio}></div>
 
-    <script type="module" src={scriptUrl}></script>
+    <script type="module" src={mosaicUrl}></script>
   </body>
 </html>

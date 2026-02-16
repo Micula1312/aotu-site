@@ -56,7 +56,8 @@ export function createMosaicEngine({ mountEl, audioUrl, params, onStatus, onCoun
   const tagsEl = document.createElement("div");
   tagsEl.className = "tags";
   tagsEl.textContent = "";
-  stage.appendChild(tagsEl);
+  //stage.appendChild(tagsEl);
+  viewport.appendChild(tagsEl); // così pan+zoom lo trascinano
 
   const off = document.createElement("canvas");
   const octx = off.getContext("2d", { willReadFrequently: true });
