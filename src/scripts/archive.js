@@ -1,4 +1,4 @@
-// AOTU Archive — cards + lightbox (image/video/audio) + TAG FILTER (post_tag)
+// AOTU Archive — cards + lightbox (image/video/audio) + TAG FILTER (post_tag) + INFINITE SCROLL
 // Dev/Prod safe:
 // - in dev usa SEMPRE il proxy: /wp-json → target .../wp/wp-json
 // - in prod usa window.__WP_API_URL (iniettata dal layout Base.astro)
@@ -60,6 +60,8 @@ const STATE = {
   lastQuery: null,
   tagId: null,      // ID di post_tag usato per filtrare
   tagLabel: null,   // nome leggibile del tag (per la pill)
+  loading: false,   // evita richieste concorrenti
+  hasMore: true,    // se c'è ancora roba da caricare
 };
 
 // ---------- Utils ----------
@@ -189,43 +191,88 @@ function buildQuery({ page = 1 } = {}) {
   // *** filtro per TAG (post_tag) — WP vuole l'ID ***
   if (STATE.tagId) url.searchParams.set('tags', String(STATE.tagId));
 
+  // Ordine default: recenti prima
+  url.searchParams.set('orderby', 'date');
+  url.searchParams.set('order', 'desc');
+
   return url.toString();
 }
 
+// Versione robusta: usa header se esposti, fallback su batch pieno; gestisce 400 (fine pagine)
 async function fetchPage({ append = false } = {}) {
   try {
+    if (STATE.loading) return;
+    STATE.loading = true;
+
+    const nextPage = append ? STATE.page + 1 : 1;
+
     if (moreBtn) moreBtn.disabled = true;
-    syncURL();
-    setStatus('Loading…');
-    showGrid(false);
+    if (!append) {
+      syncURL();
+      setStatus('Loading…');
+      showGrid(false);
+      await ensureTagIdIfNeeded();
+      STATE.hasMore = true; // reset quando si rifà una query
+    }
 
-    // risolvi l'ID del tag se l'utente ha messo nome/slug
-    await ensureTagIdIfNeeded();
-
-    const url = buildQuery({ page: append ? STATE.page + 1 : 1 });
+    const url = buildQuery({ page: nextPage });
     STATE.lastQuery = url;
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const res = await fetch(url, { mode: 'cors' });
+
+    // WP risponde 400 quando superi l'ultima pagina
+    if (!res.ok) {
+      if (append && res.status === 400) {
+        STATE.hasMore = false;
+        if (moreBtn) moreBtn.disabled = true;
+        setStatus('');
+        showGrid(true);
+        STATE.loading = false;
+        return;
+      }
+      throw new Error('HTTP ' + res.status);
+    }
 
     const data = await res.json();
-    const total = Number(res.headers.get('X-WP-Total')) || (Array.isArray(data) ? data.length : 0);
-    const totalPages = Number(res.headers.get('X-WP-TotalPages')) || 1;
-    const items = Array.isArray(data) ? data : [];
+    const batch = Array.isArray(data) ? data : [];
 
-    if (append) { STATE.items.push(...items); STATE.page += 1; }
-    else { STATE.items = items; STATE.page = 1; }
-    STATE.pages = totalPages;
+    const totalHdr = res.headers.get('X-WP-Total');
+    const pagesHdr = res.headers.get('X-WP-TotalPages');
+
+    if (append) {
+      STATE.items.push(...batch);
+      STATE.page = nextPage;
+      if (pagesHdr) STATE.pages = Number(pagesHdr);
+    } else {
+      STATE.items = batch;
+      STATE.page = 1;
+      STATE.pages = pagesHdr ? Number(pagesHdr)
+                             : (batch.length < STATE.perPage ? 1 : Number.POSITIVE_INFINITY);
+    }
 
     renderList();
-    if (countEl) countEl.textContent = `${total} results`;
-    if (moreBtn) moreBtn.disabled = STATE.page >= STATE.pages;
+
+    if (countEl) {
+      countEl.textContent = totalHdr ? `${Number(totalHdr)} results`
+                                     : `${STATE.items.length} results`;
+    }
+
+    // Calcolo "c'è altro?"
+    let hasMore;
+    if (pagesHdr) hasMore = STATE.page < Number(pagesHdr);
+    else          hasMore = batch.length === STATE.perPage; // fallback
+
+    STATE.hasMore = hasMore;
+    if (moreBtn) moreBtn.disabled = !hasMore;
+
     setStatus(STATE.items.length === 0 ? 'No results' : '');
     showGrid(STATE.items.length > 0);
   } catch (err) {
     console.error(err);
     setStatus('Error loading archive (check CORS/API).');
     if (moreBtn) moreBtn.disabled = false;
+  } finally {
+    STATE.loading = false;
   }
 }
 
@@ -460,6 +507,48 @@ async function renderTagList() {
   }
 }
 
+// ---------- Infinite Scroll ----------
+let io = null;
+let sentinel = null;
+
+function ensureInfiniteScroll() {
+  if (!grid) return;
+
+  const supportsIO = 'IntersectionObserver' in window;
+  if (!supportsIO) {
+    // Nessun IO → tieni il bottone come fallback
+    if (moreBtn) moreBtn.hidden = false;
+    return;
+  }
+
+  // Sentinel subito dopo la griglia (crealo una sola volta)
+  if (!sentinel) {
+    sentinel = document.createElement('div');
+    sentinel.id = 'archive-sentinel';
+    sentinel.setAttribute('aria-hidden', 'true');
+    sentinel.style.cssText = 'width:100%;height:1px;margin:0;padding:0;';
+    grid.insertAdjacentElement('afterend', sentinel);
+  }
+
+  // Con IO attivo, il bottone può stare nascosto (fallback rimane cliccabile se lo vuoi mostrare)
+  if (moreBtn) moreBtn.hidden = true;
+
+  // (Ri)attacca l’osservatore
+  if (io) io.disconnect();
+  io = new IntersectionObserver((entries) => {
+    entries.forEach(en => {
+      if (en.isIntersecting && STATE.hasMore && !STATE.loading) {
+        fetchPage({ append: true });
+      }
+    });
+  }, {
+    root: null,
+    rootMargin: '1200px 0px 1200px 0px', // prefetch largo
+    threshold: 0.01
+  });
+
+  io.observe(sentinel);
+}
 
 // ---------- Events ----------
 const debounce = (fn, ms=250) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(null,a),ms); }; };
@@ -477,9 +566,11 @@ clearAllBtn?.addEventListener('click', () => {
   fetchPage({ append: false });
 });
 
-moreBtn?.addEventListener('click', () => { if (STATE.page < STATE.pages) fetchPage({ append: true }); });
+// Fallback button (rimane utilizzabile anche con IO disabilitato)
+moreBtn?.addEventListener('click', () => { fetchPage({ append: true }); });
 
 // ---------- Kick-off ----------
 renderActivePills();
-//renderTagList(); 
-fetchPage({ append: false });
+// renderTagList(); // (attiva se vuoi la cloud nel pannello)
+ensureInfiniteScroll();            // attiva infinite scroll
+fetchPage({ append: false });      // carica la prima pagina

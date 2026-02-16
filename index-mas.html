@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Flash RGB Space — Three.js (fixed imports)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    html,body{height:100%;margin:0;background:#070707;overflow:hidden;font-family:Inter,system-ui,Segoe UI,Helvetica,Arial}
+    #ui{position:fixed;left:12px;top:12px;z-index:2;color:#fff;background:rgba(0,0,0,0.25);padding:10px;border-radius:10px}
+    #ui label{font-size:12px;display:block;margin-top:6px}
+    #palette{display:flex;gap:6px;margin-top:8px}
+    .sw{width:30px;height:22px;border-radius:6px;border:1px solid rgba(255,255,255,0.12)}
+    #credits{position:fixed;right:12px;bottom:12px;color:#fff;opacity:0.6;font-size:12px}
+    #err{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:#fff;padding:18px;border-radius:12px;max-width:720px;display:none;z-index:999}
+    #err pre{white-space:pre-wrap;color:#f88;font-size:13px}
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <strong>Flash RGB Space</strong>
+    <div id="palette"></div>
+    <label>Velocità flash <input id="speed" type="range" min="0" max="4" step="0.01" value="1"></label>
+    <label>Intensità emissiva <input id="intensity" type="range" min="0" max="5" step="0.01" value="1.8"></label>
+    <label>Ampiezza variazione <input id="amp" type="range" min="0" max="2" step="0.01" value="0.9"></label>
+    <label>Bloom <input id="bloom" type="range" min="0" max="3" step="0.01" value="1.2"></label>
+    <div style="margin-top:8px;font-size:12px;opacity:0.9">Click su un oggetto per evidenziarlo. Usa il mouse per orbitare/zoomare.</div>
+  </div>
+  <div id="credits">three.js + postprocessing • palette: aqua, blue, lime, yellow, green, fuchsia, red</div>
+  <div id="err"><strong>Errore caricamento moduli</strong>
+    <p>Il browser non è riuscito a importare i moduli ES. Possibili cause:</p>
+    <ul>
+      <li>Stai aprendo il file via <code>file://</code> — prova a servire la cartella con un piccolo server (es. <code>npx http-server .</code> o VSCode Live Server).</li>
+      <li>Connessione bloccata dal browser o da estensioni (CORS).</li>
+      <li>Errore temporaneo con il CDN.</li>
+    </ul>
+    <p>Errore console:</p>
+    <pre id="errTxt"></pre>
+  </div>
+
+  <script type="module">
+    // We dynamically import three and the example modules from CDN URLs inside an async function
+    // so we can catch errors and present a friendly message. This also guarantees full URLs (no bare 'three').
+    (async function(){
+      const base = 'https://cdn.jsdelivr.net/npm/three@0.181.0';
+      try{
+        const THREE = await import(base + '/build/three.module.js');
+        const { OrbitControls } = await import(base + '/examples/jsm/controls/OrbitControls.js');
+        const { EffectComposer } = await import(base + '/examples/jsm/postprocessing/EffectComposer.js');
+        const { RenderPass } = await import(base + '/examples/jsm/postprocessing/RenderPass.js');
+        const { UnrealBloomPass } = await import(base + '/examples/jsm/postprocessing/UnrealBloomPass.js');
+
+        // --- setup renderer / scene / camera
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        document.body.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050507);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 2000);
+        camera.position.set(0, 60, 220);
+
+        // lights
+        const amb = new THREE.AmbientLight(0xffffff, 0.22);
+        scene.add(amb);
+        const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+        dir.position.set(-100, 160, 120);
+        scene.add(dir);
+
+        // postprocessing (bloom)
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
+        composer.addPass(bloomPass);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // palette: aqua, blue, lime, yellow, green, fuchsia, red
+        const palette = [
+          {name:'aqua', hex:0x00FFFF},
+          {name:'blue', hex:0x0066FF},
+          {name:'lime', hex:0xBFFF00},
+          {name:'yellow', hex:0xFFD200},
+          {name:'green', hex:0x00CC66},
+          {name:'fuchsia', hex:0xFF00AA},
+          {name:'red', hex:0xFF0033}
+        ];
+
+        // UI palette display
+        const palEl = document.getElementById('palette');
+        palette.forEach(p => { const d = document.createElement('div'); d.className='sw'; d.title = p.name; d.style.background = '#' + p.hex.toString(16).padStart(6,'0'); palEl.appendChild(d); });
+
+        // group of objects
+        const group = new THREE.Group();
+        scene.add(group);
+
+        const N = 56; // number of objects
+        const rand = (a,b)=> a + Math.random()*(b-a);
+
+        // generate objects and assign palette colors in round-robin
+        for(let i=0;i<N;i++){
+          let geom;
+          const t = i % 4;
+          if(t===0) geom = new THREE.SphereGeometry(rand(6,16), 32, 24);
+          else if(t===1) geom = new THREE.BoxGeometry(rand(8,18), rand(8,18), rand(8,18));
+          else if(t===2) geom = new THREE.TorusKnotGeometry(rand(3,8), rand(0.8,2.2), 140, 12);
+          else geom = new THREE.ConeGeometry(rand(5,12), rand(8,22), 24);
+
+          const pal = palette[i % palette.length];
+          const mat = new THREE.MeshStandardMaterial({
+            color: pal.hex,
+            metalness: 0.15,
+            roughness: 0.35,
+            emissive: pal.hex,
+            emissiveIntensity: 0.6,
+            toneMapped: false // allow bloom to be more visible for emissive
+          });
+
+          const mesh = new THREE.Mesh(geom, mat);
+          mesh.position.set(rand(-220,220), rand(-30,120), rand(-220,220));
+          mesh.userData = { baseColor: new THREE.Color(pal.hex), phase: Math.random()*Math.PI*2 };
+          group.add(mesh);
+        }
+
+        // selection helper
+        const ray = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+        let selected = null;
+        window.addEventListener('pointerdown', (e)=>{
+          pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+          pointer.y = - (e.clientY / window.innerHeight) * 2 + 1;
+          ray.setFromCamera(pointer, camera);
+          const hits = ray.intersectObjects(group.children, false);
+          if(hits.length>0){
+            select(hits[0].object);
+          }
+        });
+
+        function select(m){
+          selected = m;
+          // simple highlight: scale and add emissive boost
+          group.children.forEach(ch => { ch.scale.set(1,1,1); });
+          m.scale.set(1.12,1.12,1.12);
+        }
+
+        // UI bindings
+        const elSpeed = document.getElementById('speed');
+        const elIntensity = document.getElementById('intensity');
+        const elAmp = document.getElementById('amp');
+        const elBloom = document.getElementById('bloom');
+
+        elBloom.addEventListener('input', ()=>{ bloomPass.strength = parseFloat(elBloom.value); });
+
+        // animate
+        const clock = new THREE.Clock();
+        function animate(){
+          requestAnimationFrame(animate);
+          const t = clock.getElapsedTime();
+          const speed = parseFloat(elSpeed.value);
+          const intensityBase = parseFloat(elIntensity.value);
+          const amp = parseFloat(elAmp.value);
+
+          group.children.forEach((m, idx)=>{
+            const phase = m.userData.phase;
+            const pulse = (Math.sin(t*speed + phase) * 0.5 + 0.5); // 0..1
+            const bright = intensityBase + pulse * amp;
+            // set emissive intensity dynamically
+            m.material.emissive.copy(m.userData.baseColor);
+            // MeshStandardMaterial has emissiveIntensity since r125+ — set via property if present
+            if('emissiveIntensity' in m.material) m.material.emissiveIntensity = bright;
+            else {
+              // fallback: lerp color to simulate intensity
+              const c = m.userData.baseColor.clone().multiplyScalar(bright);
+              m.material.emissive.copy(c);
+            }
+            // small motion
+            m.rotation.x += 0.003 * (1 + idx%3);
+            m.rotation.y += 0.004 * (1 + (idx%4));
+          });
+
+          controls.update();
+          composer.render();
+        }
+        animate();
+
+        // resize
+        window.addEventListener('resize', ()=>{
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // initial bloom value
+        bloomPass.strength = parseFloat(elBloom.value);
+
+        // select first
+        select(group.children[0]);
+
+      }catch(err){
+        console.error('Import failed', err);
+        const errBox = document.getElementById('err');
+        const errTxt = document.getElementById('errTxt');
+        errTxt.textContent = err && err.message ? err.message : String(err);
+        errBox.style.display = 'block';
+      }
+    })();
+  </script>
+</body>
+</html>

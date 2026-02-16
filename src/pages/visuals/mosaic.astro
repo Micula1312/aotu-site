@@ -1,0 +1,22 @@
+---
+import scriptUrl from '../../scripts/visuals/mosaic/index.js?url';
+
+const wp = import.meta.env.PUBLIC_WP_API_URL;
+const audio = import.meta.env.PUBLIC_MOSAIC_AUDIO_URL;
+---
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <title>AOTU • Visuals Mosaic</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <div
+      id="mosaic-root"
+      data-wp={wp}
+      data-audio={audio}
+    ></div>
+
+    <script type="module" src={scriptUrl}></script>
+  </body>
+</html>

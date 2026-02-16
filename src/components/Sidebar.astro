@@ -1,5 +1,5 @@
 ---
-/* Sidebar.astro — versione robusta con BASE + URL builder */
+/* Sidebar.astro — Visuals: Slideshow + Mosaic • poi Machine Reader */
 const { current = '' } = Astro.props;
 
 /** BASE gestisce eventuale sottocartella in produzione (es. /aotu/) */
@@ -56,76 +56,70 @@ function buildQS(over: Record<string, string | number | undefined> = {}) {
   <!-- NAV a cassetti -->
   <nav class="index-list">
 
-    <!-- Gruppo: Tools -->
+    <!-- Gruppo: Tools (immutato) -->
     <details class="drawer" data-drawer="pages" open>
-      <summary>Tools</summary>
+      <summary>Archive</summary>
       <ul>
         <li class={current==='archive' ? 'is-active' : ''}><a href={link('/')}                data-nav="hard">Mediarchive</a></li>
         <li class={current==='network' ? 'is-active' : ''}><a href={link('/network/')}       data-nav="hard">Network</a></li>
         <li class={current==='texts'   ? 'is-active' : ''}><a href={link('/texts/')}         data-nav="hard">Bibliography</a></li>
-        <li class={current==='p5'      ? 'is-active' : ''}><a href={link('/lab/p5-experiments/')} data-nav="hard">P5 Lab</a></li>
+        <!-- <li class={current==='p5'      ? 'is-active' : ''}><a href={link('/lab/p5-experiments/')} data-nav="hard">P5 Lab</a></li> -->
       </ul>
     </details>
 
-    <!-- Gruppo: Pages -->
+    <!-- Gruppo: Pages (immutato) -->
     <details class="drawer" data-drawer="tools">
-      <summary>Pages</summary>
+      <summary>About</summary>
       <ul>
         <li class={current==='abstract'  ? 'is-active' : ''}><a href={link('/abstract/')}   data-nav="hard">About</a></li>
         <li class={current==='manifesto' ? 'is-active' : ''}><a href={link('/manifesto/')}  data-nav="hard">Manifesto</a></li>
       </ul>
     </details>
 
-    <!-- Gruppo: Visuals (solo le route presenti) -->
+    <!-- Gruppo: Visuals (SOLO i due template di oggi) -->
     <details class="drawer" data-drawer="visuals" open>
       <summary>Visuals</summary>
       <ul>
-        <!-- Sequence Accum -->
-        <li class={current==='visuals-seq' ? 'is-active' : ''}>
-          <a href={link('/visuals/wp-sequence-accum') + buildQS({ perPage: 60, scale: 0.5, interval: 1200 })} data-nav="hard">
-            Sequence (accum)
+        <li class={current==='visuals-slideshow' ? 'is-active' : ''}>
+          <a
+            href={link('/visuals/slideshow') + buildQS({
+              perPage: 60, delay: 1800, shuffle: 1, fit: 'cover'
+            })}
+            data-nav="hard"
+          >
+            Slideshow
           </a>
         </li>
-        <li class={current==='visuals-seq-full' ? 'is-active' : ''}>
-          <a href={link('/visuals/wp-sequence-accum-full') + buildQS({ perPage: 60, scale: 0.55, interval: 1100 })} data-nav="hard">
-            Sequence (accum · full UI)
-          </a>
-        </li>
-
-        <!-- Grid Glitch -->
-        <li class={current==='visuals-grid' ? 'is-active' : ''}>
-          <a href={link('/visuals/wp-grid-glitch') + buildQS({ perPage: 48, cols: 6, rows: 4, glitchEvery: 350 })} data-nav="hard">
-            Grid (glitch)
-          </a>
-        </li>
-        <li class={current==='visuals-grid-full' ? 'is-active' : ''}>
-          <a href={link('/visuals/wp-grid-glitch-full') + buildQS({ perPage: 48, cols: 6, rows: 4, glitchEvery: 350 })} data-nav="hard">
-            Grid (glitch · full UI)
-          </a>
-        </li>
-
-        <!-- Ribbon Flowfield (non usa WP: rimuovo il param "site") -->
-        <li class={current==='visuals-ribbon' ? 'is-active' : ''}>
-          <a href={link('/visuals/ribbon-flowfield') + buildQS({ site: undefined, count: 300, speed: 1.6, noiseScale: 0.0016 })} data-nav="hard">
-            Ribbon Flowfield
-          </a>
-        </li>
-        <li class={current==='visuals-ribbon-full' ? 'is-active' : ''}>
-          <a href={link('/visuals/ribbon-flowfield-full') + buildQS({ site: undefined, count: 300, speed: 1.6, noiseScale: 0.0016 })} data-nav="hard">
-            Ribbon Flowfield (full UI)
+        <li class={current==='visuals-mosaic' ? 'is-active' : ''}>
+          <a
+            href={link('/visuals/mosaic') + buildQS({
+              perPage: 48, speed: 1.2, dwell: 1400, cell: 16, order: 'center', fit: 'cover', shuffle: 1
+            })}
+            data-nav="hard"
+          >
+            Mosaic
           </a>
         </li>
       </ul>
     </details>
 
-
+    <!-- Ultima voce: Machine Reader -->
+    <details class="drawer" data-drawer="machine" open>
+      <summary>Machine</summary>
+      <ul>
+        <li class={current==='machine-reader' ? 'is-active' : ''}>
+          <a href={link('/machine-reader/')} data-nav="hard">Machine Reader</a>
+        </li>
+      </ul>
+    </details>
 
   </nav>
 
   <!-- Controlli -->
   <div class="controls" style="display:grid; gap:8px; margin-top:12px;">
-    <button id="themeBtn" class="btn">terminal</button>
     <button id="audioBtn" class="btn">[ mute ]</button>
+    <button id="themeBtn" class="btn">terminal</button>
+    
     <button id="neonBtn"  class="btn" aria-pressed="false" title="Neon mode">★ neon</button>
   </div>
 </aside>
