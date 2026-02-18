@@ -1113,7 +1113,7 @@ canvas{ position:absolute; inset:0; display:block; width:100%; height:100%; }
   position:absolute; left:12px; bottom:12px; z-index:20;
   color: var(--au-green);
   font-family: Helvetica, Arial, system-ui, sans-serif;
-  font-size: 16px;
+  font-size: 30px;
   line-height: 1.25;
   letter-spacing: 0.2px;
   opacity: 0.98;
