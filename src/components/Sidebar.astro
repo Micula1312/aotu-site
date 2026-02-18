@@ -12,7 +12,7 @@ const link = (p: string) => BASE + p.replace(/^\//, '');
 function buildQS(over: Record<string, string | number | undefined> = {}) {
   const base: Record<string, string> = {
     site: 'https://thearchiveoftheuntamed.xyz/wp',
-    perPage: '60',
+    perPage: '100',
     orderby: 'date',
     order: 'desc',
   };
@@ -45,8 +45,8 @@ function buildQS(over: Record<string, string | number | undefined> = {}) {
   <div class="winbar">
     <h2 class="title">AOTU · Index</h2>
     <div class="btns">
-      <button id="toggleSidebarDesktop" class="btn small desktop-only" aria-expanded="true" type="button">◀ collapse</button>
-      <button id="closeSidebar" class="btn small mobile-only" type="button" aria-label="Close sidebar">close ✕</button>
+      <button id="toggleSidebarDesktop" class="btn small desktop-only" aria-expanded="true" type="button">◀ </button>
+      <button id="closeSidebar" class="btn small mobile-only" type="button" aria-label="Close sidebar">✕</button>
     </div>
   </div>
 
@@ -61,8 +61,8 @@ function buildQS(over: Record<string, string | number | undefined> = {}) {
       <summary>Archive</summary>
       <ul>
         <li class={current==='archive' ? 'is-active' : ''}><a href={link('/')}                data-nav="hard">Mediarchive</a></li>
-        <li class={current==='network' ? 'is-active' : ''}><a href={link('/network/')}       data-nav="hard">Network</a></li>
-        <li class={current==='texts'   ? 'is-active' : ''}><a href={link('/texts/')}         data-nav="hard">Bibliography</a></li>
+        <!-- <li class={current==='network' ? 'is-active' : ''}><a href={link('/network/')}       data-nav="hard">Network</a></li>
+        <li class={current==='texts'   ? 'is-active' : ''}><a href={link('/texts/')}         data-nav="hard">Bibliography</a></li> -->
         <!-- <li class={current==='p5'      ? 'is-active' : ''}><a href={link('/lab/p5-experiments/')} data-nav="hard">P5 Lab</a></li> -->
       </ul>
     </details>
@@ -83,7 +83,7 @@ function buildQS(over: Record<string, string | number | undefined> = {}) {
         <li class={current==='visuals-slideshow' ? 'is-active' : ''}>
           <a
             href={link('/visuals/slideshow') + buildQS({
-              perPage: 60, delay: 1800, shuffle: 1, fit: 'cover'
+              perPage: 100, delay: 1800, shuffle: 1, fit: 'cover'
             })}
             data-nav="hard"
           >
@@ -93,7 +93,7 @@ function buildQS(over: Record<string, string | number | undefined> = {}) {
         <li class={current==='visuals-mosaic' ? 'is-active' : ''}>
           <a
             href={link('/visuals/mosaic') + buildQS({
-              perPage: 48, speed: 1.2, dwell: 1400, cell: 16, order: 'center', fit: 'cover', shuffle: 1
+              perPage: 100, speed: 2, dwell: 1400, cell: 16, order: 'center', fit: 'cover', shuffle: 1
             })}
             data-nav="hard"
           >
@@ -104,20 +104,20 @@ function buildQS(over: Record<string, string | number | undefined> = {}) {
     </details>
 
     <!-- Ultima voce: Machine Reader -->
-    <details class="drawer" data-drawer="machine" open>
+    <!-- <details class="drawer" data-drawer="machine" open>
       <summary>Machine</summary>
       <ul>
         <li class={current==='machine-reader' ? 'is-active' : ''}>
           <a href={link('/machine-reader/')} data-nav="hard">Machine Reader</a>
         </li>
       </ul>
-    </details>
+    </details> -->
 
   </nav>
 
   <!-- Controlli -->
   <div class="controls" style="display:grid; gap:8px; margin-top:12px;">
-    <button id="audioBtn" class="btn">[ mute ]</button>
+    <button id="audioBtn" class="btn">[ play ♩ ]</button>
     <button id="themeBtn" class="btn">terminal</button>
     
     <button id="neonBtn"  class="btn" aria-pressed="false" title="Neon mode">★ neon</button>

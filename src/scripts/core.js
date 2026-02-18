@@ -27,7 +27,7 @@ themeBtn?.addEventListener('click', flipTheme);
 const audio = document.getElementById('bg-audio');
 const audioBtn = document.getElementById('audioBtn');
 function updateAudioBtnLabel() {
-  if (audio && audioBtn) audioBtn.textContent = audio.muted ? '[ unmute ]' : '[ mute ]';
+  if (audio && audioBtn) audioBtn.textContent = audio.muted ? '[ unmute ]' : '[ play ♩ ]';
 }
 function toggleAudio() {
   if (!audio) return;
