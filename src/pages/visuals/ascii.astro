@@ -1,0 +1,16 @@
+---
+import asciiUrl from '../../scripts/visuals/ascii.js?url';
+
+const wp = import.meta.env.PUBLIC_WP_API_URL;
+---
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <title>AOTU • Visuals ASCII</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <div id="ascii-root" data-wp={wp}></div>
+    <script type="module" src={asciiUrl}></script>
+  </body>
+</html>

@@ -77,31 +77,43 @@ function buildQS(over: Record<string, string | number | undefined> = {}) {
     </details>
 
     <!-- Gruppo: Visuals (SOLO i due template di oggi) -->
-    <details class="drawer" data-drawer="visuals" open>
-      <summary>Visuals</summary>
-      <ul>
-        <li class={current==='visuals-slideshow' ? 'is-active' : ''}>
-          <a
-            href={link('/visuals/slideshow') + buildQS({
-              perPage: 100, delay: 1800, shuffle: 1, fit: 'cover'
-            })}
-            data-nav="hard"
-          >
-            Slideshow
-          </a>
-        </li>
-        <li class={current==='visuals-mosaic' ? 'is-active' : ''}>
-          <a
-            href={link('/visuals/mosaic') + buildQS({
-              perPage: 100, speed: 2, dwell: 1400, cell: 16, order: 'center', fit: 'cover', shuffle: 1
-            })}
-            data-nav="hard"
-          >
-            Mosaic
-          </a>
-        </li>
-      </ul>
-    </details>
+<details class="drawer" data-drawer="visuals" open>
+  <summary>Visuals</summary>
+  <ul>
+    <li class={current==='visuals-slideshow' ? 'is-active' : ''}>
+      <a
+        href={link('/visuals/slideshow') + buildQS({
+          perPage: 100, delay: 1800, shuffle: 1, fit: 'cover'
+        })}
+        data-nav="hard"
+      >
+        Slideshow
+      </a>
+    </li>
+
+    <li class={current==='visuals-mosaic' ? 'is-active' : ''}>
+      <a
+        href={link('/visuals/mosaic') + buildQS({
+          perPage: 100, speed: 2, dwell: 1400, cell: 16, order: 'center', fit: 'cover', shuffle: 1
+        })}
+        data-nav="hard"
+      >
+        Mosaic
+      </a>
+    </li>
+
+    <li class={current==='visuals-ascii' ? 'is-active' : ''}>
+      <a
+        href={link('/visuals/ascii') + buildQS({
+          perPage: 100, speed: 2, cell: 8, fit: 'cover', shuffle: 1
+        })}
+        data-nav="hard"
+      >
+        ASCII
+      </a>
+    </li>
+  </ul>
+</details>
 
     <!-- Ultima voce: Machine Reader -->
     <!-- <details class="drawer" data-drawer="machine" open>
