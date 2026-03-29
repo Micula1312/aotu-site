@@ -143,6 +143,52 @@
     .val{opacity:.85; font-variant-numeric: tabular-nums;}
     .pill{display:inline-flex; padding:4px 8px; border:1px solid rgba(255,255,255,.10); border-radius:999px; opacity:.85;}
 
+    .ui .back{
+      display:inline-block;
+      margin:6px 0 10px 0;
+      font-size:11px;
+      text-decoration:none;
+            opacity:.1;
+      color: #dfff9a;
+    }
+
+    .ui .back:hover{
+      opacity:1;
+    }
+
+    .closeFS{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:60;
+  width:36px;
+  height:36px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;
+  background:rgba(0,0,0,.42);
+  color:#fff;
+  font-size:18px;
+  line-height:1;
+  cursor:pointer;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+
+.closeFS:hover{
+  background:rgba(0,0,0,.62);
+}
+
+:fullscreen .closeFS,
+:-webkit-full-screen .closeFS,
+.fakefs .closeFS{
+  display:flex;
+}
+
+
+
     /* Fullscreen: UI + status spariscono, stage occupa tutto, viewport diventa quadrato base 1:1 */
     :is(:fullscreen, :-webkit-full-screen) .ui{ opacity:0 !important; pointer-events:none !important; }
     :is(:fullscreen, :-webkit-full-screen) .status{ opacity:0 !important; pointer-events:none !important; }
@@ -162,6 +208,25 @@
   const stage = document.createElement("div");
   stage.className = "stage";
   stageWrap.appendChild(stage);
+
+
+  const closeFS = document.createElement("button");
+closeFS.className = "closeFS";
+closeFS.type = "button";
+closeFS.setAttribute("aria-label", "Exit fullscreen");
+closeFS.setAttribute("title", "Exit fullscreen");
+closeFS.textContent = "✕";
+
+closeFS.addEventListener("click", async () => {
+  const doc = document;
+  try {
+    if (doc.fullscreenElement) {
+      await doc.exitFullscreen?.();
+    }
+  } catch {}
+});
+
+stage.appendChild(closeFS);
 
   const viewport = document.createElement("div");
   viewport.className = "viewport";
@@ -190,6 +255,8 @@
   ui.className = "ui";
   ui.innerHTML = `
     <h3>AOTU • ASCII</h3>
+
+    <a href="/" class="btn back" onclick="document.exitFullscreen?.()">← Back to archive</a>
 
     <label>Cell (px)
       <input id="uCell" type="range" min="0" max="40" step="1">

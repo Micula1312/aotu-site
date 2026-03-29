@@ -42,6 +42,32 @@ export function createMosaicEngine({ mountEl, audioUrl, params, onStatus, onCoun
   stage.className = "stage";
   stageWrap.appendChild(stage);
 
+  const closeFS = document.createElement("button");
+closeFS.className = "closeFS";
+closeFS.type = "button";
+closeFS.setAttribute("aria-label", "Exit fullscreen");
+closeFS.setAttribute("title", "Exit fullscreen");
+closeFS.textContent = "✕";
+
+closeFS.addEventListener("click", async () => {
+  const doc = document;
+  const exit =
+    doc.exitFullscreen ||
+    doc.webkitExitFullscreen ||
+    doc.mozCancelFullScreen ||
+    doc.msExitFullscreen;
+
+  try {
+    if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+      await exit?.call(doc);
+    }
+  } catch {}
+
+  document.documentElement.classList.remove("fakefs");
+});
+
+stage.appendChild(closeFS);
+
   const viewport = document.createElement("div");
   viewport.className = "viewport";
   stage.appendChild(viewport);
@@ -838,6 +864,7 @@ export function mountMosaicUI({ mountEl, params, engine }) {
   ui.className = "ui";
   ui.innerHTML = `
     <h3>#Untamed visuals</h3>
+    <a href="/" class="btn back" onclick="document.exitFullscreen?.()">← Back to archive</a>
     <div class="row" style="gap:10px;">
       <button id="uRun" type="button" class="btn">Pausa</button>
       <button id="uReload" type="button" class="btn">Reset</button>
@@ -1153,6 +1180,20 @@ canvas{ position:absolute; inset:0; display:block; width:100%; height:100%; }
   border-radius:10px; padding:7px 10px; font:12px system-ui;
   box-shadow: 0 0 0 1px rgba(0,0,0,.35) inset;
 }
+
+    .ui .back{
+      display:inline-block;
+      margin:6px 0 10px 0;
+      font-size:11px;
+      text-decoration:none;
+      opacity: 1;
+      color: #dfff9a;
+    }
+
+    .ui .back:hover{
+      opacity:1;
+    }
+
 .val{opacity:.85; font-variant-numeric: tabular-nums;}
 .pill{display:inline-flex; padding:4px 8px; border:1px solid rgba(255,255,255,.10); border-radius:999px; opacity:.85;}
 
@@ -1217,6 +1258,37 @@ canvas{ position:absolute; inset:0; display:block; width:100%; height:100%; }
   max-width: min(92vw, 92vh);
   left: 24px;
   bottom: 24px;
+}
+
+.closeFS{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:60;
+  width:36px;
+  height:36px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;
+  background:rgba(0,0,0,.42);
+  color:#fff;
+  font-size:18px;
+  line-height:1;
+  cursor:pointer;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+
+.closeFS:hover{
+  background:rgba(0,0,0,.62);
+}
+
+:fullscreen .closeFS,
+:-webkit-full-screen .closeFS,
+.fakefs .closeFS{
+  display:flex;
 }
 
 /* iOS fake fullscreen */
