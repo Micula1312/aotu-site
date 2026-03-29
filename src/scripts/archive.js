@@ -56,7 +56,7 @@ const STATE = {
   items: [],
   page: 1,
   pages: 1,
-  perPage: 24,
+  perPage: 100,
   lastQuery: null,
   tagId: null,      // ID di post_tag usato per filtrare
   tagLabel: null,   // nome leggibile del tag (per la pill)
