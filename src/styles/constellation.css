@@ -1,0 +1,21 @@
+.constellation {
+    background-color: #000;
+    color: #fff;
+    font-family: 'Arial', sans-serif;
+    /* Add more styles as needed */
+}
+
+.constellation h1 {
+    font-size: 2.5em;
+    text-align: center;
+}
+
+.constellation .star {
+    width: 10px;
+    height: 10px;
+    background-color: yellow;
+    border-radius: 50%;
+    position: absolute;
+}
+
+/* Add additional styling for other elements of the constellation page */
