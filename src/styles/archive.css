@@ -190,6 +190,61 @@ dialog#lb {
 #lb #lbTags { color: var(--muted); font-size: 13px; }
 #lb #lbNotes { font-size: 14px; line-height: 1.55; }
 
+
+.lb-nav,
+.lb-close-x {
+  position: absolute;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  opacity: .8;
+}
+
+.lb-nav {
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  transform: translateY(-50%);
+}
+
+.lb-prev { left: 20px; }
+.lb-next { right: 20px; }
+
+.lb-prev::before,
+.lb-next::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-top: 1px solid #fff;
+  border-right: 1px solid #fff;
+  margin: auto;
+}
+
+.lb-prev::before { transform: rotate(-135deg); }
+.lb-next::before { transform: rotate(45deg); }
+
+.lb-close-x {
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+}
+
+.lb-close-x::before,
+.lb-close-x::after {
+  content: "";
+  position: absolute;
+  top: 17px;
+  left: 8px;
+  width: 20px;
+  height: 1px;
+  background: #fff;
+}
+
+.lb-close-x::before { transform: rotate(45deg); }
+.lb-close-x::after  { transform: rotate(-45deg); }
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .card { transition: none; }

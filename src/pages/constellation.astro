@@ -4,10 +4,21 @@ import '../styles/constellation.css';
 
 <div id="constellation-visualization"></div>
 <div id="loading-indicator">Loading media...</div>
-<div id="info-panel" class="info-panel hidden">
-  <button id="close-info">&times;</button>
-  <div id="info-content"></div>
-</div>
+
+<dialog id="lb">
+  <button id="lbCloseX" class="lb-close-x" type="button" aria-label="Close"></button>
+  <button id="lbPrev" class="lb-nav lb-prev" type="button" aria-label="Previous"></button>
+  <button id="lbNext" class="lb-nav lb-next" type="button" aria-label="Next"></button>
+
+  <div class="lb-wrap">
+    <div class="lb-media" id="lbMedia"></div>
+    <div class="lb-meta">
+      <h3 class="lb-title" id="lbTitle"></h3>
+      <div class="muted" id="lbInfo"></div>
+      <div id="lbTags" style="margin-top:8px"></div>
+    </div>
+  </div>
+</dialog>
 
 <script>
   import * as THREE from 'three';
@@ -32,9 +43,100 @@ import '../styles/constellation.css';
   // Variables
   const particlesGroup = new THREE.Group();
   const particles: any[] = [];
+
+  const lb = document.getElementById('lb') as HTMLDialogElement | null;
+const lbMedia = document.getElementById('lbMedia');
+const lbTitle = document.getElementById('lbTitle');
+const lbInfo = document.getElementById('lbInfo');
+const lbTags = document.getElementById('lbTags');
+
+let CURRENT_INDEX = 0;
+let lastFocus: HTMLElement | null = null;
+
+function escapeHtml(s = '') {
+  return s.replace(/[&<>"']/g, (m) => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[m] || m));
+}
+
+async function updateLightbox(item: any) {
+  if (!lbMedia) return;
+
+  if (lbTitle) lbTitle.textContent = item.title || 'Untitled';
+
+  const formattedDate = item.date
+    ? new Date(item.date).toLocaleDateString('it-IT', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    : '';
+
+  if (lbInfo) lbInfo.textContent = formattedDate;
+
+  if (lbTags) {
+    const tags = Array.isArray(item.tags)
+      ? item.tags.map((tag: string) => `#${escapeHtml(String(tag))}`).join(' ')
+      : '';
+    lbTags.innerHTML = tags;
+  }
+
+  lbMedia.innerHTML = '';
+
+  const img = new Image();
+  img.src = item.url;
+  img.alt = item.alt || item.title || '';
+  lbMedia.appendChild(img);
+}
+
+async function openLightbox(item: any, openerEl?: HTMLElement | null) {
+  if (!lb || !mediaData.length) return;
+
+  lastFocus = openerEl || (document.activeElement as HTMLElement | null);
+  CURRENT_INDEX = mediaData.findIndex((i) => i.id === item.id);
+  if (CURRENT_INDEX < 0) CURRENT_INDEX = 0;
+
+  await updateLightbox(mediaData[CURRENT_INDEX]);
+  lb.showModal();
+}
+
+async function showNext() {
+  if (!mediaData.length) return;
+  CURRENT_INDEX = (CURRENT_INDEX + 1) % mediaData.length;
+  await updateLightbox(mediaData[CURRENT_INDEX]);
+}
+
+async function showPrev() {
+  if (!mediaData.length) return;
+  CURRENT_INDEX = (CURRENT_INDEX - 1 + mediaData.length) % mediaData.length;
+  await updateLightbox(mediaData[CURRENT_INDEX]);
+}
+
+document.getElementById('lbNext')?.addEventListener('click', showNext);
+document.getElementById('lbPrev')?.addEventListener('click', showPrev);
+document.getElementById('lbCloseX')?.addEventListener('click', () => lb?.close());
+
+window.addEventListener('keydown', (e) => {
+  if (!lb?.open) return;
+  if (e.key === 'Escape') lb.close();
+  if (e.key === 'ArrowRight') showNext();
+  if (e.key === 'ArrowLeft') showPrev();
+});
+
+lb?.addEventListener('close', () => {
+  lastFocus?.focus?.();
+});
+
+
   let mediaData: any[] = [];
   let mouseX = 0;
   let mouseY = 0;
+  let zoomLevel = 300;
+  let hoveredTitle = '';
 
   // Fetch media from WordPress API
   async function loadMedia() {
@@ -49,6 +151,11 @@ import '../styles/constellation.css';
 
       mediaData = await response.json();
       console.log(`✅ Loaded ${mediaData.length} media items`);
+      
+      // AGGIUNGI QUESTO DEBUG:
+      console.log('PRIMO MEDIA ITEM:', mediaData[0]);
+      console.log('URL:', mediaData[0]?.url);
+      console.log('TITLE:', mediaData[0]?.title);
 
       if (loadingIndicator) loadingIndicator.style.display = 'none';
       createParticles();
@@ -67,11 +174,13 @@ import '../styles/constellation.css';
     const count = Math.min(100, Math.max(10, mediaData.length));
     
     for (let i = 0; i < count; i++) {
-      const geometry = new THREE.SphereGeometry(2, 8, 8);
+      const geometry = new THREE.SphereGeometry(6, 8, 8);
       const hue = i / count;
       const material = new THREE.MeshBasicMaterial({ 
         color: new THREE.Color().setHSL(hue, 0.7, 0.6) 
       });
+      material.transparent = true;
+      material.opacity = 0.85;
       const mesh = new THREE.Mesh(geometry, material);
       
       // Position particles in 3D space
@@ -122,7 +231,7 @@ import '../styles/constellation.css';
   }
 
   const starField = createStarfield();
-  camera.position.z = 300;
+  camera.position.z = zoomLevel;
 
   // Mouse move interaction
   document.addEventListener('mousemove', (event) => {
@@ -143,44 +252,108 @@ import '../styles/constellation.css';
 
     // Highlight hovered particle
     if (intersects.length > 0) {
-      const hovered = intersects[0].object;
+      const hovered = intersects[0].object as any;
       hovered.material.color.setHex(0xffff00);
       hovered.scale.set(1.5, 1.5, 1.5);
+      hoveredTitle = hovered.userData.title || 'Untitled';
+      document.title = hoveredTitle; // Mostra nel title del browser
+    } else {
+      hoveredTitle = '';
     }
   });
 
   // Click to show info
-  document.addEventListener('click', () => {
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(particles);
+document.addEventListener('click', () => {
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(particles);
 
-    if (intersects.length > 0) {
-      const clicked = intersects[0].object;
-      showInfoPanel(clicked.userData);
-    }
-  });
+  if (intersects.length > 0) {
+    const clicked = intersects[0].object as any;
+    openLightbox(clicked.userData);
+  }
+});
 
-  // Show info panel
-  function showInfoPanel(data: any) {
-    const panel = document.getElementById('info-panel');
-    const content = document.getElementById('info-content');
-    
-    if (!content) return;
+function openFromConstellation(data) {
 
-    content.innerHTML = `
-      <h2>${data.title || 'Untitled'}</h2>
-      <img src="${data.url}" alt="${data.alt || data.title}" style="width: 100%; border-radius: 8px; margin: 10px 0; max-height: 400px; object-fit: cover;">
-      <p><strong>Date:</strong> ${new Date(data.date).toLocaleDateString()}</p>
-      ${data.description ? `<p><strong>Description:</strong> ${data.description}</p>` : ''}
-    `;
-    
-    panel?.classList.remove('hidden');
+  // ⚠️ questo usa lo stesso sistema dell'archive
+  if (!window.STATE || !window.openLightbox) {
+    console.warn('Archive not loaded');
+    return;
   }
 
+  // trova item corrispondente nell'archive
+  const item = window.STATE.items.find(i => i.id === data.id);
+
+  if (!item) {
+    console.warn('Item not found in archive');
+    return;
+  }
+
+  window.openLightbox(item);
+
+}
+
+
+
+// function showInfoPanel(data) {
+//   const panel = document.getElementById('info-panel');
+//   const content = document.getElementById('info-content');
+  
+//   if (!content) return;
+
+//   const formattedDate = data.date
+//     ? new Date(data.date).toLocaleDateString('it-IT')
+//     : '';
+
+//   const tags = Array.isArray(data.tags)
+//     ? data.tags.map(tag => `#${tag}`).join(' ')
+//     : '';
+
+//   content.innerHTML = `
+//     <h2 style="margin-bottom:10px;">
+//       ${data.title || 'Untitled'}
+//     </h2>
+
+//     <img 
+//       src="${data.url}" 
+//       alt="${data.alt || ''}" 
+//       style="width:100%; border-radius:8px; margin-bottom:12px; max-height:400px; object-fit:cover;"
+//     >
+
+//     ${tags ? `<p style="margin:0 0 6px 0;">${tags}</p>` : ''}
+
+//     ${formattedDate ? `<p style="margin:0; opacity:0.7;">${formattedDate}</p>` : ''}
+//   `;
+  
+//   panel?.classList.remove('hidden');
+// }
+
+
   // Close info panel
-  document.getElementById('close-info')?.addEventListener('click', () => {
-    document.getElementById('info-panel')?.classList.add('hidden');
+  // document.getElementById('close-info')?.addEventListener('click', () => {
+  //   document.getElementById('info-panel')?.classList.add('hidden');
+  // });
+
+  // Mouse wheel zoom
+  window.addEventListener('wheel', (e) => {
+    const speed = 20;
+    if (e.deltaY < 0) zoomLevel = Math.max(10, zoomLevel - speed);
+    else zoomLevel = Math.min(1000, zoomLevel + speed);
+    camera.position.z = zoomLevel;
   });
+
+    // Aggiungi glow effect al renderer
+  renderer.domElement.style.filter = 'drop-shadow(0 0 30px rgba(0, 255, 0, 0.3))';
+
+  // Aggiungi effetto luminoso alle particelle
+  function addParticleGlow() {
+    particles.forEach((particle) => {
+      const originalScale = particle.scale.x;
+      particle.userData.glowScale = originalScale;
+    });
+  }
+
+  addParticleGlow();
 
   // Animation loop
   function animate() {
@@ -208,4 +381,6 @@ import '../styles/constellation.css';
 
   // Load media on page load
   loadMedia();
+
+  
 </script>

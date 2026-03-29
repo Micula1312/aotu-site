@@ -112,6 +112,15 @@ function buildQS(over: Record<string, string | number | undefined> = {}) {
         ASCII
       </a>
     </li>
+
+    <li class={current==='constellation' ? 'is-active' : ''}>
+      <a
+        href={link('/constellation')}
+        data-nav="hard"
+      >
+        ✺ Constellation
+      </a>
+    </li>
   </ul>
 </details>
 

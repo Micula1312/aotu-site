@@ -1,9 +1,5 @@
 import type { APIRoute } from 'astro';
 
-/**
- * GET /api/media
- * Fetch media from WordPress and transform for constellation viewer
- */
 export const GET: APIRoute = async ({ request }) => {
   try {
     const WP_API_URL = 'https://thearchiveoftheuntamed.xyz/wp/wp-json/wp/v2/media';
@@ -28,12 +24,15 @@ export const GET: APIRoute = async ({ request }) => {
 
     const media = await response.json();
 
-    // Transform WordPress media to constellation format
+    // Usa il parametro 'src' che il tuo img.ts aspetta per URL completi
     const transformedMedia = media.map((item: any) => ({
       id: item.id,
       title: item.title.rendered || 'Untitled',
-      url: `/api/img?src=${encodeURIComponent(item.source_url)}`,
-      thumbnail: `/api/img?src=${encodeURIComponent(item.media_details?.sizes?.thumbnail?.source_url || item.source_url)}`,
+    //   url: `/api/img?src=${encodeURIComponent(item.source_url)}`,
+    url: item.source_url,  // URL DIRETTO
+      thumbnail: `/api/img?src=${encodeURIComponent(
+        item.media_details?.sizes?.thumbnail?.source_url || item.source_url
+      )}`,
       description: item.description?.rendered || '',
       alt: item.alt_text || '',
       date: item.date,

@@ -397,35 +397,40 @@ function renderList() {
 
 // ---------- Lightbox ----------
 let lastFocus = null;
-async function openLightbox(item, openerEl) {
-  if (!lb) return;
-  lastFocus = openerEl || document.activeElement;
+let CURRENT_INDEX = 0;
 
+async function updateLightbox(item) {
   const t = mapType(item);
 
-  // Titolo
   if (lbTitle) lbTitle.textContent = item.title?.rendered || 'Untitled';
 
-  // Data upload (formattata IT)
   const dateStr = item.date
-    ? new Date(item.date).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })
-    : (item.date || '').slice(0,10);
+    ? new Date(item.date).toLocaleDateString('it-IT', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    : (item.date || '').slice(0, 10);
+
   if (lbInfo) lbInfo.textContent = dateStr;
 
-  // TAG: post_tag (embed → fallback IDs), cliccabili -> filtro
   const tags = await getPostTags(item);
   if (lbTags) {
     lbTags.innerHTML = tags.length
-      ? tags.map(tg => `<button type="button" class="tag-pill" data-id="${tg.id}" data-name="${escapeHtml(tg.name)}">#${escapeHtml(tg.name)}</button>`).join(' ')
+      ? tags.map(tg =>
+          `<button type="button" class="tag-pill" data-id="${tg.id}" data-name="${escapeHtml(tg.name)}">#${escapeHtml(tg.name)}</button>`
+        ).join(' ')
       : '';
   }
 
-  // Niente note/caption
-  if (lbNotes) { lbNotes.hidden = true; lbNotes.innerHTML = ''; }
+  if (lbNotes) {
+    lbNotes.hidden = true;
+    lbNotes.innerHTML = '';
+  }
 
-  // Media
   if (lbMedia) {
     lbMedia.innerHTML = '';
+
     if (t === 'image') {
       const img = new Image();
       img.src = item.source_url;
@@ -433,11 +438,14 @@ async function openLightbox(item, openerEl) {
       lbMedia.appendChild(img);
     } else if (t === 'video') {
       const v = document.createElement('video');
-      v.src = item.source_url; v.controls = true; v.playsInline = true;
+      v.src = item.source_url;
+      v.controls = true;
+      v.playsInline = true;
       lbMedia.appendChild(v);
     } else if (t === 'audio') {
       const a = document.createElement('audio');
-      a.src = item.source_url; a.controls = true;
+      a.src = item.source_url;
+      a.controls = true;
       lbMedia.appendChild(a);
     } else {
       const p = document.createElement('p');
@@ -445,20 +453,54 @@ async function openLightbox(item, openerEl) {
       lbMedia.appendChild(p);
     }
   }
+}
+
+async function showNext() {
+  if (!STATE.items.length) return;
+  CURRENT_INDEX = (CURRENT_INDEX + 1) % STATE.items.length;
+  await updateLightbox(STATE.items[CURRENT_INDEX]);
+}
+
+async function showPrev() {
+  if (!STATE.items.length) return;
+  CURRENT_INDEX = (CURRENT_INDEX - 1 + STATE.items.length) % STATE.items.length;
+  await updateLightbox(STATE.items[CURRENT_INDEX]);
+}
+
+
+async function openLightbox(item, openerEl) {
+  if (!lb) return;
+
+  lastFocus = openerEl || document.activeElement;
+  CURRENT_INDEX = STATE.items.findIndex(i => i.id === item.id);
+
+  await updateLightbox(item);
 
   lb.showModal();
 
-  // ESC / click fuori
-  const onKey = (e) => { if (e.key === 'Escape') lb.close(); };
+  const onKey = (e) => {
+    if (e.key === 'Escape') lb.close();
+    if (e.key === 'ArrowRight') showNext();
+    if (e.key === 'ArrowLeft') showPrev();
+  };
+
   const onClickOutside = (e) => {
     const rect = lb.getBoundingClientRect();
-    const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+    const inside =
+      e.clientX >= rect.left &&
+      e.clientX <= rect.right &&
+      e.clientY >= rect.top &&
+      e.clientY <= rect.bottom;
     if (!inside) lb.close();
   };
-  lb.addEventListener('keydown', onKey, { once: true });
+
+  window.addEventListener('keydown', onKey);
   lb.addEventListener('click', onClickOutside, { once: true });
 
-  lb.addEventListener('close', () => { lastFocus && lastFocus.focus?.(); }, { once: true });
+  lb.addEventListener('close', () => {
+    window.removeEventListener('keydown', onKey);
+    lastFocus && lastFocus.focus?.();
+  }, { once: true });
 }
 
 // Tag pill nel lightbox → applica filtro
@@ -574,3 +616,13 @@ renderActivePills();
 // renderTagList(); // (attiva se vuoi la cloud nel pannello)
 ensureInfiniteScroll();            // attiva infinite scroll
 fetchPage({ append: false });      // carica la prima pagina
+
+
+
+document.getElementById('lbNext')?.addEventListener('click', showNext);
+document.getElementById('lbPrev')?.addEventListener('click', showPrev);
+document.getElementById('lbCloseX')?.addEventListener('click', () => lb?.close());
+
+
+window.openLightbox = openLightbox;
+window.STATE = STATE;

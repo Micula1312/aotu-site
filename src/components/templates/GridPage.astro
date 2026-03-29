@@ -46,18 +46,21 @@ import "../../styles/archive.css";
   <div id="state" class="loading">Loading…</div>
   <div id="grid" class="grid" hidden></div>
 
-  <dialog id="lb">
-    <button class="close" onclick="document.getElementById('lb').close()">Close</button>
-    <div class="lb-wrap">
-      <div class="lb-media" id="lbMedia"></div>
-      <div class="lb-meta">
-        <h3 class="lb-title" id="lbTitle"></h3>
-        <div class="muted" id="lbInfo"></div>
-        <div id="lbTags" style="margin-top:8px"></div>
-        <div id="lbNotes" style="margin-top:10px"></div>
-      </div>
+<dialog id="lb">
+  <button id="lbCloseX" class="lb-close-x" type="button" aria-label="Close"></button>
+  <button id="lbPrev" class="lb-nav lb-prev" type="button" aria-label="Previous"></button>
+  <button id="lbNext" class="lb-nav lb-next" type="button" aria-label="Next"></button>
+
+  <div class="lb-wrap">
+    <div class="lb-media" id="lbMedia"></div>
+    <div class="lb-meta">
+      <h3 class="lb-title" id="lbTitle"></h3>
+      <div class="muted" id="lbInfo"></div>
+      <div id="lbTags" style="margin-top:8px"></div>
+      <div id="lbNotes" style="margin-top:10px"></div>
     </div>
-  </dialog>
+  </div>
+</dialog>
 
   {scriptUrl && <script type="module" src={scriptUrl}></script>}
 </Base>

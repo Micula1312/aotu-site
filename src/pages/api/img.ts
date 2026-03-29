@@ -1,8 +1,15 @@
 import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = async ({ url }) => {
-  const src = url.searchParams.get('src') || url.searchParams.get('url') || url.searchParams.get('u') || '';
+  let src = url.searchParams.get('src') || url.searchParams.get('url') || url.searchParams.get('u') || '';
   const base = url.searchParams.get('base') || '';
+
+  // AGGIUNGI QUESTO: Decodifica l'URL
+  try {
+    src = decodeURIComponent(src);
+  } catch (e) {
+    console.error('Decode error:', e);
+  }
 
   // Prova a costruire sempre un URL assoluto usando eventualmente "base"
   let abs: string;
