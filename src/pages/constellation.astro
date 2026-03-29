@@ -1,42 +1,211 @@
 ---
-layout: null
+import '../styles/constellation.css';
 ---
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-<div id="constellation-visualization" style="width: 100%; height: 100vh;"></div>
+<div id="constellation-visualization"></div>
+<div id="loading-indicator">Loading media...</div>
+<div id="info-panel" class="info-panel hidden">
+  <button id="close-info">&times;</button>
+  <div id="info-content"></div>
+</div>
 
 <script>
+  import * as THREE from 'three';
+
+  // Initialize Three.js scene
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer();
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    10000
+  );
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  document.getElementById('constellation-visualization').appendChild(renderer.domElement);
+  renderer.setClearColor(0x000000);
+  document.getElementById('constellation-visualization')?.appendChild(renderer.domElement);
 
-  const stars = [];
-  for (let i = 0; i < 100; i++) {
-      let starGeometry = new THREE.SphereGeometry(0.05, 24, 24);
-      let starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      let star = new THREE.Mesh(starGeometry, starMaterial);
-      star.position.set(
-          (Math.random() - 0.5) * 100,
-          (Math.random() - 0.5) * 100,
-          (Math.random() - 0.5) * 100
-      );
-      stars.push(star);
-      scene.add(star);
+  // Raycaster for mouse interaction
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  
+  // Variables
+  const particlesGroup = new THREE.Group();
+  const particles: any[] = [];
+  let mediaData: any[] = [];
+  let mouseX = 0;
+  let mouseY = 0;
+
+  // Fetch media from WordPress API
+  async function loadMedia() {
+    try {
+      const loadingIndicator = document.getElementById('loading-indicator');
+      if (loadingIndicator) loadingIndicator.textContent = 'Fetching media from WordPress...';
+
+      const response = await fetch('/api/media');
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      mediaData = await response.json();
+      console.log(`✅ Loaded ${mediaData.length} media items`);
+
+      if (loadingIndicator) loadingIndicator.style.display = 'none';
+      createParticles();
+    } catch (error) {
+      console.error('❌ Failed to load media:', error);
+      const loadingIndicator = document.getElementById('loading-indicator');
+      if (loadingIndicator) {
+        loadingIndicator.textContent = `Error: ${error}`;
+        loadingIndicator.style.color = '#ff0000';
+      }
+    }
   }
 
-  camera.position.z = 5;
-
-  function animate() {
-      requestAnimationFrame(animate);
-      stars.forEach(star => {
-          star.rotation.x += 0.01;
-          star.rotation.y += 0.01;
+  // Create particles from media data
+  function createParticles() {
+    const count = Math.min(100, Math.max(10, mediaData.length));
+    
+    for (let i = 0; i < count; i++) {
+      const geometry = new THREE.SphereGeometry(2, 8, 8);
+      const hue = i / count;
+      const material = new THREE.MeshBasicMaterial({ 
+        color: new THREE.Color().setHSL(hue, 0.7, 0.6) 
       });
-      renderer.render(scene, camera);
-  }
-  animate();
-</script>
+      const mesh = new THREE.Mesh(geometry, material);
+      
+      // Position particles in 3D space
+      const x = (Math.random() - 0.5) * 2000;
+      const y = (Math.random() - 0.5) * 2000;
+      const z = (Math.random() - 0.5) * 2000;
+      
+      mesh.position.set(x, y, z);
+      mesh.userData = {
+        ...mediaData[i % mediaData.length],
+        originalColor: material.color.getHex(),
+        index: i
+      };
+      
+      particlesGroup.add(mesh);
+      particles.push(mesh);
+    }
 
+    scene.add(particlesGroup);
+  }
+
+  // Create starfield background
+  function createStarfield() {
+    const starGeometry = new THREE.BufferGeometry();
+    const starMaterial = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.5,
+      sizeAttenuation: true,
+    });
+
+    const starVertices = [];
+    for (let i = 0; i < 5000; i++) {
+      starVertices.push(
+        (Math.random() - 0.5) * 4000,
+        (Math.random() - 0.5) * 4000,
+        (Math.random() - 0.5) * 4000
+      );
+    }
+
+    starGeometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(new Float32Array(starVertices), 3)
+    );
+
+    const starField = new THREE.Points(starGeometry, starMaterial);
+    scene.add(starField);
+    return starField;
+  }
+
+  const starField = createStarfield();
+  camera.position.z = 300;
+
+  // Mouse move interaction
+  document.addEventListener('mousemove', (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    mouseX = (event.clientX / window.innerWidth) - 0.5;
+    mouseY = (event.clientY / window.innerHeight) - 0.5;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(particles);
+
+    // Reset all particles
+    particles.forEach(particle => {
+      particle.material.color.setHex(particle.userData.originalColor);
+      particle.scale.set(1, 1, 1);
+    });
+
+    // Highlight hovered particle
+    if (intersects.length > 0) {
+      const hovered = intersects[0].object;
+      hovered.material.color.setHex(0xffff00);
+      hovered.scale.set(1.5, 1.5, 1.5);
+    }
+  });
+
+  // Click to show info
+  document.addEventListener('click', () => {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(particles);
+
+    if (intersects.length > 0) {
+      const clicked = intersects[0].object;
+      showInfoPanel(clicked.userData);
+    }
+  });
+
+  // Show info panel
+  function showInfoPanel(data: any) {
+    const panel = document.getElementById('info-panel');
+    const content = document.getElementById('info-content');
+    
+    if (!content) return;
+
+    content.innerHTML = `
+      <h2>${data.title || 'Untitled'}</h2>
+      <img src="${data.url}" alt="${data.alt || data.title}" style="width: 100%; border-radius: 8px; margin: 10px 0; max-height: 400px; object-fit: cover;">
+      <p><strong>Date:</strong> ${new Date(data.date).toLocaleDateString()}</p>
+      ${data.description ? `<p><strong>Description:</strong> ${data.description}</p>` : ''}
+    `;
+    
+    panel?.classList.remove('hidden');
+  }
+
+  // Close info panel
+  document.getElementById('close-info')?.addEventListener('click', () => {
+    document.getElementById('info-panel')?.classList.add('hidden');
+  });
+
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+    
+    if (particles.length > 0) {
+      particlesGroup.rotation.x += (mouseY * 0.5 - particlesGroup.rotation.x) * 0.05;
+      particlesGroup.rotation.y += (mouseX * 0.5 - particlesGroup.rotation.y) * 0.05;
+    }
+    
+    starField.rotation.x += 0.00005;
+    starField.rotation.y += 0.00008;
+    
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Load media on page load
+  loadMedia();
+</script>
