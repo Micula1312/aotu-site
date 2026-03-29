@@ -1,24 +1,3 @@
-.constellation {
-    background-color: #000;
-    color: #fff;
-    font-family: 'Arial', sans-serif;
-    /* Add more styles as needed */
-}
-
-.constellation h1 {
-    font-size: 2.5em;
-    text-align: center;
-}
-
-.constellation .star {
-    width: 10px;
-    height: 10px;
-    background-color: yellow;
-    border-radius: 50%;
-    position: absolute;
-}
-
-/* Add additional styling for other elements of the constellation page */
 body {
   margin: 0;
   overflow: hidden;
@@ -32,6 +11,32 @@ body {
   display: block;
 }
 
+.constellation {
+  background-color: #000;
+  color: #fff;
+  font-family: 'Arial', sans-serif;
+}
+
+.constellation h1 {
+  font-size: 2.5em;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+  text-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+}
+
+.constellation .star {
+  width: 10px;
+  height: 10px;
+  background-color: yellow;
+  border-radius: 50%;
+  position: absolute;
+  box-shadow: 0 0 10px rgba(255, 255, 0, 0.8),
+              0 0 20px rgba(255, 255, 0, 0.5),
+              0 0 30px rgba(0, 255, 0, 0.3);
+}
+
+/* Info Panel */
 .info-panel {
   position: fixed;
   top: 50%;
@@ -44,38 +49,136 @@ body {
   color: #fff;
   max-width: 500px;
   z-index: 100;
-  box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.5),
+              0 0 40px rgba(0, 255, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+  backdrop-filter: blur(10px);
 }
 
 .info-panel h2 {
   margin: 0 0 15px 0;
   color: #00ff00;
   text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+  font-size: 1.8em;
 }
 
 .info-panel p {
   margin: 10px 0;
   line-height: 1.6;
+  font-size: 0.95em;
 }
 
 .info-panel.hidden {
   display: none;
 }
 
+.info-panel img {
+  border: 1px solid #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+}
+
+/* Close Button */
 #close-info {
   position: absolute;
   top: 10px;
   right: 10px;
   background: #00ff00;
-  border: none;
+  border: 2px solid #00ff00;
   width: 30px;
   height: 30px;
   font-size: 24px;
   cursor: pointer;
   border-radius: 50%;
   color: #000;
+  transition: all 0.3s ease;
+  font-weight: bold;
 }
 
 #close-info:hover {
   background: #fff;
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+}
+
+#close-info:active {
+  transform: rotate(90deg) scale(0.95);
+}
+
+/* Loading Indicator */
+#loading-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #00ff00;
+  font-size: 18px;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+  animation: pulse 1.5s infinite;
+  z-index: 50;
+}
+
+/* Canvas Glow */
+canvas {
+  filter: drop-shadow(0 0 30px rgba(0, 255, 0, 0.2));
+}
+
+/* KEYFRAME ANIMATIONS */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+  }
+  50% {
+    opacity: 0.5;
+    text-shadow: 0 0 20px rgba(0, 255, 0, 1);
+  }
+}
+
+@keyframes starGlow {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 20px rgba(0, 255, 0, 0.8));
+  }
+  100% {
+    filter: brightness(1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .info-panel {
+    max-width: 90%;
+    padding: 20px;
+  }
+
+  .info-panel h2 {
+    font-size: 1.5em;
+  }
+
+  #loading-indicator {
+    font-size: 16px;
+  }
 }
