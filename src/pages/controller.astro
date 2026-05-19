@@ -1,0 +1,73 @@
+---
+// AOTU — Touch Controller
+// Pagina controller per orchestrare gli schermi dell'archivio.
+// URL: /controller
+
+const WP_API_URL = (import.meta.env.PUBLIC_WP_API_URL || 'https://thearchiveoftheuntamed.xyz/wp/wp-json').replace(/\/$/, '');
+const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
+---
+
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>AOTU Controller</title>
+    <link rel="stylesheet" href={Astro.resolve('../styles/controller.css')} />
+    <script is:inline define:vars={{ WP_API_URL, WS_URL }}>
+      window.__AOTU_WP_API_URL = WP_API_URL;
+      window.__AOTU_WS_URL = WS_URL;
+    </script>
+  </head>
+  <body class="aotu-controller-page">
+    <main class="controller-shell">
+      <header class="controller-header">
+        <div>
+          <p class="eyebrow">THE ARCHIVE OF THE UNTAMED</p>
+          <h1>Screen Network Controller</h1>
+        </div>
+        <div class="connection" id="connectionState">offline</div>
+      </header>
+
+      <section class="panel panel-targets" aria-labelledby="targets-title">
+        <h2 id="targets-title">Target</h2>
+        <div class="target-grid" id="targetGrid">
+          <button class="target is-active" data-target="all">ALL</button>
+          <button class="target" data-target="screen-1">1</button>
+          <button class="target" data-target="screen-2">2</button>
+          <button class="target" data-target="screen-3">3</button>
+          <button class="target" data-target="screen-4">4</button>
+          <button class="target" data-target="screen-5">5</button>
+          <button class="target" data-target="screen-6">6</button>
+        </div>
+      </section>
+
+      <section class="panel panel-actions" aria-labelledby="actions-title">
+        <h2 id="actions-title">Actions</h2>
+        <div class="action-grid">
+          <button class="action" id="cmdRandom">RANDOM ARCHIVE</button>
+          <button class="action" id="cmdPulse">PULSE</button>
+          <button class="action" id="cmdBlackout">BLACKOUT</button>
+          <button class="action" id="cmdWake">WAKE</button>
+        </div>
+      </section>
+
+      <section class="panel panel-tags" aria-labelledby="tags-title">
+        <div class="panel-title-row">
+          <h2 id="tags-title">Database Tags</h2>
+          <button class="mini" id="reloadTags">reload</button>
+        </div>
+        <input class="search" id="tagSearch" type="search" placeholder="cerca hashtag…" autocomplete="off" />
+        <div class="tag-cloud" id="tagCloud" aria-live="polite">
+          <span class="muted">loading tags…</span>
+        </div>
+      </section>
+
+      <section class="panel panel-log" aria-labelledby="log-title">
+        <h2 id="log-title">Live Log</h2>
+        <pre id="logBox">ready</pre>
+      </section>
+    </main>
+
+    <script type="module" src={Astro.resolve('../scripts/controller/controller.js')}></script>
+  </body>
+</html>
