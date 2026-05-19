@@ -1,8 +1,7 @@
 ---
-// AOTU — Touch Controller
-// Pagina controller per orchestrare gli schermi dell'archivio.
-// URL: /controller
+import "../styles/controller.css";
 
+// AOTU — Touch Controller
 const WP_API_URL = (import.meta.env.PUBLIC_WP_API_URL || 'https://thearchiveoftheuntamed.xyz/wp/wp-json').replace(/\/$/, '');
 const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
 ---
@@ -12,14 +11,16 @@ const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>AOTU Controller</title>
-    <link rel="stylesheet" href={Astro.resolve('../styles/controller.css')} />
+
     <script is:inline define:vars={{ WP_API_URL, WS_URL }}>
       window.__AOTU_WP_API_URL = WP_API_URL;
       window.__AOTU_WS_URL = WS_URL;
     </script>
   </head>
+
   <body class="aotu-controller-page">
     <main class="controller-shell">
+
       <header class="controller-header">
         <div>
           <p class="eyebrow">THE ARCHIVE OF THE UNTAMED</p>
@@ -28,8 +29,8 @@ const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
         <div class="connection" id="connectionState">offline</div>
       </header>
 
-      <section class="panel panel-targets" aria-labelledby="targets-title">
-        <h2 id="targets-title">Target</h2>
+      <section class="panel panel-targets">
+        <h2>Target</h2>
         <div class="target-grid" id="targetGrid">
           <button class="target is-active" data-target="all">ALL</button>
           <button class="target" data-target="screen-1">1</button>
@@ -41,8 +42,8 @@ const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
         </div>
       </section>
 
-      <section class="panel panel-actions" aria-labelledby="actions-title">
-        <h2 id="actions-title">Actions</h2>
+      <section class="panel panel-actions">
+        <h2>Actions</h2>
         <div class="action-grid">
           <button class="action" id="cmdRandom">RANDOM ARCHIVE</button>
           <button class="action" id="cmdPulse">PULSE</button>
@@ -51,23 +52,34 @@ const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
         </div>
       </section>
 
-      <section class="panel panel-tags" aria-labelledby="tags-title">
+      <section class="panel panel-tags">
         <div class="panel-title-row">
-          <h2 id="tags-title">Database Tags</h2>
+          <h2>Database Tags</h2>
           <button class="mini" id="reloadTags">reload</button>
         </div>
-        <input class="search" id="tagSearch" type="search" placeholder="cerca hashtag…" autocomplete="off" />
-        <div class="tag-cloud" id="tagCloud" aria-live="polite">
+
+        <input
+          class="search"
+          id="tagSearch"
+          type="search"
+          placeholder="cerca hashtag…"
+          autocomplete="off"
+        />
+
+        <div class="tag-cloud" id="tagCloud">
           <span class="muted">loading tags…</span>
         </div>
       </section>
 
-      <section class="panel panel-log" aria-labelledby="log-title">
-        <h2 id="log-title">Live Log</h2>
+      <section class="panel panel-log">
+        <h2>Live Log</h2>
         <pre id="logBox">ready</pre>
       </section>
+
     </main>
 
-    <script type="module" src={Astro.resolve('../scripts/controller/controller.js')}></script>
+    <script>
+      import "../scripts/controller/controller.js";
+    </script>
   </body>
 </html>

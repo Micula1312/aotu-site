@@ -1,8 +1,12 @@
 ---
-// AOTU — Screen Client
-// Ogni schermo apre /screen?id=screen-1, /screen?id=screen-2, ecc.
+import "../styles/screen.css";
 
-const WP_API_URL = (import.meta.env.PUBLIC_WP_API_URL || 'https://thearchiveoftheuntamed.xyz/wp/wp-json').replace(/\/$/, '');
+// AOTU — Screen Client
+const RAW_WP_API_URL = (import.meta.env.PUBLIC_WP_API_URL || 'https://thearchiveoftheuntamed.xyz/wp').replace(/\/$/, '');
+
+const WP_API_URL = RAW_WP_API_URL.endsWith('/wp-json')
+  ? RAW_WP_API_URL
+  : `${RAW_WP_API_URL}/wp-json`;
 const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
 ---
 
@@ -11,12 +15,13 @@ const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>AOTU Screen</title>
-    <link rel="stylesheet" href={Astro.resolve('../styles/screen.css')} />
+
     <script is:inline define:vars={{ WP_API_URL, WS_URL }}>
       window.__AOTU_WP_API_URL = WP_API_URL;
       window.__AOTU_WS_URL = WS_URL;
     </script>
   </head>
+
   <body class="aotu-screen-page">
     <main class="screen-stage" id="stage">
       <div class="screen-meta">
@@ -29,6 +34,8 @@ const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
       <div class="tag-label" id="tagLabel">THE ARCHIVE IS ALIVE</div>
     </main>
 
-    <script type="module" src={Astro.resolve('../scripts/screen/screen.js')}></script>
+    <script>
+      import "../scripts/screen/screen.js";
+    </script>
   </body>
 </html>

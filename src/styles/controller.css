@@ -46,3 +46,27 @@ h2 { margin: 0 0 14px; font-size: 18px; text-transform: uppercase; letter-spacin
   .target-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+
+
+.tag-section {
+  margin-bottom: 1.5rem;
+}
+
+.tag-section h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 0.75rem;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-pill span {
+  opacity: 0.6;
+  margin-left: 0.35rem;
+}
