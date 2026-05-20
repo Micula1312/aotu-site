@@ -1,277 +1,311 @@
-// AOTU — screen.js
-// Client fullscreen: riceve comandi WebSocket e mostra media WP filtrati per tag.
-
-const RAW_API_BASE = (window.__AOTU_WP_API_URL || 'https://thearchiveoftheuntamed.xyz/wp').replace(/\/$/, '');
-
-const API_BASE = RAW_API_BASE.endsWith('/wp-json')
-  ? RAW_API_BASE
-  : `${RAW_API_BASE}/wp-json`;
-
-const WS_URL = window.__AOTU_WS_URL || 'ws://localhost:8787';
+const STATE_API = "https://thearchiveoftheuntamed.xyz/wp/wp-json/aotu/v1/state";
+const WP_API = "https://thearchiveoftheuntamed.xyz/wp/wp-json/wp/v2";
+const MEDIA_API = `${WP_API}/media`;
+const TAGS_API = `${WP_API}/tags`;
 
 const params = new URLSearchParams(window.location.search);
-const SCREEN_ID = params.get('id') || 'screen-1';
+const SCREEN_ID = params.get("id") || "screen-1";
 
-const els = {
-  screenId: document.getElementById('screenId'),
-  status: document.getElementById('screenStatus'),
-  mediaLayer: document.getElementById('mediaLayer'),
-  veil: document.getElementById('veil'),
-  tagLabel: document.getElementById('tagLabel'),
-  stage: document.getElementById('stage'),
-};
+let lastUpdatedAt = 0;
+let currentTag = "";
+let currentMode = "sync";
+let currentSpeed = 6000;
+let currentMedia = [];
+let currentIndex = 0;
+let slideTimer = null;
 
-const STATE = {
-  ws: null,
-  items: [],
-  index: 0,
-  timer: null,
-  reconnectTimer: null,
-};
+const stage =
+  document.querySelector("[data-screen-stage]") ||
+  document.querySelector("#screen-stage") ||
+  document.body;
 
-if (els.screenId) els.screenId.textContent = SCREEN_ID.toUpperCase();
-
-function setStatus(status) {
-  if (!els.status) return;
-  els.status.textContent = status;
+function shouldApplyToThisScreen(state) {
+  return !state.screen || state.screen === "all" || state.screen === SCREEN_ID;
 }
 
-function shouldHandle(msg) {
-  return msg.target === 'all' || msg.target === SCREEN_ID;
+async function pollState() {
+  try {
+    const res = await fetch(`${STATE_API}?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return;
+
+    const state = await res.json();
+
+    if (!state.updatedAt || state.updatedAt === lastUpdatedAt) return;
+    if (!shouldApplyToThisScreen(state)) return;
+
+    lastUpdatedAt = state.updatedAt;
+    console.log("AOTU NEW STATE", state);
+
+    applyState(state);
+  } catch (err) {
+    console.warn("AOTU polling offline/intermittent", err);
+  }
 }
 
-function connectWS() {
-  clearTimeout(STATE.reconnectTimer);
-  setStatus('connecting');
+async function applyState(state) {
+  currentSpeed = Number(state.speed) || 6000;
+  currentMode = state.mode || "sync";
 
-  const ws = new WebSocket(WS_URL);
-  STATE.ws = ws;
+  applyMode(currentMode);
 
-  ws.addEventListener('open', () => {
-    setStatus('online');
-
-    ws.send(JSON.stringify({
-      type: 'HELLO',
-      role: 'screen',
-      screenId: SCREEN_ID,
-      sentAt: Date.now(),
-    }));
-  });
-
-  ws.addEventListener('close', () => {
-    setStatus('offline');
-    STATE.reconnectTimer = setTimeout(connectWS, 1200);
-  });
-
-  ws.addEventListener('error', () => {
-    setStatus('error');
-  });
-
-  ws.addEventListener('message', async (event) => {
-    let msg;
-
-    try {
-      msg = JSON.parse(event.data);
-    } catch {
-      return;
-    }
-
-    if (!shouldHandle(msg)) return;
-
-    if (msg.type === 'FILTER_TAG') {
-      if (els.tagLabel) els.tagLabel.textContent = `#${msg.tagName || msg.tagSlug || msg.tagId}`;
-      const items = await fetchMedia({ tagId: msg.tagId });
-      startPlaylist(items);
-    }
-
-    if (msg.type === 'RANDOM_ARCHIVE') {
-      if (els.tagLabel) els.tagLabel.textContent = 'RANDOM ARCHIVE';
-      const items = await fetchMedia();
-      startPlaylist(items);
-    }
-
-    if (msg.type === 'BLACKOUT') {
-      blackout();
-    }
-
-    if (msg.type === 'WAKE') {
-      wake();
-    }
-
-    if (msg.type === 'PULSE') {
-      pulse();
-    }
-  });
-}
-
-async function fetchMedia({ tagId = null } = {}) {
-  const url = new URL(`${API_BASE}/wp/v2/media`, window.location.origin);
-
-  url.searchParams.set('per_page', '100');
-  url.searchParams.set('orderby', 'date');
-  url.searchParams.set('order', 'desc');
-  url.searchParams.set('_embed', '1');
-  url.searchParams.set(
-    '_fields',
-    'id,date,mime_type,media_type,source_url,title,alt_text,caption,media_details,tags,_embedded'
-  );
-
-  if (tagId) {
-    url.searchParams.set('tags', String(tagId));
+  if (currentMode === "blackout") {
+    return;
   }
 
-  console.log('[screen] media url=', url.toString());
+  if (currentMode === "random") {
+    currentTag = "";
+    currentMedia = await fetchMediaByTag("");
+    currentIndex = Math.floor(Math.random() * Math.max(currentMedia.length, 1));
+    renderCurrentMedia();
+    restartSlideshow();
+    return;
+  }
+
+  if (state.tag !== currentTag) {
+    currentTag = state.tag || "";
+    currentMedia = await fetchMediaByTag(currentTag);
+    currentIndex = 0;
+    renderCurrentMedia();
+  }
+
+  restartSlideshow();
+}
+
+function applyMode(mode) {
+  stage.classList.remove(
+    "is-blackout",
+    "fx-pulse",
+    "fx-pixel",
+    "fx-mosaic",
+    "fx-invert",
+    "fx-blur",
+    "fx-acid"
+  );
+
+  if (mode === "blackout") stage.classList.add("is-blackout");
+  if (mode === "pulse") stage.classList.add("fx-pulse");
+  if (mode === "pixel") stage.classList.add("fx-pixel");
+  if (mode === "mosaic") stage.classList.add("fx-mosaic");
+  if (mode === "invert") stage.classList.add("fx-invert");
+  if (mode === "blur") stage.classList.add("fx-blur");
+  if (mode === "acid") stage.classList.add("fx-acid");
+}
+
+async function resolveTagId(tag) {
+  if (!tag) return null;
+
+  const cleanTag = tag.replace(/^#/, "").trim();
+
+  const res = await fetch(
+    `${TAGS_API}?slug=${encodeURIComponent(cleanTag)}&t=${Date.now()}`,
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) return null;
+
+  const tags = await res.json();
+  return tags?.[0]?.id || null;
+}
+
+async function fetchMediaByTag(tag) {
+  let url = `${MEDIA_API}?per_page=50&_fields=id,source_url,media_type,mime_type,title,alt_text`;
+
+  if (tag) {
+    const tagId = await resolveTagId(tag);
+
+    if (!tagId) {
+      console.warn("AOTU tag not found", tag);
+      return [];
+    }
+
+    url += `&tags=${tagId}`;
+  }
 
   try {
-    const res = await fetch(url.toString(), { mode: 'cors' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const res = await fetch(`${url}&t=${Date.now()}`, { cache: "no-store" });
 
-    const data = await res.json();
+    if (!res.ok) {
+      console.error("AOTU media fetch error", res.status);
+      return [];
+    }
 
-    return Array.isArray(data)
-      ? data.filter(item => {
-          const mt = (item.mime_type || '').toLowerCase();
-          return mt.startsWith('image/') || mt.startsWith('video/');
-        })
-      : [];
+    const media = await res.json();
+
+    return media.filter((item) => {
+      const mime = item.mime_type || "";
+      return mime.startsWith("image/") || mime.startsWith("video/");
+    });
   } catch (err) {
-    console.error('[screen] media fetch error', err);
+    console.error("AOTU media fetch failed", err);
     return [];
   }
 }
 
-function startPlaylist(items = []) {
-  clearInterval(STATE.timer);
+function renderCurrentMedia() {
+  if (currentMode === "blackout") return;
 
-  STATE.items = shuffle(items);
-  console.log('[screen] playlist items=', STATE.items.length, STATE.items);
-  STATE.index = 0;
-
-  if (!STATE.items.length) {
-    showNoMedia();
+  if (!currentMedia.length) {
+    stage.innerHTML = `
+      <div class="aotu-empty">
+        <p>${SCREEN_ID}</p>
+        <p>No media found</p>
+        <p>${currentTag ? "#" + currentTag : "waiting for signal"}</p>
+      </div>
+    `;
     return;
   }
 
-  showCurrent();
+  const item = currentMedia[currentIndex];
+  const url = item.source_url;
+  const mime = item.mime_type || "";
 
-  STATE.timer = setInterval(() => {
-    STATE.index = (STATE.index + 1) % STATE.items.length;
-    showCurrent();
-  }, 7000);
-}
+  stage.innerHTML = "";
 
-function showCurrent() {
-  const item = STATE.items[STATE.index];
-  if (!item) {
-    showNoMedia();
-    return;
+  let el;
+
+  if (mime.startsWith("video/")) {
+    el = document.createElement("video");
+    el.src = url;
+    el.autoplay = true;
+    el.muted = true;
+    el.loop = true;
+    el.playsInline = true;
+  } else {
+    el = document.createElement("img");
+    el.src = url;
+    el.alt = item.alt_text || item.title?.rendered || "";
   }
 
-  showMedia(item);
-}
+  el.className = "aotu-screen-media";
+  stage.appendChild(el);
 
-function showMedia(item) {
-  if (!els.mediaLayer) return;
-
-  const mime = (item.mime_type || '').toLowerCase();
-  const title = item.title?.rendered || 'Untitled';
-
-  console.log('[screen] showing', {
-  mime,
-  title,
-  src: item.source_url,
-  img: getImageUrl(item)
-});
-
-  els.mediaLayer.innerHTML = '';
-  els.mediaLayer.classList.remove('is-ready');
-
-  if (mime.startsWith('image/')) {
-    const img = document.createElement('img');
-    img.src = getImageUrl(item);
-    img.alt = stripHtml(title);
-    img.className = 'screen-media is-image';
-    els.mediaLayer.appendChild(img);
-  }
-
-  if (mime.startsWith('video/')) {
-    const video = document.createElement('video');
-    video.src = toProxyUrl(item.source_url);
-    video.className = 'screen-media is-video';
-    video.autoplay = true;
-    video.muted = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.setAttribute('playsinline', '');
-    els.mediaLayer.appendChild(video);
-    video.play().catch(() => {});
-  }
-    requestAnimationFrame(() => {
-    els.mediaLayer.classList.add('is-ready');
+  requestAnimationFrame(() => {
+    el.classList.add("is-visible");
   });
 }
 
-function getImageUrl(item) {
-  const sizes = item.media_details?.sizes;
+function nextMedia() {
+  if (!currentMedia.length || currentMode === "blackout") return;
 
-  const src =
-    sizes?.large?.source_url ||
-    sizes?.medium_large?.source_url ||
-    sizes?.medium?.source_url ||
-    sizes?.full?.source_url ||
-    item.source_url;
-
-  return toProxyUrl(src);
-}
-
-function toProxyUrl(src = '') {
-  try {
-    const u = new URL(src);
-    return u.pathname;
-  } catch {
-    return src;
+  if (currentMode === "random") {
+    currentIndex = Math.floor(Math.random() * currentMedia.length);
+  } else {
+    currentIndex = (currentIndex + 1) % currentMedia.length;
   }
+
+  renderCurrentMedia();
 }
 
-function showNoMedia() {
-  if (!els.mediaLayer) return;
-  els.mediaLayer.innerHTML = '<div class="no-media">NO MEDIA</div>';
+function restartSlideshow() {
+  if (slideTimer) clearInterval(slideTimer);
+
+  slideTimer = setInterval(() => {
+    nextMedia();
+  }, currentSpeed);
 }
 
-function blackout() {
-  clearInterval(STATE.timer);
-  if (els.mediaLayer) els.mediaLayer.innerHTML = '';
-  if (els.tagLabel) els.tagLabel.textContent = 'BLACKOUT';
-  document.body.classList.add('is-blackout');
+function injectBaseStyle() {
+  const style = document.createElement("style");
+
+  style.innerHTML = `
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .aotu-screen-media {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: block;
+      opacity: 0;
+      transform: scale(1.04);
+      transition: opacity 800ms ease, transform 1200ms ease, filter 500ms ease;
+      background: #000;
+    }
+
+    .aotu-screen-media.is-visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .is-blackout {
+      background: #000 !important;
+    }
+
+    .is-blackout > * {
+      opacity: 0 !important;
+      pointer-events: none;
+    }
+
+    .fx-pulse .aotu-screen-media {
+      animation: aotuPulse 900ms infinite alternate ease-in-out;
+    }
+
+    .fx-pixel .aotu-screen-media {
+      image-rendering: pixelated;
+      filter: contrast(1.45) saturate(1.7);
+      transform: scale(1.1);
+    }
+
+    .fx-mosaic .aotu-screen-media {
+      image-rendering: pixelated;
+      filter: contrast(1.9) saturate(2.1);
+      transform: scale(1.22);
+    }
+
+    .fx-invert .aotu-screen-media {
+      filter: invert(1) contrast(1.35) saturate(1.4);
+    }
+
+    .fx-blur .aotu-screen-media {
+      filter: blur(14px) contrast(1.4) saturate(1.5);
+      transform: scale(1.14);
+    }
+
+    .fx-acid .aotu-screen-media {
+      filter: hue-rotate(95deg) saturate(3.2) contrast(1.35);
+    }
+
+    .aotu-empty {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-content: center;
+      gap: 0.5rem;
+      text-align: center;
+      color: #d4ff52;
+      background: #000;
+      font-family: Arial, Helvetica, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .aotu-empty p {
+      margin: 0;
+    }
+
+    @keyframes aotuPulse {
+      from {
+        filter: brightness(0.7) contrast(1.2) saturate(1.2);
+        transform: scale(1.02);
+      }
+
+      to {
+        filter: brightness(1.5) contrast(1.8) saturate(2);
+        transform: scale(1.09);
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
 }
 
-function wake() {
-  document.body.classList.remove('is-blackout');
-  if (els.tagLabel) els.tagLabel.textContent = 'THE ARCHIVE IS ALIVE';
-}
+injectBaseStyle();
+pollState();
+setInterval(pollState, 1000);
 
-function pulse() {
-  document.body.classList.remove('is-pulsing');
-  void document.body.offsetWidth;
-  document.body.classList.add('is-pulsing');
-}
-
-function shuffle(arr = []) {
-  return [...arr].sort(() => Math.random() - 0.5);
-}
-
-function stripHtml(html = '') {
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  return div.textContent || div.innerText || '';
-}
-
-console.log('[screen] API_BASE=', API_BASE);
-console.log('[screen] SCREEN_ID=', SCREEN_ID);
-
-connectWS();
-
-// Prima accensione: pesca subito qualcosa dalla media library.
-fetchMedia().then(startPlaylist);
-
-window.AOTU_SCREEN = { STATE, fetchMedia, startPlaylist };
+console.log("AOTU screen ready", SCREEN_ID);

@@ -105,7 +105,68 @@ flex: auto;
   will-change: transform; */
 }
 
-.card img, .card video { filter: blur(8px); }
+/* ===== AOTU HARD PIXEL PREVIEW ===== */
+
+:root{
+  --pixel-scale: 12;      /* 5–9 sweet spot */
+  --pixel-hover: 1.4;    /* reveal softness */
+}
+
+.card{
+  overflow:hidden;
+  background:#000;
+}
+
+/* media base */
+.card img,
+.card video,
+.card .pv,
+.card .ph{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  aspect-ratio:4/3;
+
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+
+  filter:none;
+
+  transform:
+    scale(var(--pixel-scale))
+    scale(.15);
+
+  transform-origin:center;
+  transition:
+    transform .45s ease,
+    filter .45s ease,
+    opacity .35s ease;
+
+  will-change: transform;
+}
+
+/* hover reveal */
+.card:hover img,
+.card:hover video,
+.card:hover .pv,
+.card:hover .ph{
+  transform:scale(var(--pixel-hover));
+}
+
+/* optional dark veil */
+.card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.18);
+  pointer-events:none;
+  transition:opacity .35s ease;
+}
+
+.card:hover::after{
+  opacity:0;
+}
 
 
 /* La card ora è full-bleed: il link non ha padding */

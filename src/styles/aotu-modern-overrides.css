@@ -1,0 +1,339 @@
+/* =========================================================
+   AOTU — MODERN DIGITAL SKIN
+   Load this file LAST, after the existing CSS files.
+   Base colors: black + rgb(0,255,0) + white.
+   Direction: less retro/CRT, more clean digital interface.
+   ========================================================= */
+
+:root {
+  --bg: #000000;
+  --fg: #ffffff;
+  --muted: rgba(255,255,255,.64);
+  --dim: rgba(255,255,255,.44);
+
+  --accent: rgb(0,255,0);
+  --accent-2: rgb(0,255,0);
+  --acid: rgb(0,255,0);
+  --green: rgb(0,255,0);
+  --error: #ff3b5f;
+  --danger: #ff3b5f;
+
+  --surface: rgba(255,255,255,.035);
+  --surface-2: rgba(255,255,255,.065);
+  --titlebar: rgba(255,255,255,.04);
+  --chip-bg: rgba(255,255,255,.055);
+  --panel-grad-top: rgba(255,255,255,.045);
+  --panel-grad-bot: rgba(0,0,0,.92);
+
+  --border: rgba(255,255,255,.16);
+  --border-green: rgba(0,255,0,.42);
+  --gridline: rgba(0,255,0,.055);
+
+  --radius-s: 3px;
+  --radius: 6px;
+
+  --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.055);
+  --shadow-neon: 0 0 0 1px rgba(0,255,0,.18), 0 18px 60px rgba(0,0,0,.42);
+
+  --font-mono: Inter, Arial, Helvetica, sans-serif;
+  --font-ui: Inter, Arial, Helvetica, sans-serif;
+}
+
+html, body {
+  background: #000;
+  color: var(--fg);
+  font-family: var(--font-ui);
+  text-shadow: none !important;
+}
+
+body {
+  background:
+    radial-gradient(circle at 16% 8%, rgba(0,255,0,.13), transparent 30%),
+    radial-gradient(circle at 86% 72%, rgba(0,255,0,.08), transparent 34%),
+    linear-gradient(180deg, #000 0%, #030603 100%) !important;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(0,255,0,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,0,.055) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at center, black, transparent 78%);
+  opacity: .55;
+}
+
+body[data-theme="light"] {
+  --bg: #f7fff7;
+  --fg: #001a00;
+  --muted: rgba(0,26,0,.62);
+  --dim: rgba(0,26,0,.44);
+  --surface: rgba(0,255,0,.05);
+  --surface-2: rgba(0,255,0,.1);
+  --chip-bg: rgba(0,255,0,.1);
+  --border: rgba(0,26,0,.18);
+  background: #f7fff7 !important;
+}
+
+/* Layout panels: clean glass instead of terminal windows */
+.index,
+section.content,
+.panel,
+.mf-panel,
+.mf.mode-terminal .crt,
+dialog,
+#lb,
+#fx-panel,
+#vf-panel,
+.card,
+.archive-card,
+.network-card {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025)) !important;
+  box-shadow: var(--shadow-inset), 0 20px 70px rgba(0,0,0,.38) !important;
+  backdrop-filter: blur(16px);
+}
+
+.index .winbar,
+#sidebar .winbar,
+.mf-viewtoggle,
+section.content .section-title {
+  border-bottom: 1px solid var(--border) !important;
+  background: transparent !important;
+}
+
+.index .winbar .title,
+section.content .section-title,
+.eyebrow,
+.mf-k,
+.mf-sub,
+.hero-eyebrow,
+#loading-indicator,
+.screen-meta {
+  color: var(--accent) !important;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+/* Remove most retro dashed borders */
+.index .index-list a,
+.index details.drawer,
+.input,
+.btn,
+.chip,
+.pill,
+.bib-card,
+section.bar select,
+section.bar input,
+section.bar button,
+.target,
+.action,
+.tag-pill,
+.mini,
+.search,
+#fx-panel button,
+#vf-panel button,
+#fx-panel input,
+#vf-panel input,
+#vf-panel select {
+  border-style: solid !important;
+  border-color: var(--border) !important;
+  background: rgba(255,255,255,.045) !important;
+  color: var(--fg) !important;
+  box-shadow: none !important;
+}
+
+.btn:hover,
+.chip:hover,
+.pill:hover,
+.index .index-list a:hover,
+.index details.drawer ul a:hover,
+section.bar button:hover,
+.target.is-active,
+.target:hover,
+.action:hover,
+.tag-pill:hover,
+.mini:hover,
+button:hover,
+.button:hover {
+  background: var(--accent) !important;
+  color: #000 !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 1px rgba(0,255,0,.22), 0 12px 36px rgba(0,255,0,.12) !important;
+}
+
+/* Typography: bold modern, less monospaced */
+h1, h2, h3, .audio-title, .tag-label {
+  font-family: Inter, Arial, Helvetica, sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: -.055em !important;
+  text-transform: uppercase;
+}
+
+p, li, input, button, select, textarea, .muted, .dim {
+  font-family: Inter, Arial, Helvetica, sans-serif !important;
+}
+
+/* Archive grid: sharper gallery, less blur by default */
+#grid {
+  --gap: 10px !important;
+}
+
+#grid .card,
+.card {
+  overflow: hidden;
+  background: #000 !important;
+  transition: transform .22s ease, border-color .22s ease, filter .22s ease !important;
+}
+
+.card:hover {
+  transform: translateY(-4px) scale(1.01) !important;
+  border-color: var(--accent) !important;
+}
+
+.card img,
+.card video,
+.card .ph,
+.card .pv {
+  filter: none !important;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.card:hover img,
+.card:hover video {
+  filter: contrast(1.12) saturate(1.05) !important;
+}
+
+.card .title {
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,.72)) !important;
+  color: #fff !important;
+  text-align: left !important;
+  font-size: 12px !important;
+  letter-spacing: .02em;
+}
+
+/* Lightbox */
+#lb,
+dialog#lb {
+  background: rgba(0,0,0,.88) !important;
+}
+
+#lb::backdrop,
+dialog::backdrop {
+  background: rgba(0,0,0,.72) !important;
+  backdrop-filter: blur(12px);
+}
+
+.lb-media,
+#lb .lb-media {
+  border-radius: calc(var(--radius) - 6px) !important;
+  border-color: var(--border) !important;
+}
+
+.lb-prev::before,
+.lb-next::before,
+.lb-close-x::before,
+.lb-close-x::after {
+  border-color: var(--fg) !important;
+  background: var(--fg) !important;
+}
+
+/* Controller */
+.connection {
+  border-color: var(--border) !important;
+  background: rgba(255,255,255,.05) !important;
+  color: var(--fg) !important;
+}
+.connection[data-status="online"] {
+  background: var(--accent) !important;
+  color: #000 !important;
+  border-color: var(--accent) !important;
+}
+
+/* Screen mode */
+.audio-object {
+  background:
+    radial-gradient(circle at center, rgba(0,255,0,.22), rgba(0,0,0,.96) 58%) !important;
+}
+.audio-title,
+.empty,
+.tag-label {
+  color: var(--accent) !important;
+}
+.screen-meta {
+  color: #fff !important;
+  mix-blend-mode: normal !important;
+  filter: none !important;
+  opacity: .72;
+}
+
+/* FX panels */
+#fx-fab,
+#vf-fab {
+  background: var(--accent) !important;
+  color: #000 !important;
+  box-shadow: 0 10px 34px rgba(0,255,0,.16), 0 12px 34px rgba(0,0,0,.42) !important;
+}
+
+#fx-panel header,
+#vf-panel header {
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+/* Network: clean data table */
+.network-header {
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--accent);
+}
+.network-card:hover {
+  filter: none !important;
+  background: var(--accent) !important;
+  color: #000 !important;
+}
+
+/* Softer neon mode — not full CRT */
+body.neon {
+  text-shadow: none !important;
+}
+body.neon .btn,
+body.neon .chip,
+body.neon .index,
+body.neon section.content,
+body.neon .card,
+body.neon dialog,
+body.neon .index .index-list a {
+  box-shadow: var(--shadow-inset), 0 0 32px rgba(0,255,0,.12), 0 18px 60px rgba(0,0,0,.42) !important;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .index,
+  #sidebar {
+    border-radius: 0 0 var(--radius) var(--radius) !important;
+  }
+
+  .sidebar-pull {
+    height: 38px !important;
+    background: rgba(0,0,0,.86) !important;
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+
+

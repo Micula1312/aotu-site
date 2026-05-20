@@ -1,9 +1,17 @@
 ---
 import "../styles/controller.css";
 
-// AOTU — Touch Controller
-const WP_API_URL = (import.meta.env.PUBLIC_WP_API_URL || 'https://thearchiveoftheuntamed.xyz/wp/wp-json').replace(/\/$/, '');
-const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
+const RAW_WP_API_URL = (
+  import.meta.env.PUBLIC_WP_API_URL ||
+  "https://thearchiveoftheuntamed.xyz/wp"
+).replace(/\/$/, "");
+
+const WP_API_URL = RAW_WP_API_URL.endsWith("/wp-json")
+  ? RAW_WP_API_URL
+  : `${RAW_WP_API_URL}/wp-json`;
+
+const STATE_API_URL = `${WP_API_URL}/aotu/v1/state`;
+const TAGS_API_URL = `${WP_API_URL}/wp/v2/tags?per_page=100`;
 ---
 
 <html lang="it">
@@ -12,21 +20,20 @@ const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>AOTU Controller</title>
 
-    <script is:inline define:vars={{ WP_API_URL, WS_URL }}>
-      window.__AOTU_WP_API_URL = WP_API_URL;
-      window.__AOTU_WS_URL = WS_URL;
+    <script is:inline define:vars={{ STATE_API_URL, TAGS_API_URL }}>
+      window.__AOTU_STATE_API_URL = STATE_API_URL;
+      window.__AOTU_TAGS_API_URL = TAGS_API_URL;
     </script>
   </head>
 
   <body class="aotu-controller-page">
     <main class="controller-shell">
-
       <header class="controller-header">
         <div>
           <p class="eyebrow">THE ARCHIVE OF THE UNTAMED</p>
           <h1>Screen Network Controller</h1>
         </div>
-        <div class="connection" id="connectionState">offline</div>
+        <div class="connection" id="connectionState">polling</div>
       </header>
 
       <section class="panel panel-targets">
@@ -49,6 +56,12 @@ const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
           <button class="action" id="cmdPulse">PULSE</button>
           <button class="action" id="cmdBlackout">BLACKOUT</button>
           <button class="action" id="cmdWake">WAKE</button>
+          <button class="action" id="cmdReset">RESET</button>
+          <button class="action" id="cmdPixel">PIXEL</button>
+          <button class="action" id="cmdMosaic">MOSAIC</button>
+          <button class="action" id="cmdInvert">INVERT</button>
+          <button class="action" id="cmdBlur">BLUR</button>
+          <button class="action" id="cmdAcid">ACID</button>
         </div>
       </section>
 
@@ -75,11 +88,12 @@ const WS_URL = import.meta.env.PUBLIC_AOTU_WS_URL || 'ws://localhost:8787';
         <h2>Live Log</h2>
         <pre id="logBox">ready</pre>
       </section>
-
     </main>
 
     <script>
       import "../scripts/controller/controller.js";
     </script>
+  </body>
+</html>
   </body>
 </html>

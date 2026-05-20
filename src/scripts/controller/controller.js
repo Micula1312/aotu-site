@@ -1,249 +1,219 @@
-// AOTU — controller.js
-// Touch UI: legge tag reali da WordPress/MySQL via REST API e invia comandi agli schermi via WebSocket.
+const STATE_API =
+  window.__AOTU_STATE_API_URL ||
+  "https://thearchiveoftheuntamed.xyz/wp/wp-json/aotu/v1/state";
 
-const RAW_API_BASE = (window.__AOTU_WP_API_URL || '/wp-json').replace(/\/$/, '');
+const TAGS_API =
+  window.__AOTU_TAGS_API_URL ||
+  "https://thearchiveoftheuntamed.xyz/wp/wp-json/wp/v2/tags?per_page=100";
 
-const API_BASE = RAW_API_BASE.endsWith('/wp-json')
-  ? RAW_API_BASE
-  : `${RAW_API_BASE}/wp-json`;
-
-const WS_URL = window.__AOTU_WS_URL || 'ws://localhost:8787';
-
-const els = {
-  connection: document.getElementById('connectionState'),
-  targetGrid: document.getElementById('targetGrid'),
-  tagCloud: document.getElementById('tagCloud'),
-  tagSearch: document.getElementById('tagSearch'),
-  reloadTags: document.getElementById('reloadTags'),
-  cmdRandom: document.getElementById('cmdRandom'),
-  cmdBlackout: document.getElementById('cmdBlackout'),
-  cmdWake: document.getElementById('cmdWake'),
-  cmdPulse: document.getElementById('cmdPulse'),
-  logBox: document.getElementById('logBox'),
+const state = {
+  tag: "",
+  mode: "sync",
+  speed: 6000,
+  screen: "all",
 };
 
-const STATE = {
-  ws: null,
-  target: 'all',
-  tags: [],
-  reconnectTimer: null,
-};
-
-const escapeHtml = (s = '') =>
-  String(s).replace(/[&<>"']/g, m => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  }[m]));
-
-function log(line, data = null) {
-  if (!els.logBox) return;
-  const now = new Date().toLocaleTimeString('it-IT');
-  const payload = data ? `\n${JSON.stringify(data, null, 2)}` : '';
-  els.logBox.textContent = `[${now}] ${line}${payload}\n\n${els.logBox.textContent}`.slice(0, 4000);
+function $(sel) {
+  return document.querySelector(sel);
 }
 
-function setConnection(status) {
-  if (!els.connection) return;
-  els.connection.textContent = status;
-  els.connection.dataset.status = status;
-}
+const logBox = $("#logBox");
+const connectionState = $("#connectionState");
 
-function connectWS() {
-  clearTimeout(STATE.reconnectTimer);
-  setConnection('connecting');
-
-  const ws = new WebSocket(WS_URL);
-  STATE.ws = ws;
-
-  ws.addEventListener('open', () => {
-    setConnection('online');
-    send({ type: 'HELLO', role: 'controller' }, false);
-    log('controller connected');
-  });
-
-  ws.addEventListener('close', () => {
-    setConnection('offline');
-    STATE.reconnectTimer = setTimeout(connectWS, 1200);
-  });
-
-  ws.addEventListener('error', () => {
-    setConnection('error');
-  });
-}
-
-function send(command, shouldLog = true) {
-  const payload = {
-    ...command,
-    target: command.target || STATE.target,
-    sentAt: Date.now(),
-  };
-
-  if (!STATE.ws || STATE.ws.readyState !== WebSocket.OPEN) {
-    log('websocket not ready', payload);
-    return;
+function log(msg) {
+  console.log(msg);
+  if (logBox) {
+    logBox.textContent =
+      `[${new Date().toLocaleTimeString()}] ${msg}\n` + logBox.textContent;
   }
+}
 
-  STATE.ws.send(JSON.stringify(payload));
-  if (shouldLog) log(`sent ${payload.type} → ${payload.target}`, payload);
+async function sendState(next = {}) {
+  const payload = { ...state, ...next };
+  Object.assign(state, payload);
+
+  try {
+    const res = await fetch(STATE_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      log(`STATE ERROR ${res.status}`);
+      return;
+    }
+
+    const data = await res.json();
+
+    if (connectionState) {
+      connectionState.textContent = "online";
+      connectionState.classList.add("is-online");
+    }
+
+    log(`STATE SENT mode:${data.mode} tag:#${data.tag || "none"} → ${data.screen}`);
+  } catch (err) {
+    console.error(err);
+
+    if (connectionState) {
+      connectionState.textContent = "offline";
+      connectionState.classList.remove("is-online");
+    }
+
+    log("STATE SEND FAILED");
+  }
 }
 
 async function loadTags() {
-  if (!els.tagCloud) return;
+  const wrap = $("#tagCloud");
 
-  els.tagCloud.innerHTML = '<span class="muted">loading tags…</span>';
+  if (!wrap) {
+    console.error("AOTU: #tagCloud not found");
+    return;
+  }
+
+  wrap.innerHTML = `<span class="muted">loading tags…</span>`;
 
   try {
-    const tagsUrl = `${API_BASE}/wp/v2/tags?per_page=100&_fields=id,name,slug,count`;
-    console.log('[controller] tags url=', tagsUrl);
+    const res = await fetch(`${TAGS_API}&t=${Date.now()}`, {
+      cache: "no-store",
+    });
 
-    const tagRes = await fetch(tagsUrl, { mode: 'cors' });
-    let tags = tagRes.ok ? await tagRes.json() : [];
-    tags = Array.isArray(tags) ? tags : [];
+    if (!res.ok) throw new Error(`Tags error ${res.status}`);
 
+    const tags = await res.json();
+    wrap.innerHTML = "";
 
+    tags.forEach((tag) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tag";
+      btn.dataset.tag = tag.slug;
+      btn.textContent = `#${tag.name}`;
 
-    // Fallback: se /tags torna vuoto, ricava i tag dai media embedded come archive.js
-    if (!tags.length) {
-      const mediaUrl = `${API_BASE}/wp/v2/media?per_page=100&_embed=1&_fields=id,_embedded,tags`;
-      console.log('[controller] media fallback url=', mediaUrl);
+      btn.addEventListener("click", () => {
+        document
+          .querySelectorAll("#tagCloud .is-active")
+          .forEach((b) => b.classList.remove("is-active"));
 
-      const mediaRes = await fetch(mediaUrl, { mode: 'cors' });
-      if (!mediaRes.ok) throw new Error(`HTTP media ${mediaRes.status}`);
+        btn.classList.add("is-active");
 
-      const media = await mediaRes.json();
-      const map = new Map();
-
-      media.forEach(item => {
-        const terms = item._embedded?.['wp:term'] || [];
-
-        terms.flat().forEach(term => {
-          if (term.taxonomy !== 'post_tag') return;
-
-          const id = Number(term.id);
-          const existing = map.get(id);
-
-          map.set(id, {
-            id,
-            name: term.name,
-            slug: term.slug || '',
-            count: existing ? existing.count + 1 : 1,
-          });
+        sendState({
+          tag: tag.slug,
+          mode: "sync",
+          screen: state.screen,
         });
       });
 
-      tags = [...map.values()];
-    }
+      wrap.appendChild(btn);
+    });
 
-    STATE.tags = tags
-      .filter(t => t.name)
-      .sort((a, b) => (b.count || 0) - (a.count || 0));
-
-    console.log('[controller] loaded tags=', STATE.tags);
-
-    renderTags();
-    log(`loaded ${STATE.tags.length} database tags`);
+    log(`TAGS LOADED ${tags.length}`);
   } catch (err) {
-    console.error('[controller] tag error', err);
-    els.tagCloud.innerHTML = '<span class="muted">no tags / API error</span>';
-    log('error loading tags', { error: String(err), api: API_BASE });
+    console.error(err);
+    wrap.innerHTML = `<span class="muted">tags error</span>`;
+    log("TAGS ERROR");
   }
 }
 
-function renderTags(search = '') {
-  if (!els.tagCloud) return;
+function bindTargets() {
+  document.querySelectorAll("[data-target]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document
+        .querySelectorAll("[data-target]")
+        .forEach((b) => b.classList.remove("is-active"));
 
-  const query = String(search || '').toLowerCase();
-
-  const filtered = STATE.tags.filter(t =>
-    !query ||
-    t.name.toLowerCase().includes(query) ||
-    (t.slug || '').toLowerCase().includes(query)
-  );
-
-  const topTags = [...filtered]
-    .sort((a, b) => (b.count || 0) - (a.count || 0))
-    .slice(0, 10);
-
-  const otherTags = filtered
-    .filter(t => !topTags.some(top => top.id === t.id))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  els.tagCloud.innerHTML = `
-    <div class="tag-section">
-      <h3>TOP 10 DATABASE TAGS</h3>
-      <div class="tag-list">
-        ${topTags.map(tagButton).join('')}
-      </div>
-    </div>
-
-    <div class="tag-section">
-      <h3>ALL TAGS</h3>
-      <div class="tag-list">
-        ${otherTags.map(tagButton).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function tagButton(tag) {
-  const count = Number(tag.count || 0);
-  const countLabel = count > 0 ? `<span>${count}</span>` : '';
-
-  return `
-    <button
-      class="tag-pill"
-      data-tag-id="${tag.id}"
-      data-tag-name="${escapeHtml(tag.name)}"
-      data-tag-slug="${escapeHtml(tag.slug || '')}"
-    >
-      #${escapeHtml(tag.name)}
-      ${countLabel}
-    </button>
-  `;
-}
-
-els.targetGrid?.addEventListener('click', (event) => {
-  const btn = event.target.closest('[data-target]');
-  if (!btn) return;
-
-  STATE.target = btn.dataset.target;
-
-  els.targetGrid
-    .querySelectorAll('.target')
-    .forEach(el => el.classList.toggle('is-active', el === btn));
-
-  log(`target selected: ${STATE.target}`);
-});
-
-els.tagCloud?.addEventListener('click', (event) => {
-  const btn = event.target.closest('[data-tag-id]');
-  if (!btn) return;
-
-  send({
-    type: 'FILTER_TAG',
-    tagId: Number(btn.dataset.tagId),
-    tagName: btn.dataset.tagName,
-    tagSlug: btn.dataset.tagSlug,
+      btn.classList.add("is-active");
+      state.screen = btn.dataset.target || "all";
+      log(`TARGET ${state.screen}`);
+    });
   });
-});
+}
 
-els.tagSearch?.addEventListener('input', (event) => {
-  renderTags(event.target.value);
-});
+function sendMode(mode) {
+  sendState({
+    mode,
+    screen: state.screen,
+  });
+}
 
-els.reloadTags?.addEventListener('click', loadTags);
+function bindActions() {
+  $("#cmdRandom")?.addEventListener("click", () => {
+    sendState({
+      tag: "",
+      mode: "random",
+      screen: state.screen,
+    });
+  });
 
-els.cmdRandom?.addEventListener('click', () => send({ type: 'RANDOM_ARCHIVE' }));
-els.cmdBlackout?.addEventListener('click', () => send({ type: 'BLACKOUT' }));
-els.cmdWake?.addEventListener('click', () => send({ type: 'WAKE' }));
-els.cmdPulse?.addEventListener('click', () => send({ type: 'PULSE' }));
+  $("#cmdPulse")?.addEventListener("click", () => sendMode("pulse"));
+  $("#cmdBlackout")?.addEventListener("click", () => sendMode("blackout"));
 
-console.log('[controller] API_BASE=', API_BASE);
+  $("#cmdWake")?.addEventListener("click", () => {
+    sendState({
+      mode: "sync",
+      screen: state.screen,
+    });
+  });
 
-connectWS();
-loadTags();
+  $("#cmdPixel")?.addEventListener("click", () => sendMode("pixel"));
+  $("#cmdMosaic")?.addEventListener("click", () => sendMode("mosaic"));
+  $("#cmdInvert")?.addEventListener("click", () => sendMode("invert"));
+  $("#cmdBlur")?.addEventListener("click", () => sendMode("blur"));
+  $("#cmdAcid")?.addEventListener("click", () => sendMode("acid"));
 
-window.AOTU_CONTROLLER = { STATE, send, loadTags };
+  $("#cmdReset")?.addEventListener("click", () => {
+    document
+      .querySelectorAll(".is-active")
+      .forEach((b) => b.classList.remove("is-active"));
+
+    const allBtn = document.querySelector('[data-target="all"]');
+    allBtn?.classList.add("is-active");
+
+    Object.assign(state, {
+      tag: "",
+      mode: "sync",
+      speed: 6000,
+      screen: "all",
+    });
+
+    sendState({
+      tag: "",
+      mode: "sync",
+      speed: 6000,
+      screen: "all",
+    });
+  });
+
+  $("#reloadTags")?.addEventListener("click", loadTags);
+
+  $("#tagSearch")?.addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase();
+
+    document.querySelectorAll("#tagCloud .tag").forEach((btn) => {
+      btn.style.display = btn.textContent.toLowerCase().includes(q)
+        ? ""
+        : "none";
+    });
+  });
+}
+
+function initController() {
+  bindTargets();
+  bindActions();
+  loadTags();
+
+  // appena apri il controller, sveglia gli screen se erano rimasti in blackout
+  sendState({
+    mode: "sync",
+    screen: "all",
+  });
+
+  log("AOTU controller ready");
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initController);
+} else {
+  initController();
+}
