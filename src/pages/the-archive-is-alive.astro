@@ -1,0 +1,250 @@
+---
+import "../styles/the-archive-is-alive.css";
+
+const CONTROLLER_URL = "/controller";
+const DISCORD_URL = "#";
+---
+
+<main class="tai-app">
+  <section class="tai-screen active" id="welcome">
+    <p class="tai-kicker">Welcome in the archive.</p>
+    <h1>THE ARCHIVE<br />IS ALIVE!</h1>
+
+    <div class="tai-actions">
+      <button data-go="intro">ITALIANO</button>
+      <button data-go="intro">ENGLISH</button>
+    </div>
+  </section>
+
+  <section class="tai-screen" id="intro">
+    <p class="tai-big">ciao!</p>
+    <p>hai appena varcato la soglia dell'archivio.</p>
+    <p>
+      Attraverso questo accesso, hai appena scelto inconsapevolmente di venirci incontro.
+    </p>
+    <p>
+      A volte ci vuole coraggio per fare un passo. E ci vuole il passo per scoprire
+      che una distanza non è mai esistita.
+    </p>
+
+    <button class="tai-work-btn" data-go="after-threshold">
+      <span>01</span>
+      LA SOGLIA
+      <small>2026 · Installazione · intervento site specific su serranda</small>
+    </button>
+  </section>
+
+  <section class="tai-screen" id="after-threshold">
+    <p class="tai-big">Grazie del tuo attraversamento.</p>
+    <p>Come ti senti?</p>
+    <p>Vivi lo spazio, l'archivio è vivo!</p>
+
+    <p>
+      <strong>If u trust the process,</strong> lascia il telefono sulla parete alla tua sinistra,
+      e preparati a separarti dal tuo dispositivo per tutto il tempo di cui senti di aver bisogno.
+    </p>
+
+    <p>
+      In alternativa procedi nello spazio e utilizza il tuo dispositivo come alleato
+      per facilitare l'attraversamento tuo e di chi ti sta intorno :)
+    </p>
+
+    <button class="tai-work-btn" data-go="online">
+      <span>02</span>
+      #WEPLAYONLINE
+      <small>2026 · interfaccia / dispositivo alleato</small>
+    </button>
+  </section>
+
+  <section class="tai-screen" id="online">
+    <p class="tai-big">#weplayonline</p>
+    <p>
+      Sentiti liberə di documentare l'esperienza, usare la luce, andare alla camera,
+      e se ti va lasciare una traccia.
+    </p>
+
+    <div class="tai-actions vertical">
+      <button id="torchBtn">ACCENDI TORCIA</button>
+      <button id="cameraBtn">APRI CAMERA</button>
+      <a href={DISCORD_URL} target="_blank">LASCIA UNA TRACCIA</a>
+      <button data-go="needs">CONTINUA</button>
+    </div>
+
+    <video id="cameraPreview" playsinline muted></video>
+    <p class="tai-note">Se la torcia non è disponibile, la pagina userà uno sfondo luminoso.</p>
+  </section>
+
+  <section class="tai-screen" id="needs">
+    <p class="tai-kicker">Abbiamo bisogno di spazi</p>
+
+    <div class="tai-generator" id="needText">per sentirci accolte</div>
+
+    <textarea
+      id="userNeed"
+      placeholder="Abbiamo bisogno di spazi..."
+    ></textarea>
+
+    <div class="tai-actions vertical">
+      <button id="saveNeed">REGISTRA</button>
+      <button data-go="web">CONTINUA</button>
+    </div>
+
+    <p class="tai-note" id="savedMsg"></p>
+  </section>
+
+  <section class="tai-screen" id="web">
+    <button class="tai-work-btn" data-go="web-text">
+      <span>03</span>
+      MERAVIGLIOSA RAGNATELA
+      <small>2026 · Installazione sonora</small>
+    </button>
+  </section>
+
+  <section class="tai-screen" id="web-text">
+    <p>
+      Grazie per il lascito della tua traccia, è il momento di abbassare la tensione
+      e rilassarti.
+    </p>
+
+    <p class="tai-big">
+      Sei in uno spazio protetto in cui poterti lasciare andare.
+    </p>
+
+    <button class="tai-work-btn" data-go="glass-text">
+      <span>04</span>
+      GLASS UPDATE
+      <small>2026 · Installazione multimediale</small>
+    </button>
+  </section>
+
+  <section class="tai-screen" id="glass-text">
+    <p>
+      Per fortuna o purtroppo, quando ci sentiamo sopraffattə e in sfiducia,
+      la vita ci dà la possibilità di prendere il controllo e filtrarne i contenuti.
+    </p>
+
+    <div class="tai-actions vertical">
+      <a href={CONTROLLER_URL}>GO TO CONTROLLER</a>
+      <button data-go="hope">TORNA ALLA MOSTRA</button>
+    </div>
+  </section>
+
+  <section class="tai-screen" id="hope">
+    <p>
+      Ma se per caso, arrivato a questo punto della mostra, ti sentissi un po’ meglio,
+      e decidessi di tornare a riporre su noi e sull'arte un po’ di speranza,
+      torna all'ingresso, appoggia il telefono alla parete e fruisci ancora dell’esperienza.
+    </p>
+
+    <button class="tai-work-btn" data-go="offline">
+      <span>05</span>
+      #WEPLAYOFFLINE
+      <small>2026 · Installazione multimediale</small>
+    </button>
+  </section>
+
+  <section class="tai-screen tai-offline" id="offline">
+    <h1>THANK U<br />FOR YOUR<br />TRUST</h1>
+    <p>appoggia il telefono alla parete</p>
+  </section>
+</main>
+
+<script>
+  const screens = document.querySelectorAll(".tai-screen");
+  const goBtns = document.querySelectorAll("[data-go]");
+
+  function goTo(id) {
+    screens.forEach((screen) => screen.classList.remove("active"));
+    document.getElementById(id)?.classList.add("active");
+    window.scrollTo(0, 0);
+  }
+
+  goBtns.forEach((btn) => {
+    btn.addEventListener("click", () => goTo(btn.dataset.go));
+  });
+
+  const needs = [
+    "per sentirci accolte",
+    "per sentirci selvatiche",
+    "per sentirci protette",
+    "per perdere il controllo",
+    "per sentirci vicine",
+    "per ricordare chi sta lontano",
+    "per trasformarci in qualcosa di bello",
+    "per ricostruire ciò che si è rotto"
+  ];
+
+  const needText = document.getElementById("needText");
+  setInterval(() => {
+    if (!needText) return;
+    needText.textContent = needs[Math.floor(Math.random() * needs.length)];
+  }, 2600);
+
+  document.getElementById("saveNeed")?.addEventListener("click", () => {
+    const input = document.getElementById("userNeed");
+    const msg = document.getElementById("savedMsg");
+    const value = input.value.trim();
+
+    if (!value) {
+      msg.textContent = "scrivi una frase prima di registrare";
+      return;
+    }
+
+    const saved = JSON.parse(localStorage.getItem("aotu_needs") || "[]");
+    saved.push({
+      text: value,
+      date: new Date().toISOString()
+    });
+
+    localStorage.setItem("aotu_needs", JSON.stringify(saved));
+    input.value = "";
+    msg.textContent = "traccia registrata";
+  });
+
+  const torchBtn = document.getElementById("torchBtn");
+  let stream = null;
+  let torchOn = false;
+
+  torchBtn?.addEventListener("click", async () => {
+    try {
+      if (!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" }
+        });
+      }
+
+      const track = stream.getVideoTracks()[0];
+      const capabilities = track.getCapabilities?.() || {};
+
+      if (!capabilities.torch) {
+        document.body.classList.toggle("light-mode");
+        torchBtn.textContent = document.body.classList.contains("light-mode")
+          ? "SPEGNI LUCE"
+          : "ACCENDI TORCIA";
+        return;
+      }
+
+      torchOn = !torchOn;
+      await track.applyConstraints({ advanced: [{ torch: torchOn }] });
+      torchBtn.textContent = torchOn ? "SPEGNI TORCIA" : "ACCENDI TORCIA";
+    } catch (e) {
+      document.body.classList.toggle("light-mode");
+    }
+  });
+
+  document.getElementById("cameraBtn")?.addEventListener("click", async () => {
+    const video = document.getElementById("cameraPreview");
+
+    try {
+      const cam = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+      });
+
+      video.srcObject = cam;
+      video.classList.add("visible");
+      video.play();
+    } catch (e) {
+      alert("Camera non disponibile su questo browser.");
+    }
+  });
+</script>

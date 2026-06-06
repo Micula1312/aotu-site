@@ -1,0 +1,54 @@
+---
+// src/pages/offline.astro
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>#WEPLAYOFFLINE</title>
+  </head>
+
+  <body>
+    <main>
+      <p class="work">■ 2. #WEPLAYOFFLINE, 2026</p>
+      <h1>THANK YOU<br />FOR YOUR TRUST</h1>
+      <p class="sub">THE ARCHIVE IS ALIVE</p>
+    </main>
+
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; width: 100%; min-height: 100%; }
+      body {
+        background: #000;
+        color: #39ff14;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        overflow: hidden;
+      }
+      main {
+        width: 100vw;
+        height: 100dvh;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 2rem;
+        padding: 24px;
+        text-align: center;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(3.4rem, 15vw, 12rem);
+        line-height: 0.84;
+        letter-spacing: -0.08em;
+        text-transform: uppercase;
+      }
+      .work, .sub {
+        margin: 0;
+        font-size: clamp(0.78rem, 2.5vw, 1rem);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        opacity: 0.62;
+      }
+    </style>
+  </body>
+</html>

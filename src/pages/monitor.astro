@@ -1,0 +1,93 @@
+---
+import "../styles/monitor.css";
+import "../styles/aotu-header.css";
+---
+
+<main class="monitor-page">
+<header class="aotu-page-header">
+  <p class="aotu-eyebrow">
+    THE ARCHIVE OF THE UNTAMED
+  </p>
+
+  <h1 class="aotu-page-title">
+    MONITOR
+  </h1>
+
+  <div class="live-clock">
+    <span id="monitorDate">--</span>
+    <span id="monitorTime">--:--:--</span>
+  </div>
+</header>
+
+  <section class="monitor-grid">
+
+    <article class="monitor-card">
+  <p>STATE ENDPOINT</p>
+  <h2 id="stateStatus">checking</h2>
+</article>
+
+<article class="monitor-card">
+  <p>LAST SIGNAL</p>
+  <h2 id="lastSignal">--</h2>
+</article>
+
+<article class="monitor-card">
+  <p>CURRENT MODE</p>
+  <h2 id="currentMode">--</h2>
+</article>
+
+<article class="monitor-card">
+  <p>CURRENT TAG</p>
+  <h2 id="currentTag">--</h2>
+</article>
+    <article class="monitor-card">
+      <p>API STATUS</p>
+      <h2 id="apiStatus">checking</h2>
+    </article>
+
+    <article class="monitor-card">
+      <p>TOTAL MEDIA</p>
+      <h2 id="totalMedia">--</h2>
+    </article>
+
+    <article class="monitor-card">
+      <p>IMAGES</p>
+      <h2 id="imageCount">--</h2>
+    </article>
+
+    <article class="monitor-card">
+      <p>VIDEO</p>
+      <h2 id="videoCount">--</h2>
+    </article>
+  </section>
+
+    <section class="monitor-panel">
+    <div class="panel-head">
+      <h2>PREVIEW STREAM</h2>
+      <span>latest media fragments</span>
+    </div>
+    <div id="previewStrip" class="preview-strip"></div>
+  </section>
+
+  <section class="monitor-panel">
+    <div class="panel-head">
+      <h2>LATEST INGESTION</h2>
+      <span id="lastUpload">waiting</span>
+    </div>
+    <div id="latestList" class="latest-list"></div>
+  </section>
+
+  <section class="monitor-panel">
+    <div class="panel-head">
+      <h2>TAG ACTIVITY</h2>
+      <span>post_tag taxonomy</span>
+    </div>
+    <div id="tagActivity" class="tag-activity"></div>
+  </section>
+
+
+</main>
+
+    <script>
+      import "../scripts/monitor.js";
+    </script>

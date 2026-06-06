@@ -1,0 +1,367 @@
+---
+// src/pages/percorso-mostra.astro
+---
+
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>THE ARCHIVE IS ALIVE!</title>
+  </head>
+
+  <body>
+    <main class="show-shell">
+      <section class="screen is-active" data-screen="landing">
+        <p class="eyebrow">WELCOME IN THE ARCHIVE</p>
+        <h1>THE ARCHIVE<br />IS ALIVE!</h1>
+        <div class="btn-row">
+          <button class="btn btn-empty" data-go="soglia">ITALIANO</button>
+          <button class="btn btn-empty" data-go="soglia-en">ENGLISH</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="soglia">
+        <p class="text-big">Ciao! Hai appena varcato la soglia dell'archivio.</p>
+        <p>
+          Attraverso questo accesso hai appena scelto, forse inconsapevolmente,
+          di venirci incontro.
+        </p>
+        <p>
+          A volte ci vuole coraggio per fare un passo. E ci vuole un passo per
+          scoprire che una distanza non è mai esistita.
+        </p>
+
+        <button class="work-card work-full" data-go="bivio">
+          <span>■ 1. LA SOGLIA, 2026</span>
+          <small>Installazione · intervento site-specific su serranda</small>
+        </button>
+      </section>
+
+      <section class="screen" data-screen="soglia-en">
+        <p class="text-big">Hi! You have just crossed the threshold of the archive.</p>
+        <p>
+          Through this access, you have just chosen, perhaps unknowingly, to come
+          closer to us.
+        </p>
+        <p>
+          Sometimes it takes courage to take a step. And sometimes it takes a
+          step to discover that distance never really existed.
+        </p>
+
+        <button class="work-card work-full" data-go="bivio">
+          <span>■ 1. LA SOGLIA, 2026</span>
+          <small>Installation · site-specific intervention on shutter</small>
+        </button>
+      </section>
+
+      <section class="screen" data-screen="bivio">
+        <p class="text-big">Grazie del tuo attraversamento.</p>
+        <p>Come ti senti?</p>
+        <p>Vivi lo spazio. L'archivio è vivo.</p>
+
+        <p>
+          If u trust the process, lascia il telefono sulla parete alla tua
+          sinistra e preparati a separarti dal tuo dispositivo per tutto il tempo
+          di cui senti di aver bisogno.
+        </p>
+        <p>
+          In alternativa, procedi nello spazio e utilizza il tuo dispositivo come
+          alleato per facilitare il tuo attraversamento e quello di chi ti sta
+          intorno.
+        </p>
+
+        <div class="btn-stack">
+          <a class="work-card work-full" href="/offline">
+            <span>■ 2. #WEPLAYOFFLINE, 2026</span>
+            <small>Installazione multimediale</small>
+          </a>
+          <button class="work-card work-empty" data-go="online">
+            <span>□ #WEPLAYONLINE</span>
+            <small>Attitudine / guida digitale</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="online">
+        <p class="text-big">Hai scelto di attraversare l'archivio insieme al tuo dispositivo.</p>
+        <p>Usalo come alleato. Documenta, illumina, lascia una traccia.</p>
+
+        <div class="btn-stack">
+          <button class="btn btn-empty" id="torchBtn">□ ACCENDI TORCIA / CAMBIO LUCE</button>
+          <a class="btn btn-empty" href="https://discord.com/" target="_blank" rel="noreferrer">□ LASCIA UNA TRACCIA SU DISCORD</a>
+        </div>
+
+        <div class="phrase-box">
+          <p class="muted">Abbiamo bisogno di spazi per...</p>
+          <p id="randomPhrase" class="random-phrase">sentirci accolte</p>
+        </div>
+
+        <label class="trace-form">
+          <span>Completa anche tu:</span>
+          <textarea id="traceInput" placeholder="Abbiamo bisogno di spazi per..."></textarea>
+        </label>
+        <button class="btn btn-empty" id="saveTrace">□ REGISTRA LA FRASE</button>
+        <p class="saved" id="savedMsg" aria-live="polite"></p>
+
+        <button class="work-card work-full" data-go="ragnatela">
+          <span>■ 3. MERAVIGLIOSA RAGNATELA, 2026</span>
+          <small>Installazione sonora</small>
+        </button>
+      </section>
+
+      <section class="screen" data-screen="ragnatela">
+        <button class="work-card work-full" data-go="glass">
+          <span>■ 3. MERAVIGLIOSA RAGNATELA, 2026</span>
+          <small>Installazione sonora</small>
+        </button>
+
+        <p>
+          Grazie per il lascito della tua traccia. È il momento di abbassare la
+          tensione e rilassarti.
+        </p>
+        <p>Sei in uno spazio protetto in cui poterti lasciare andare.</p>
+
+        <button class="btn btn-empty" data-go="glass">□ CONTINUA</button>
+      </section>
+
+      <section class="screen" data-screen="glass">
+        <div class="work-card work-full no-click">
+          <span>■ 4. GLASS UPDATE, 2026</span>
+          <small>Installazione multimediale</small>
+        </div>
+
+        <p>
+          Per fortuna o purtroppo, quando ci sentiamo sopraffatte e in sfiducia,
+          la vita ci offre la possibilità di prendere il controllo e filtrare i
+          contenuti.
+        </p>
+        <p>Filtrare. Ordinare. Selezionare.</p>
+        <p>Ma il controllo è reale o soltanto apparente?</p>
+
+        <a class="work-card work-empty" href="/controller">
+          <span>□ ACCEDI ALL'INTERFACCIA</span>
+          <small>Vai a ■ 5. THE ARCHIVE IS ALIVE</small>
+        </a>
+      </section>
+    </main>
+
+    <script>
+      const screens = [...document.querySelectorAll(".screen")];
+      const goButtons = document.querySelectorAll("[data-go]");
+      const body = document.body;
+
+      function go(name) {
+        screens.forEach((screen) => {
+          screen.classList.toggle("is-active", screen.dataset.screen === name);
+        });
+        window.scrollTo(0, 0);
+      }
+
+      goButtons.forEach((button) => {
+        button.addEventListener("click", () => go(button.dataset.go));
+      });
+
+      const phrases = [
+        "sentirci accolte",
+        "sentirci selvatiche",
+        "sentirci protette",
+        "perdere il controllo",
+        "sentirci vicine",
+        "ricordare chi sta lontano",
+        "trasformarci in qualcosa di bello",
+        "ricostruire ciò che si è rotto",
+      ];
+
+      const randomPhrase = document.getElementById("randomPhrase");
+      let phraseIndex = 0;
+      setInterval(() => {
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        if (randomPhrase) randomPhrase.textContent = phrases[phraseIndex];
+      }, 1800);
+
+      const torchBtn = document.getElementById("torchBtn");
+      torchBtn?.addEventListener("click", () => {
+        body.classList.toggle("torch-on");
+      });
+
+      const traceInput = document.getElementById("traceInput");
+      const saveTrace = document.getElementById("saveTrace");
+      const savedMsg = document.getElementById("savedMsg");
+
+      saveTrace?.addEventListener("click", () => {
+        const value = traceInput.value.trim();
+        if (!value) return;
+        const saved = JSON.parse(localStorage.getItem("aotu_traces") || "[]");
+        saved.push({ text: value, date: new Date().toISOString() });
+        localStorage.setItem("aotu_traces", JSON.stringify(saved));
+        traceInput.value = "";
+        savedMsg.textContent = "Traccia registrata in questo dispositivo.";
+      });
+    </script>
+
+    <style>
+      :root {
+        --bg: #050505;
+        --fg: #f2f2f2;
+        --acid: #39ff14;
+        --muted: rgba(242, 242, 242, 0.62);
+        --line: rgba(242, 242, 242, 0.22);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body { margin: 0; min-height: 100%; }
+
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        transition: background 240ms ease, color 240ms ease;
+      }
+
+      body.torch-on {
+        background: #e8ffe0;
+        color: #050505;
+      }
+
+      .show-shell {
+        min-height: 100vh;
+        padding: max(24px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+        display: grid;
+        place-items: center;
+      }
+
+      .screen {
+        display: none;
+        width: min(680px, 100%);
+        min-height: calc(100vh - 48px);
+        align-content: center;
+        gap: 20px;
+      }
+
+      .screen.is-active { display: grid; }
+
+      .eyebrow, .muted {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.78rem;
+      }
+
+      h1 {
+        font-size: clamp(3rem, 14vw, 8rem);
+        line-height: 0.86;
+        margin: 0;
+        letter-spacing: -0.08em;
+      }
+
+      p {
+        font-size: clamp(1rem, 4.6vw, 1.35rem);
+        line-height: 1.32;
+        margin: 0;
+      }
+
+      .text-big {
+        font-size: clamp(1.4rem, 7vw, 2.8rem);
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+      }
+
+      .btn-row, .btn-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .btn-row { grid-template-columns: 1fr 1fr; }
+
+      button, a {
+        font: inherit;
+      }
+
+      .btn, .work-card {
+        width: 100%;
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        text-decoration: none;
+        text-align: left;
+        padding: 16px;
+        cursor: pointer;
+      }
+
+      .btn-empty, .work-empty {
+        background: transparent;
+      }
+
+      .work-full {
+        background: var(--fg);
+        color: var(--bg);
+        border-color: var(--fg);
+      }
+
+      body.torch-on .work-full {
+        background: #050505;
+        color: #e8ffe0;
+        border-color: #050505;
+      }
+
+      .work-card {
+        display: grid;
+        gap: 8px;
+      }
+
+      .work-card span {
+        font-size: clamp(1.05rem, 5vw, 1.8rem);
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      .work-card small {
+        font-size: 0.86rem;
+        line-height: 1.2;
+        opacity: 0.72;
+      }
+
+      .no-click { cursor: default; }
+
+      .phrase-box {
+        border: 1px solid var(--line);
+        padding: 18px;
+        min-height: 140px;
+        display: grid;
+        align-content: center;
+        gap: 12px;
+      }
+
+      .random-phrase {
+        color: var(--acid);
+        font-size: clamp(1.8rem, 10vw, 4.8rem);
+        line-height: 0.9;
+        letter-spacing: -0.06em;
+      }
+
+      .trace-form {
+        display: grid;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 120px;
+        resize: vertical;
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        padding: 14px;
+        font: inherit;
+      }
+
+      .saved {
+        color: var(--acid);
+        font-size: 0.95rem;
+      }
+    </style>
+  </body>
+</html>

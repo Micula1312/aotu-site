@@ -67,24 +67,36 @@ async function sendState(next = {}) {
 async function loadTags() {
   const wrap = $("#tagCloud");
 
-  if (!wrap) {
-    console.error("AOTU: #tagCloud not found");
-    return;
-  }
+  if (!wrap) return;
 
   wrap.innerHTML = `<span class="muted">loading tags…</span>`;
 
   try {
-    const res = await fetch(`${TAGS_API}&t=${Date.now()}`, {
-      cache: "no-store",
-    });
+    let page = 1;
+    let totalPages = 1;
+    let allTags = [];
 
-    if (!res.ok) throw new Error(`Tags error ${res.status}`);
+    do {
+      const res = await fetch(
+        `${TAGS_API}&page=${page}&orderby=count&order=desc&_fields=id,name,slug,count&t=${Date.now()}`,
+        { cache: "no-store" }
+      );
 
-    const tags = await res.json();
+      if (!res.ok) throw new Error(`Tags error ${res.status}`);
+
+      const tags = await res.json();
+
+      totalPages = Number(res.headers.get("X-WP-TotalPages") || 1);
+      allTags.push(...tags);
+
+      page++;
+    } while (page <= totalPages);
+
+    allTags = allTags.filter((tag) => Number(tag.count || 0) > 0);
+
     wrap.innerHTML = "";
 
-    tags.forEach((tag) => {
+    allTags.forEach((tag) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "tag";
@@ -108,7 +120,7 @@ async function loadTags() {
       wrap.appendChild(btn);
     });
 
-    log(`TAGS LOADED ${tags.length}`);
+    log(`TAGS LOADED ${allTags.length}`);
   } catch (err) {
     console.error(err);
     wrap.innerHTML = `<span class="muted">tags error</span>`;
@@ -146,7 +158,7 @@ function bindActions() {
     });
   });
 
-  $("#cmdPulse")?.addEventListener("click", () => sendMode("pulse"));
+  // $("#cmdPulse")?.addEventListener("click", () => sendMode("pulse"));
   $("#cmdBlackout")?.addEventListener("click", () => sendMode("blackout"));
 
   $("#cmdWake")?.addEventListener("click", () => {
@@ -156,11 +168,11 @@ function bindActions() {
     });
   });
 
-  $("#cmdPixel")?.addEventListener("click", () => sendMode("pixel"));
-  $("#cmdMosaic")?.addEventListener("click", () => sendMode("mosaic"));
-  $("#cmdInvert")?.addEventListener("click", () => sendMode("invert"));
-  $("#cmdBlur")?.addEventListener("click", () => sendMode("blur"));
-  $("#cmdAcid")?.addEventListener("click", () => sendMode("acid"));
+  // $("#cmdPixel")?.addEventListener("click", () => sendMode("pixel"));
+  // $("#cmdMosaic")?.addEventListener("click", () => sendMode("mosaic"));
+  // $("#cmdInvert")?.addEventListener("click", () => sendMode("invert"));
+  // $("#cmdBlur")?.addEventListener("click", () => sendMode("blur"));
+  // $("#cmdAcid")?.addEventListener("click", () => sendMode("acid"));
 
   $("#cmdReset")?.addEventListener("click", () => {
     document

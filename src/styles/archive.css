@@ -109,7 +109,7 @@ flex: auto;
 
 :root{
   --pixel-scale: 12;      /* 5–9 sweet spot */
-  --pixel-hover: 1.4;    /* reveal softness */
+  --pixel-hover: 1;    /* reveal softness */
 }
 
 .card{
@@ -135,7 +135,6 @@ flex: auto;
 
   transform:
     scale(var(--pixel-scale))
-    scale(.15);
 
   transform-origin:center;
   transition:

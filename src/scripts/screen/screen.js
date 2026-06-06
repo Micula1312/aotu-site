@@ -14,6 +14,17 @@ let currentMedia = [];
 let currentIndex = 0;
 let slideTimer = null;
 
+const SECRET_MESSAGES = [
+  "THE ARCHIVE IS NOT SLEEPING",
+  "SOME FILES REFUSE TO BE SEEN",
+  "THE UNTAMED REMEMBERS",
+  "SIGNAL LOST / SIGNAL ALIVE",
+  "THIS IS NOT A BLACKOUT",
+  "THE DATABASE IS DREAMING",
+  "PLEASE TOUCH THE ARCHIVE GENTLY",
+  "NO MEDIA / ONLY GHOSTS",
+];
+
 const stage =
   document.querySelector("[data-screen-stage]") ||
   document.querySelector("#screen-stage") ||
@@ -42,6 +53,17 @@ async function pollState() {
   }
 }
 
+function renderSecretBlackout() {
+  const msg =
+    SECRET_MESSAGES[Math.floor(Math.random() * SECRET_MESSAGES.length)];
+
+  stage.innerHTML = `
+    <div class="aotu-secret-blackout">
+      ${msg}
+    </div>
+  `;
+}
+
 async function applyState(state) {
   currentSpeed = Number(state.speed) || 6000;
   currentMode = state.mode || "sync";
@@ -49,6 +71,7 @@ async function applyState(state) {
   applyMode(currentMode);
 
   if (currentMode === "blackout") {
+    renderSecretBlackout();
     return;
   }
 
@@ -225,6 +248,24 @@ function injectBaseStyle() {
       transform: scale(1.04);
       transition: opacity 800ms ease, transform 1200ms ease, filter 500ms ease;
       background: #000;
+      filter: hue-rotate(95deg) saturate(3.2) contrast(1.35);
+    }
+
+    .aotu-secret-blackout {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #000;
+      color: #d4ff52;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: clamp(28px, 7vw, 120px);
+      font-weight: 900;
+      line-height: 0.9;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: -0.06em;
+      padding: 8vw;
     }
 
     .aotu-screen-media.is-visible {

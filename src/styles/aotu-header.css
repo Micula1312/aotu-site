@@ -1,0 +1,56 @@
+:root{
+  --green: rgb(0,255,0);
+  --green-line: rgba(0,255,0,.28);
+}
+
+.aotu-page-header{
+  min-height:38vh;
+
+  display:grid;
+  align-content:end;
+
+  border-bottom:1px solid var(--green-line);
+
+  padding-bottom:28px;
+  margin-bottom:18px;
+}
+
+.aotu-eyebrow{
+  margin:0 0 12px;
+
+  color:var(--green);
+
+  font-size:12px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.aotu-page-title{
+  margin:0;
+
+  font-size:clamp(56px,12vw,156px);
+  line-height:.82;
+  letter-spacing:-.08em;
+  font-weight:900;
+}
+
+.aotu-page-subtitle{
+  margin-top:18px;
+
+  max-width:720px;
+
+  color:rgba(255,255,255,.55);
+
+  font-size:14px;
+  line-height:1.5;
+}
+
+.aotu-page-header {
+  position: relative;
+}
+
+.aotu-page-header .connection {
+  position: absolute;
+  top: 0;
+  right: 0;
+}

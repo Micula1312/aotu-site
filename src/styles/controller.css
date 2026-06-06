@@ -48,21 +48,7 @@ input{
 
 /* header */
 
-.controller-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:20px;
-  margin-bottom:28px;
-}
 
-.eyebrow{
-  margin:0 0 8px;
-  color:var(--green);
-  letter-spacing:.14em;
-  font-size:11px;
-  text-transform:uppercase;
-}
 
 h1{
   margin:0;

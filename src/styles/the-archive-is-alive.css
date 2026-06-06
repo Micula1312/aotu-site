@@ -1,0 +1,210 @@
+:root {
+  --bg: #000;
+  --fg: #fff;
+  --green: #9dff00;
+  --orange: #ff874b;
+  --muted: #888;
+  --line: rgba(157, 255, 0, 0.24);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body.light-mode {
+  background: #fff;
+  color: #000;
+}
+
+.tai-app {
+  min-height: 100vh;
+}
+
+.tai-screen {
+  display: none;
+  min-height: 100vh;
+  padding: 22px;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid var(--line);
+}
+
+.tai-screen.active {
+  display: flex;
+}
+
+.tai-kicker {
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 13px;
+}
+
+h1 {
+  margin: 18px 0;
+  font-size: clamp(54px, 17vw, 126px);
+  line-height: 0.82;
+  letter-spacing: -0.08em;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+p {
+  max-width: 720px;
+  font-size: 21px;
+  line-height: 1.22;
+}
+
+strong {
+  color: var(--green);
+}
+
+.tai-big {
+  font-size: clamp(34px, 9vw, 68px);
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+  font-weight: 950;
+}
+
+.tai-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.tai-actions.vertical {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+button,
+a {
+  border: 1px solid var(--green);
+  background: transparent;
+  color: var(--fg);
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button:hover,
+a:hover {
+  background: var(--green);
+  color: #000;
+}
+
+.tai-work-btn {
+  width: 100%;
+  max-width: 760px;
+  margin-top: 36px;
+  padding: 22px;
+  border-color: var(--orange);
+  color: var(--orange);
+  border-radius: 24px;
+  text-align: left;
+  font-size: clamp(34px, 11vw, 76px);
+  line-height: 0.9;
+  letter-spacing: -0.07em;
+}
+
+.tai-work-btn:hover {
+  background: var(--orange);
+  color: #000;
+}
+
+.tai-work-btn span {
+  display: block;
+  font-size: 18px;
+  letter-spacing: 0;
+  margin-bottom: 12px;
+}
+
+.tai-work-btn small {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  color: currentColor;
+}
+
+.tai-generator {
+  margin: 30px 0;
+  min-height: 30vh;
+  display: flex;
+  align-items: center;
+  color: var(--green);
+  font-size: clamp(42px, 13vw, 110px);
+  line-height: 0.86;
+  letter-spacing: -0.08em;
+  font-weight: 950;
+}
+
+textarea {
+  width: 100%;
+  max-width: 720px;
+  min-height: 120px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--green);
+  border-radius: 18px;
+  background: #000;
+  color: var(--fg);
+  font: inherit;
+  resize: vertical;
+}
+
+.tai-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+#cameraPreview {
+  display: none;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 24px;
+  border: 1px solid var(--green);
+  border-radius: 18px;
+}
+
+#cameraPreview.visible {
+  display: block;
+}
+
+.tai-offline {
+  align-items: center;
+  text-align: center;
+}
+
+.tai-offline h1 {
+  color: var(--green);
+}
+
+.tai-offline p {
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 13px;
+}
+
+@media (min-width: 800px) {
+  .tai-screen {
+    padding: 56px;
+  }
+}
