@@ -4,7 +4,7 @@
 }
 
 .aotu-page-header{
-  min-height:38vh;
+
 
   display:grid;
   align-content:end;
@@ -28,7 +28,7 @@
 .aotu-page-title{
   margin:0;
 
-  font-size:clamp(56px,12vw,156px);
+  font-size:clamp(24px,6vw,72px);
   line-height:.82;
   letter-spacing:-.08em;
   font-weight:900;

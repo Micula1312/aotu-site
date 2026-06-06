@@ -8,7 +8,7 @@ const TAGS_API =
 
 const state = {
   tag: "",
-  mode: "sync",
+  mode: "acid",
   speed: 6000,
   screen: "all",
 };
@@ -92,7 +92,7 @@ async function loadTags() {
       page++;
     } while (page <= totalPages);
 
-    allTags = allTags.filter((tag) => Number(tag.count || 0) > 0);
+    // allTags = allTags.filter((tag) => Number(tag.count || 0) > 0);
 
     wrap.innerHTML = "";
 
@@ -112,7 +112,7 @@ async function loadTags() {
 
         sendState({
           tag: tag.slug,
-          mode: "sync",
+          mode: "acid",
           screen: state.screen,
         });
       });
@@ -163,7 +163,7 @@ function bindActions() {
 
   $("#cmdWake")?.addEventListener("click", () => {
     sendState({
-      mode: "sync",
+      mode: "acid",
       screen: state.screen,
     });
   });
@@ -184,14 +184,14 @@ function bindActions() {
 
     Object.assign(state, {
       tag: "",
-      mode: "sync",
+      mode: "acid",
       speed: 6000,
       screen: "all",
     });
 
     sendState({
       tag: "",
-      mode: "sync",
+      mode: "acid",
       speed: 6000,
       screen: "all",
     });
@@ -217,7 +217,7 @@ function initController() {
 
   // appena apri il controller, sveglia gli screen se erano rimasti in blackout
   sendState({
-    mode: "sync",
+    mode: "acid",
     screen: "all",
   });
 

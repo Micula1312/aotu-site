@@ -77,7 +77,7 @@
           </a>
           <button class="work-card work-empty" data-go="online">
             <span>□ #WEPLAYONLINE</span>
-            <small>Attitudine / guida digitale</small>
+            <small>Exhibit guide</small>
           </button>
         </div>
       </section>
@@ -88,8 +88,9 @@
 
         <div class="btn-stack">
           <button class="btn btn-empty" id="torchBtn">□ ACCENDI TORCIA / CAMBIO LUCE</button>
-          <a class="btn btn-empty" href="https://discord.com/" target="_blank" rel="noreferrer">□ LASCIA UNA TRACCIA SU DISCORD</a>
+          <a class="btn btn-empty" href="https://discord.gg/fTPnXrWb" target="_blank" rel="noreferrer">□ LASCIA UNA TRACCIA SU DISCORD</a>
         </div>
+
 
         <div class="phrase-box">
           <p class="muted">Abbiamo bisogno di spazi per...</p>
@@ -100,36 +101,44 @@
           <span>Completa anche tu:</span>
           <textarea id="traceInput" placeholder="Abbiamo bisogno di spazi per..."></textarea>
         </label>
-        <button class="btn btn-empty" id="saveTrace">□ REGISTRA LA FRASE</button>
+        <button class="btn btn-empty" id="saveTrace">□ SALVA LA TRACCIA IN ARCHIVIO</button>
         <p class="saved" id="savedMsg" aria-live="polite"></p>
 
+        <div class="voice-recorder">
+        <button id="recordBtn" type="button">REGISTRA UNA FRASE</button>
+
+        <p class="rec-status" id="recStatus">
+          premi per lasciare una traccia vocale
+        </p>
+
+        <audio id="voicePlayback" controls></audio>
+      </div>
+        
         <button class="work-card work-full" data-go="ragnatela">
           <span>■ 3. MERAVIGLIOSA RAGNATELA, 2026</span>
           <small>Installazione sonora</small>
         </button>
+
       </section>
 
       <section class="screen" data-screen="ragnatela">
-        <button class="work-card work-full" data-go="glass">
-          <span>■ 3. MERAVIGLIOSA RAGNATELA, 2026</span>
-          <small>Installazione sonora</small>
-        </button>
-
         <p>
-          Grazie per il lascito della tua traccia. È il momento di abbassare la
+          Grazie per ciò che hai lasciato. È il momento di abbassare la
           tensione e rilassarti.
         </p>
         <p>Sei in uno spazio protetto in cui poterti lasciare andare.</p>
+        <p>Serviti pure al tavolo, il bar è a disposizione</p>
 
-        <button class="btn btn-empty" data-go="glass">□ CONTINUA</button>
+        <button class="work-card work-full" data-go="glass">
+          <span>■ 4. GLASS UPDATE, 2026</span>
+          <small>Installazione multimediale </small>
+        </button>
       </section>
 
       <section class="screen" data-screen="glass">
-        <div class="work-card work-full no-click">
-          <span>■ 4. GLASS UPDATE, 2026</span>
-          <small>Installazione multimediale</small>
-        </div>
-
+        <p>
+          Bugia beibe, è una truffa. 
+        </p>
         <p>
           Per fortuna o purtroppo, quando ci sentiamo sopraffatte e in sfiducia,
           la vita ci offre la possibilità di prendere il controllo e filtrare i
@@ -140,7 +149,7 @@
 
         <a class="work-card work-empty" href="/controller">
           <span>□ ACCEDI ALL'INTERFACCIA</span>
-          <small>Vai a ■ 5. THE ARCHIVE IS ALIVE</small>
+          <small> ■ 5. THE ARCHIVE IS ALIVE</small>
         </a>
       </section>
     </main>
@@ -197,6 +206,69 @@
         traceInput.value = "";
         savedMsg.textContent = "Traccia registrata in questo dispositivo.";
       });
+
+      const recordBtn = document.getElementById("recordBtn");
+const recStatus = document.getElementById("recStatus");
+const voicePlayback = document.getElementById("voicePlayback");
+
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+let audioStream = null;
+
+recordBtn?.addEventListener("click", async () => {
+  if (!isRecording) {
+    try {
+      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(audioStream);
+
+      mediaRecorder.addEventListener("dataavailable", (event) => {
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
+      });
+
+      mediaRecorder.addEventListener("stop", () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        voicePlayback.src = audioUrl;
+        voicePlayback.classList.add("visible");
+
+        const savedVoices = JSON.parse(
+          localStorage.getItem("aotu_voice_traces") || "[]"
+        );
+
+        savedVoices.push({
+          date: new Date().toISOString(),
+          url: audioUrl
+        });
+
+        localStorage.setItem("aotu_voice_traces", JSON.stringify(savedVoices));
+
+        recStatus.textContent = "traccia vocale registrata";
+        recordBtn.textContent = "REGISTRA DI NUOVO";
+
+        audioStream.getTracks().forEach((track) => track.stop());
+      });
+
+      mediaRecorder.start();
+      isRecording = true;
+
+      recordBtn.textContent = "STOP";
+      recordBtn.classList.add("recording");
+      recStatus.textContent = "registrazione in corso";
+    } catch (error) {
+      recStatus.textContent = "microfono non disponibile";
+    }
+  } else {
+    mediaRecorder.stop();
+    isRecording = false;
+    recordBtn.classList.remove("recording");
+  }
+});
     </script>
 
     <style>
@@ -361,6 +433,44 @@
       .saved {
         color: var(--acid);
         font-size: 0.95rem;
+      }
+
+      .voice-recorder {
+        margin: 28px 0;
+      }
+
+      .rec-status {
+        color: var(--green);
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+      }
+
+      #recordBtn.recording {
+        background: var(--green);
+        color: #000;
+        animation: recPulse 0.8s infinite alternate;
+      }
+
+      #voicePlayback {
+        display: none;
+        width: 100%;
+        max-width: 420px;
+        margin-top: 16px;
+      }
+
+      #voicePlayback.visible {
+        display: block;
+      }
+
+      @keyframes recPulse {
+        from {
+          box-shadow: 0 0 0 rgba(0, 255, 0, 0);
+        }
+
+        to {
+          box-shadow: 0 0 22px rgba(0, 255, 0, .7);
+        }
       }
     </style>
   </body>

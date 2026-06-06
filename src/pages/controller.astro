@@ -30,20 +30,24 @@ const TAGS_API_URL = `${WP_API_URL}/wp/v2/tags?per_page=100`;
 
   <body class="aotu-controller-page">
     <main class="controller-shell">
-      <header class="aotu-page-header">
-        <p class="aotu-eyebrow">THE ARCHIVE OF THE UNTAMED</p>
+    <header class="aotu-page-header">
+      <p class="aotu-eyebrow">THE ARCHIVE IS ALIVE</p>
+      <h1 class="aotu-page-title">CONTROLLER</h1>
+      <p class="aotu-page-subtitle">
+        Filtra, attraversa e manipola i contenuti dell’archivio.
+      </p>
 
-        <p class="aotu-work-number">■ 5. THE ARCHIVE IS ALIVE, 2026</p>
+      <a href="/the-archive-is-alive" class="back-to-show">
+        ← torna alla mostra
+      </a>
 
-        <h1 class="aotu-page-title">Installazione multimediale immersiva</h1>
-
-        <p class="controller-subtitle">Archive Interface</p>
-
-        <div class="connection" id="connectionState">polling</div>
-      </header>
+      <div class="connection" id="connection">
+        CONNECTING
+      </div>
+    </header>
 
       <section class="panel panel-targets">
-        <h2>Target</h2>
+        <h2>SCREEN</h2>
         <div class="target-grid" id="targetGrid">
           <button class="target is-active" data-target="all">ALL</button>
           <button class="target" data-target="screen-1">1</button>

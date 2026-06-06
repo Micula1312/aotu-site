@@ -208,3 +208,66 @@ textarea {
     padding: 56px;
   }
 }
+
+
+.aotu-page-header {
+  position: relative;
+  min-height: 38vh;
+  display: grid;
+  align-content: end;
+  border-bottom: 1px solid var(--green-line);
+  padding-bottom: 28px;
+  margin-bottom: 18px;
+}
+
+.aotu-eyebrow {
+  margin: 0 0 12px;
+  color: var(--green);
+  font-size: 12px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.aotu-page-title {
+  margin: 0;
+  color: var(--fg);
+  font-size: clamp(56px, 12vw, 156px);
+  line-height: .82;
+  letter-spacing: -.08em;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.aotu-page-subtitle {
+  margin-top: 18px;
+  max-width: 720px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.back-to-show {
+  width: fit-content;
+  margin-top: 18px;
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  background: transparent;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.back-to-show:hover {
+  background: var(--orange);
+  color: #000;
+}
+
+.aotu-page-header .connection {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
