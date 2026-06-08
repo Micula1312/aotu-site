@@ -4,20 +4,10 @@ const MEDIA_API = `${WP_API}/media`;
 const TAGS_API = `${WP_API}/tags`;
 
 const params = new URLSearchParams(window.location.search);
-const screenId =
-  params.get("id") ||
-  "screen-1";
 
-const screenNumber =
-  Number(screenId.match(/\d+/)?.[0] || 1);
-
-const isVertical =
-  screenNumber % 2 === 1;
-
-document.body.classList.toggle(
-  "vertical-screen",
-  isVertical
-);
+const rawScreenId = params.get("id") || "1";
+const screenNumber = Number(rawScreenId.match(/\d+/)?.[0] || 1);
+const SCREEN_ID = `screen-${screenNumber}`;
 
 let lastUpdatedAt = 0;
 let currentTag = "";
@@ -44,12 +34,20 @@ const stage =
   document.body;
 
 function shouldApplyToThisScreen(state) {
-  return !state.screen || state.screen === "all" || state.screen === SCREEN_ID;
+  return (
+    !state.screen ||
+    state.screen === "all" ||
+    state.screen === SCREEN_ID ||
+    state.screen === String(screenNumber)
+  );
 }
 
 async function pollState() {
   try {
-    const res = await fetch(`${STATE_API}?t=${Date.now()}`, { cache: "no-store" });
+    const res = await fetch(`${STATE_API}?t=${Date.now()}`, {
+      cache: "no-store",
+    });
+
     if (!res.ok) return;
 
     const state = await res.json();
@@ -130,7 +128,7 @@ function applyMode(mode) {
 async function resolveTagId(tag) {
   if (!tag) return null;
 
-  const cleanTag = tag.replace(/^#/, "").trim();
+  const cleanTag = String(tag).replace(/^#/, "").trim();
 
   const res = await fetch(
     `${TAGS_API}?slug=${encodeURIComponent(cleanTag)}&t=${Date.now()}`,
@@ -150,15 +148,16 @@ async function fetchMediaByTag(tag) {
     const tagId = await resolveTagId(tag);
 
     if (!tagId) {
-      console.warn("AOTU tag not found", tag);
-      return [];
+      console.warn("AOTU tag not found, loading random media", tag);
+    } else {
+      url += `&tags=${tagId}`;
     }
-
-    url += `&tags=${tagId}`;
   }
 
   try {
-    const res = await fetch(`${url}&t=${Date.now()}`, { cache: "no-store" });
+    const res = await fetch(`${url}&t=${Date.now()}`, {
+      cache: "no-store",
+    });
 
     if (!res.ok) {
       console.error("AOTU media fetch error", res.status);
@@ -175,6 +174,12 @@ async function fetchMediaByTag(tag) {
     console.error("AOTU media fetch failed", err);
     return [];
   }
+}
+
+function getRotationClass() {
+  if (screenNumber === 1) return "rotate-right";
+  if (screenNumber === 3 || screenNumber === 5) return "rotate-left";
+  return "";
 }
 
 function renderCurrentMedia() {
@@ -213,6 +218,10 @@ function renderCurrentMedia() {
   }
 
   el.className = "aotu-screen-media";
+
+  const rotationClass = getRotationClass();
+  if (rotationClass) el.classList.add(rotationClass);
+
   stage.appendChild(el);
 
   requestAnimationFrame(() => {
@@ -244,7 +253,8 @@ function injectBaseStyle() {
   const style = document.createElement("style");
 
   style.innerHTML = `
-    html, body {
+    html,
+    body {
       margin: 0;
       width: 100%;
       height: 100%;
@@ -258,10 +268,35 @@ function injectBaseStyle() {
       object-fit: cover;
       display: block;
       opacity: 0;
-      transform: scale(1.04);
-      transition: opacity 800ms ease, transform 1200ms ease, filter 500ms ease;
       background: #000;
       filter: hue-rotate(95deg) saturate(3.2) contrast(1.35);
+      transition:
+        opacity 800ms ease,
+        filter 500ms ease;
+    }
+
+    .aotu-screen-media.is-visible {
+      opacity: 1;
+    }
+
+    .aotu-screen-media.rotate-left,
+    .aotu-screen-media.rotate-right {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100vh;
+      height: 100vw;
+      max-width: none;
+      max-height: none;
+      transform-origin: center center;
+    }
+
+    .aotu-screen-media.rotate-left {
+      transform: translate(-50%, -50%) rotate(-90deg);
+    }
+
+    .aotu-screen-media.rotate-right {
+      transform: translate(-50%, -50%) rotate(90deg);
     }
 
     .aotu-secret-blackout {
@@ -270,7 +305,7 @@ function injectBaseStyle() {
       display: grid;
       place-items: center;
       background: #000;
-      color: #d4ff52;
+      color: rgb(0,255,0);
       font-family: Arial, Helvetica, sans-serif;
       font-size: clamp(28px, 7vw, 120px);
       font-weight: 900;
@@ -281,17 +316,12 @@ function injectBaseStyle() {
       padding: 8vw;
     }
 
-    .aotu-screen-media.is-visible {
-      opacity: 1;
-      transform: scale(1);
-    }
-
     .is-blackout {
       background: #000 !important;
     }
 
     .is-blackout > * {
-      opacity: 0 !important;
+      opacity: 1 !important;
       pointer-events: none;
     }
 
@@ -302,13 +332,11 @@ function injectBaseStyle() {
     .fx-pixel .aotu-screen-media {
       image-rendering: pixelated;
       filter: contrast(1.45) saturate(1.7);
-      transform: scale(1.1);
     }
 
     .fx-mosaic .aotu-screen-media {
       image-rendering: pixelated;
       filter: contrast(1.9) saturate(2.1);
-      transform: scale(1.22);
     }
 
     .fx-invert .aotu-screen-media {
@@ -317,7 +345,6 @@ function injectBaseStyle() {
 
     .fx-blur .aotu-screen-media {
       filter: blur(14px) contrast(1.4) saturate(1.5);
-      transform: scale(1.14);
     }
 
     .fx-acid .aotu-screen-media {
@@ -331,7 +358,7 @@ function injectBaseStyle() {
       place-content: center;
       gap: 0.5rem;
       text-align: center;
-      color: #d4ff52;
+      color: rgb(0,255,0);
       background: #000;
       font-family: Arial, Helvetica, sans-serif;
       text-transform: uppercase;
@@ -345,12 +372,10 @@ function injectBaseStyle() {
     @keyframes aotuPulse {
       from {
         filter: brightness(0.7) contrast(1.2) saturate(1.2);
-        transform: scale(1.02);
       }
 
       to {
         filter: brightness(1.5) contrast(1.8) saturate(2);
-        transform: scale(1.09);
       }
     }
   `;
