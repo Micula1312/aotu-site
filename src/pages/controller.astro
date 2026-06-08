@@ -37,9 +37,9 @@ const TAGS_API_URL = `${WP_API_URL}/wp/v2/tags?per_page=100`;
         Filtra, attraversa e manipola i contenuti dell’archivio.
       </p>
 
-      <a href="/the-archive-is-alive" class="back-to-show">
-        ← torna alla mostra
-      </a>
+<a href="/percorso-mostra?screen=ending" class="back-to-show">
+  ← torna alla mostra
+</a>
 
       <div class="connection" id="connection">
         CONNECTING
@@ -93,22 +93,7 @@ const TAGS_API_URL = `${WP_API_URL}/wp/v2/tags?per_page=100`;
         <pre id="logBox">ready</pre>
       </section>
 
-      <section class="panel panel-ending">
-        <p>Sei in controllo.</p>
-        <p>Apparentemente.</p>
-        <p>Puoi respirare. Esplora l'archivio.</p>
-        <p>
-          Ma se arrivata fin qui ti senti un po' meglio, e decidi di riporre
-          ancora un po' di fiducia nell'arte, negli altri, o semplicemente nello
-          spazio che stai attraversando, torna all'ingresso.
-        </p>
-        <p>Lascia il telefono sulla parete. E attraversa ancora.</p>
 
-        <a class="offline-link" href="/offline">
-          ■ 2. #WEPLAYOFFLINE, 2026<br />
-          <span>GO TO</span>
-        </a>
-      </section>
     </main>
 
     <script>
@@ -133,15 +118,6 @@ const TAGS_API_URL = `${WP_API_URL}/wp/v2/tags?per_page=100`;
         font-size: 0.78rem;
       }
 
-      .panel-ending {
-        display: grid;
-        gap: 1rem;
-      }
-
-      .panel-ending p {
-        margin: 0;
-        line-height: 1.28;
-      }
 
       .offline-link {
         display: block;

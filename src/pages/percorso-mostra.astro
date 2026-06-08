@@ -11,46 +11,43 @@
 
   <body>
     <main class="show-shell">
+      <header class="show-header">
+        <a class="show-logo" href="/" aria-label="Vai alla home">
+          go to THE ARCHIVE OF THE #UNTAMED
+        </a>
+        <button class="back-btn" id="backBtn" type="button" aria-label="Torna alla schermata precedente">
+          ← TORNA INDIETRO
+        </button>
+      </header>
+
       <section class="screen is-active" data-screen="landing">
         <p class="eyebrow">WELCOME IN THE ARCHIVE</p>
+        <p class="credits">
+          Di Micol Gelsi, con Giuseppe Di Capua e Federico Russo
+        </p>
         <h1>THE ARCHIVE<br />IS ALIVE!</h1>
         <div class="btn-row">
-          <button class="btn btn-empty" data-go="soglia">ITALIANO</button>
-          <button class="btn btn-empty" data-go="soglia-en">ENGLISH</button>
+          <button class="btn btn-empty" data-go="soglia">START</button>
         </div>
       </section>
 
       <section class="screen" data-screen="soglia">
         <p class="text-big">Ciao! Hai appena varcato la soglia dell'archivio.</p>
         <p>
-          Attraverso questo accesso hai appena scelto, forse inconsapevolmente,
+          Con questo accesso hai appena scelto, forse inconsapevolmente,
           di venirci incontro.
         </p>
         <p>
           A volte ci vuole coraggio per fare un passo. E ci vuole un passo per
           scoprire che una distanza non è mai esistita.
         </p>
+        <p>
+          Ti invitiamo pertanto ad attraversare la soglia, sperando che tu possa trovare qualcosa di cui hai bisogno.
+        </p>
 
         <button class="work-card work-full" data-go="bivio">
           <span>■ 1. LA SOGLIA, 2026</span>
           <small>Installazione · intervento site-specific su serranda</small>
-        </button>
-      </section>
-
-      <section class="screen" data-screen="soglia-en">
-        <p class="text-big">Hi! You have just crossed the threshold of the archive.</p>
-        <p>
-          Through this access, you have just chosen, perhaps unknowingly, to come
-          closer to us.
-        </p>
-        <p>
-          Sometimes it takes courage to take a step. And sometimes it takes a
-          step to discover that distance never really existed.
-        </p>
-
-        <button class="work-card work-full" data-go="bivio">
-          <span>■ 1. LA SOGLIA, 2026</span>
-          <small>Installation · site-specific intervention on shutter</small>
         </button>
       </section>
 
@@ -60,9 +57,8 @@
         <p>Vivi lo spazio. L'archivio è vivo.</p>
 
         <p>
-          If u trust the process, lascia il telefono sulla parete alla tua
-          sinistra e preparati a separarti dal tuo dispositivo per tutto il tempo
-          di cui senti di aver bisogno.
+          If u <i>trust the process</i>, lascia il telefono sui ripiani a parete alla tua
+          sinistra e preparati a separarti dal tuo dispositivo per il tempo di percorrenza dello spazio.
         </p>
         <p>
           In alternativa, procedi nello spazio e utilizza il tuo dispositivo come
@@ -108,12 +104,15 @@
         <button id="recordBtn" type="button">REGISTRA UNA FRASE</button>
 
         <p class="rec-status" id="recStatus">
-          premi per lasciare una traccia vocale
+          premi per lasciare una traccia vocale :)
         </p>
 
         <audio id="voicePlayback" controls></audio>
       </div>
-        
+
+        <p>
+          Ricorda di trovarti sempre all'interno di una
+        </p>
         <button class="work-card work-full" data-go="ragnatela">
           <span>■ 3. MERAVIGLIOSA RAGNATELA, 2026</span>
           <small>Installazione sonora</small>
@@ -126,9 +125,9 @@
           Grazie per ciò che hai lasciato. È il momento di abbassare la
           tensione e rilassarti.
         </p>
-        <p>Sei in uno spazio protetto in cui poterti lasciare andare.</p>
-        <p>Serviti pure al tavolo, il bar è a disposizione</p>
-
+        <p>Prosegui il percorso verso l'esterno.</p>
+        <p>Serviti pure al tavolo: il bar è a disposizione. Appoggiati, siediti.</p>
+        <p>Respira:</p>
         <button class="work-card work-full" data-go="glass">
           <span>■ 4. GLASS UPDATE, 2026</span>
           <small>Installazione multimediale </small>
@@ -137,138 +136,233 @@
 
       <section class="screen" data-screen="glass">
         <p>
-          Bugia beibe, è una truffa. 
+          Bugia beibe, è una truffa, non abbassare mai la guardia.
         </p>
         <p>
-          Per fortuna o purtroppo, quando ci sentiamo sopraffatte e in sfiducia,
-          la vita ci offre la possibilità di prendere il controllo e filtrare i
+          Può succedere ;) quando ci sentiamo sopraffatte e in sfiducia,
+          la vita ci offre la possibilità di tornare il controllo e filtrare i
           contenuti.
         </p>
         <p>Filtrare. Ordinare. Selezionare.</p>
-        <p>Ma il controllo è reale o soltanto apparente?</p>
+        <p>Vuoi entrare in controllo dei contenuti dell'archivio?</p>
+        <p>Verifica la tua connessione alla rete Wi-Fi e procedi verso l'ultima sala.</p>
 
-        <a class="work-card work-empty" href="/controller">
-          <span>□ ACCEDI ALL'INTERFACCIA</span>
-          <small> ■ 5. THE ARCHIVE IS ALIVE</small>
+          <button class="work-card work-full" data-go="ending">
+            <span>■ 5. THE ARCHIVE IS ALIVE, 2026</span>
+            <small>Installazione multimediale interattiva</small>
+          </button>
+      </section>
+
+      <section class="screen" data-screen="ending">
+          <a class="work-card work-empty" href="/controller">
+            <span>□ GO TO CONTROLLER</span>
+            <small></small>
+          </a>
+        <p class="text-big">Sei in controllo.</p>
+        <p>Apparentemente.</p>
+        <p>Puoi respirare. Esplora l'archivio.</p>
+        <p>
+          Ma se arrivata fin qui ti senti un po' meglio, e decidi di riporre
+          ancora un po' di fiducia nell'arte, negli altri, o semplicemente nello
+          spazio-tempo che stai attraversando, torna all'ingresso.
+        </p>
+        <p>Lascia il telefono sulla parete. E attraversa ancora.</p>
+
+        <a class="work-card work-full" href="/offline">
+          <span>■ 2. #WEPLAYOFFLINE, 2026</span>
+          <small>GO TO</small>
         </a>
       </section>
+
     </main>
 
     <script>
-      const screens = [...document.querySelectorAll(".screen")];
-      const goButtons = document.querySelectorAll("[data-go]");
-      const body = document.body;
+  const screens = [...document.querySelectorAll(".screen")];
+  const goButtons = document.querySelectorAll("[data-go]");
+  const backBtn = document.getElementById("backBtn");
+  const body = document.body;
 
-      function go(name) {
-        screens.forEach((screen) => {
-          screen.classList.toggle("is-active", screen.dataset.screen === name);
-        });
-        window.scrollTo(0, 0);
-      }
+  const params = new URLSearchParams(window.location.search);
+  const startScreen = params.get("screen") || "landing";
 
-      goButtons.forEach((button) => {
-        button.addEventListener("click", () => go(button.dataset.go));
-      });
+  const historyStack = [startScreen];
 
-      const phrases = [
-        "sentirci accolte",
-        "sentirci selvatiche",
-        "sentirci protette",
-        "perdere il controllo",
-        "sentirci vicine",
-        "ricordare chi sta lontano",
-        "trasformarci in qualcosa di bello",
-        "ricostruire ciò che si è rotto",
-      ];
+  function setScreen(name) {
+    screens.forEach((screen) => {
+      screen.classList.toggle(
+        "is-active",
+        screen.dataset.screen === name
+      );
+    });
 
-      const randomPhrase = document.getElementById("randomPhrase");
-      let phraseIndex = 0;
-      setInterval(() => {
-        phraseIndex = (phraseIndex + 1) % phrases.length;
-        if (randomPhrase) randomPhrase.textContent = phrases[phraseIndex];
-      }, 1800);
-
-      const torchBtn = document.getElementById("torchBtn");
-      torchBtn?.addEventListener("click", () => {
-        body.classList.toggle("torch-on");
-      });
-
-      const traceInput = document.getElementById("traceInput");
-      const saveTrace = document.getElementById("saveTrace");
-      const savedMsg = document.getElementById("savedMsg");
-
-      saveTrace?.addEventListener("click", () => {
-        const value = traceInput.value.trim();
-        if (!value) return;
-        const saved = JSON.parse(localStorage.getItem("aotu_traces") || "[]");
-        saved.push({ text: value, date: new Date().toISOString() });
-        localStorage.setItem("aotu_traces", JSON.stringify(saved));
-        traceInput.value = "";
-        savedMsg.textContent = "Traccia registrata in questo dispositivo.";
-      });
-
-      const recordBtn = document.getElementById("recordBtn");
-const recStatus = document.getElementById("recStatus");
-const voicePlayback = document.getElementById("voicePlayback");
-
-let mediaRecorder = null;
-let audioChunks = [];
-let isRecording = false;
-let audioStream = null;
-
-recordBtn?.addEventListener("click", async () => {
-  if (!isRecording) {
-    try {
-      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      audioChunks = [];
-      mediaRecorder = new MediaRecorder(audioStream);
-
-      mediaRecorder.addEventListener("dataavailable", (event) => {
-        if (event.data.size > 0) {
-          audioChunks.push(event.data);
-        }
-      });
-
-      mediaRecorder.addEventListener("stop", () => {
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-        const audioUrl = URL.createObjectURL(audioBlob);
-
-        voicePlayback.src = audioUrl;
-        voicePlayback.classList.add("visible");
-
-        const savedVoices = JSON.parse(
-          localStorage.getItem("aotu_voice_traces") || "[]"
-        );
-
-        savedVoices.push({
-          date: new Date().toISOString(),
-          url: audioUrl
-        });
-
-        localStorage.setItem("aotu_voice_traces", JSON.stringify(savedVoices));
-
-        recStatus.textContent = "traccia vocale registrata";
-        recordBtn.textContent = "REGISTRA DI NUOVO";
-
-        audioStream.getTracks().forEach((track) => track.stop());
-      });
-
-      mediaRecorder.start();
-      isRecording = true;
-
-      recordBtn.textContent = "STOP";
-      recordBtn.classList.add("recording");
-      recStatus.textContent = "registrazione in corso";
-    } catch (error) {
-      recStatus.textContent = "microfono non disponibile";
+    if (backBtn) {
+      backBtn.classList.toggle("is-visible", name !== "landing");
     }
-  } else {
-    mediaRecorder.stop();
-    isRecording = false;
-    recordBtn.classList.remove("recording");
+
+    window.scrollTo(0, 0);
   }
-});
+
+  function go(name) {
+    const current = document.querySelector(".screen.is-active");
+
+    if (current?.dataset.screen !== name) {
+      historyStack.push(name);
+    }
+
+    setScreen(name);
+  }
+
+  function goBack() {
+    if (historyStack.length <= 1) {
+      setScreen("landing");
+      return;
+    }
+
+    historyStack.pop();
+
+    const previous = historyStack[historyStack.length - 1] || "landing";
+    setScreen(previous);
+  }
+
+  goButtons.forEach((button) => {
+    button.addEventListener("click", () => go(button.dataset.go));
+  });
+
+  backBtn?.addEventListener("click", goBack);
+
+  setScreen(startScreen);
+
+  const phrases = [
+    "sentirci accolte",
+    "sentirci selvatiche",
+    "sentirci protette",
+    "perdere il controllo",
+    "sentirci vicine",
+    "ricordare chi sta lontano",
+    "trasformarci in qualcosa di bello",
+    "ricostruire ciò che si è rotto",
+  ];
+
+  const randomPhrase = document.getElementById("randomPhrase");
+  let phraseIndex = 0;
+
+  setInterval(() => {
+    phraseIndex = (phraseIndex + 1) % phrases.length;
+    if (randomPhrase) randomPhrase.textContent = phrases[phraseIndex];
+  }, 1800);
+
+  const torchBtn = document.getElementById("torchBtn");
+
+  torchBtn?.addEventListener("click", () => {
+    body.classList.toggle("torch-on");
+  });
+
+  const traceInput = document.getElementById("traceInput");
+  const saveTrace = document.getElementById("saveTrace");
+  const savedMsg = document.getElementById("savedMsg");
+
+  saveTrace?.addEventListener("click", () => {
+    const value = traceInput.value.trim();
+    if (!value) return;
+
+    const saved = JSON.parse(
+      localStorage.getItem("aotu_traces") || "[]"
+    );
+
+    saved.push({
+      text: value,
+      date: new Date().toISOString(),
+    });
+
+    localStorage.setItem("aotu_traces", JSON.stringify(saved));
+
+    traceInput.value = "";
+    savedMsg.textContent = "Traccia registrata in questo dispositivo.";
+  });
+
+  const recordBtn = document.getElementById("recordBtn");
+  const recStatus = document.getElementById("recStatus");
+  const voicePlayback = document.getElementById("voicePlayback");
+
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let isRecording = false;
+  let audioStream = null;
+
+  recordBtn?.addEventListener("click", async () => {
+    if (!isRecording) {
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(audioStream);
+
+        mediaRecorder.addEventListener("dataavailable", (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        });
+
+        mediaRecorder.addEventListener("stop", () => {
+          const audioBlob = new Blob(audioChunks, {
+            type: "audio/webm",
+          });
+
+          const audioUrl = URL.createObjectURL(audioBlob);
+
+          if (voicePlayback) {
+            voicePlayback.src = audioUrl;
+            voicePlayback.classList.add("visible");
+          }
+
+          const savedVoices = JSON.parse(
+            localStorage.getItem("aotu_voice_traces") || "[]"
+          );
+
+          savedVoices.push({
+            date: new Date().toISOString(),
+            url: audioUrl,
+          });
+
+          localStorage.setItem(
+            "aotu_voice_traces",
+            JSON.stringify(savedVoices)
+          );
+
+          if (recStatus) {
+            recStatus.textContent = "traccia vocale registrata";
+          }
+
+          if (recordBtn) {
+            recordBtn.textContent = "REGISTRA DI NUOVO";
+          }
+
+          audioStream?.getTracks().forEach((track) => track.stop());
+        });
+
+        mediaRecorder.start();
+        isRecording = true;
+
+        recordBtn.textContent = "STOP";
+        recordBtn.classList.add("recording");
+
+        if (recStatus) {
+          recStatus.textContent = "registrazione in corso";
+        }
+      } catch (error) {
+        if (recStatus) {
+          recStatus.textContent = "microfono non disponibile";
+        }
+      }
+    } else {
+      mediaRecorder?.stop();
+      isRecording = false;
+      recordBtn.classList.remove("recording");
+    }
+  });
+
     </script>
 
     <style>
@@ -296,6 +390,49 @@ recordBtn?.addEventListener("click", async () => {
         color: #050505;
       }
 
+      .show-header {
+        position: fixed;
+        top: max(16px, env(safe-area-inset-top));
+        left: 18px;
+        right: 18px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        pointer-events: none;
+      }
+
+      .show-logo,
+      .back-btn {
+        pointer-events: auto;
+        color: inherit;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.72rem;
+        line-height: 1.1;
+        opacity: 0.72;
+      }
+
+      .show-logo:hover,
+      .back-btn:hover {
+        opacity: 1;
+      }
+
+      .back-btn {
+        display: none;
+        width: auto;
+        border: 1px solid currentColor;
+        background: transparent;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+
+      .back-btn.is-visible {
+        display: block;
+      }
+
       .show-shell {
         min-height: 100vh;
         padding: max(24px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
@@ -318,6 +455,15 @@ recordBtn?.addEventListener("click", async () => {
         text-transform: uppercase;
         letter-spacing: 0.12em;
         font-size: 0.78rem;
+      }
+
+      .credits {
+        margin: 0;
+        opacity: 0.76;
+        font-size: clamp(0.9rem, 3.8vw, 1.08rem);
+        line-height: 1.35;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
       }
 
       h1 {
@@ -440,14 +586,14 @@ recordBtn?.addEventListener("click", async () => {
       }
 
       .rec-status {
-        color: var(--green);
+        color: var(--acid);
         font-size: 14px;
         text-transform: uppercase;
         letter-spacing: .08em;
       }
 
       #recordBtn.recording {
-        background: var(--green);
+        background: var(--acid);
         color: #000;
         animation: recPulse 0.8s infinite alternate;
       }

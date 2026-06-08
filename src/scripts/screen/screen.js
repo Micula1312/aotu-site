@@ -4,7 +4,20 @@ const MEDIA_API = `${WP_API}/media`;
 const TAGS_API = `${WP_API}/tags`;
 
 const params = new URLSearchParams(window.location.search);
-const SCREEN_ID = params.get("id") || "screen-1";
+const screenId =
+  params.get("id") ||
+  "screen-1";
+
+const screenNumber =
+  Number(screenId.match(/\d+/)?.[0] || 1);
+
+const isVertical =
+  screenNumber % 2 === 1;
+
+document.body.classList.toggle(
+  "vertical-screen",
+  isVertical
+);
 
 let lastUpdatedAt = 0;
 let currentTag = "";
