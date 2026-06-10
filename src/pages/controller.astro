@@ -46,7 +46,7 @@ const TAGS_API_URL = `${WP_API_URL}/wp/v2/tags?per_page=100`;
       </div>
     </header>
 
-      <section class="panel panel-targets">
+      <!-- <section class="panel panel-targets">
         <h2>SCREEN</h2>
         <div class="target-grid" id="targetGrid">
           <button class="target is-active" data-target="all">ALL</button>
@@ -67,7 +67,7 @@ const TAGS_API_URL = `${WP_API_URL}/wp/v2/tags?per_page=100`;
           <button class="action" id="cmdWake">WAKE</button>
           <button class="action" id="cmdReset">RESET</button>
         </div>
-      </section>
+      </section> -->
 
       <section class="panel panel-tags">
         <div class="panel-title-row">
@@ -134,6 +134,44 @@ const TAGS_API_URL = `${WP_API_URL}/wp/v2/tags?per_page=100`;
         font-size: 0.78rem;
         letter-spacing: 0.12em;
       }
+
+      .back-to-show {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+
+  margin-top: 1.2rem;
+  padding: 0.85rem 1.1rem;
+
+  border: 1px solid var(--green, rgb(0,255,0));
+  border-radius: 999px;
+
+  color: var(--green, rgb(0,255,0));
+  background: rgba(0, 255, 0, 0.08);
+
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.back-to-show:hover {
+  background: var(--green, rgb(0,255,0));
+  color: #000;
+  transform: translateY(-1px);
+  box-shadow: 0 0 24px rgba(0, 255, 0, 0.35);
+}
+
+.back-to-show:active {
+  transform: translateY(0);
+}
     </style>
   </body>
 </html>
