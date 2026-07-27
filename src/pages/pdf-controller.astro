@@ -1,0 +1,39 @@
+---
+import "../styles/pdf-controller.css";
+---
+
+<main class="pdf-controller">
+  <h1>PDF CONTROLLER</h1>
+
+  <section class="pdf-grid">
+    <button data-action="prev">PREV</button>
+    <button data-action="next">NEXT</button>
+    <button data-action="nextPdf">PDF</button>
+  </section>
+
+  <section class="pdf-grid">
+    <button data-mode="laugh">😂</button>
+    <button data-mode="acid">ACID</button>
+    <button data-mode="warp">WARP</button>
+  </section>
+
+  <section class="palette">
+    <button class="color-dot raw" data-filter="raw" data-color="0,255,0"></button>
+    <button class="color-dot green" data-filter="green" data-color="0,255,0"></button>
+    <button class="color-dot lime" data-filter="lime" data-color="212,255,82"></button>
+    <button class="color-dot orange" data-filter="orange" data-color="255,90,0"></button>
+    <button class="color-dot white" data-filter="white" data-color="255,255,255"></button>
+    <button class="color-dot violet" data-filter="violet" data-color="170,0,255"></button>
+  </section>
+
+  <button id="attackBtn" class="attack">A#U ATTACK</button>
+  <button id="resetBtn">RESET</button>
+
+  <div id="touchPad">
+    <span>TOUCH / DRAG</span>
+  </div>
+</main>
+
+<script>
+  import "../scripts/pdf-controller.js";
+</script>

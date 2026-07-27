@@ -1,0 +1,30 @@
+---
+const RAW_WP_API_URL = (
+  import.meta.env.PUBLIC_WP_API_URL ||
+  "https://thearchiveoftheuntamed.xyz/wp"
+).replace(/\/$/, "");
+
+const WP_API_URL = RAW_WP_API_URL.endsWith("/wp-json")
+  ? RAW_WP_API_URL
+  : `${RAW_WP_API_URL}/wp-json`;
+---
+
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <title>AOTU Square Visual</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <script is:inline define:vars={{ WP_API_URL }}>
+      window.__AOTU_WP_API_URL = WP_API_URL;
+    </script>
+  </head>
+
+  <body>
+    <div id="squareVisual"></div>
+
+    <script>
+      import "../scripts/square-visual.js";
+    </script>
+  </body>
+</html>

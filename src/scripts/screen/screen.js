@@ -81,6 +81,20 @@ async function applyState(state) {
 
   applyMode(currentMode);
 
+  if (currentMode === "sciopero") {
+    renderStrikeScreen();
+    return;
+  }
+
+  if (currentMode === "stop") {
+  if (slideTimer) {
+    clearInterval(slideTimer);
+    slideTimer = null;
+  }
+
+  return;
+}
+
   if (currentMode === "blackout") {
     renderSecretBlackout();
     return;
@@ -90,6 +104,7 @@ async function applyState(state) {
     currentTag = "";
     currentMedia = await fetchMediaByTag("");
     currentIndex = Math.floor(Math.random() * Math.max(currentMedia.length, 1));
+
     renderCurrentMedia();
     restartSlideshow();
     return;
@@ -97,13 +112,26 @@ async function applyState(state) {
 
   if (state.tag !== currentTag) {
     currentTag = state.tag || "";
+
     currentMedia = await fetchMediaByTag(currentTag);
     currentIndex = 0;
+
     renderCurrentMedia();
   }
 
   restartSlideshow();
 }
+
+function renderStrikeScreen() {
+  stage.innerHTML = `
+    <div class="strike-screen">
+      <div class="strike-title">
+        #OGGI-SCIOPERO
+      </div>
+    </div>
+  `;
+}
+
 
 function applyMode(mode) {
   stage.classList.remove(
@@ -222,11 +250,11 @@ function renderCurrentMedia() {
   const rotationClass = getRotationClass();
   if (rotationClass) el.classList.add(rotationClass);
 
-  stage.appendChild(el);
+stage.appendChild(el);
 
-  requestAnimationFrame(() => {
-    el.classList.add("is-visible");
-  });
+requestAnimationFrame(() => {
+  el.classList.add("is-visible");
+});
 }
 
 function nextMedia() {
@@ -274,6 +302,41 @@ function injectBaseStyle() {
         opacity 800ms ease,
         filter 500ms ease;
     }
+
+    .strike-screen{
+  position:fixed;
+  inset:0;
+
+  display:grid;
+  place-items:center;
+
+  background:#000;
+}
+
+.strike-title{
+  color:#d4ff52;
+
+  font-size:clamp(48px,10vw,180px);
+
+  font-weight:900;
+
+  letter-spacing:-0.08em;
+  text-transform:uppercase;
+
+  text-align:center;
+}
+
+    .strike-label {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 20;
+  color: #d4ff52;
+  font-size: clamp(28px, 6vw, 96px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.06em;
+}
 
     .aotu-screen-media.is-visible {
       opacity: 1;

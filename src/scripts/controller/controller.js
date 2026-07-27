@@ -168,6 +168,22 @@ function bindActions() {
     });
   });
 
+  $("#cmdStop")?.addEventListener("click", () => {
+  sendState({
+    mode: "stop",
+    tag: state.tag || "",
+    screen: state.screen || "all",
+  });
+});
+
+$("#cmdPlay")?.addEventListener("click", () => {
+  sendState({
+    mode: "sync",
+    tag: state.tag || "",
+    screen: state.screen || "all",
+  });
+});
+
   // $("#cmdPixel")?.addEventListener("click", () => sendMode("pixel"));
   // $("#cmdMosaic")?.addEventListener("click", () => sendMode("mosaic"));
   // $("#cmdInvert")?.addEventListener("click", () => sendMode("invert"));
@@ -206,6 +222,14 @@ function bindActions() {
       btn.style.display = btn.textContent.toLowerCase().includes(q)
         ? ""
         : "none";
+    });
+  });
+
+  $("#cmdStrike")?.addEventListener("click", () => {
+    sendState({
+      tag: "sciopero",
+      mode: "sciopero",
+      screen: "all",
     });
   });
 }

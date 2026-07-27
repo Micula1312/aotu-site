@@ -1,0 +1,35 @@
+---
+import "../styles/pdf-live.css";
+---
+
+<div id="pdfLive">
+  <canvas id="pdfCanvas"></canvas>
+  <canvas id="fxCanvas"></canvas>
+
+    <div class="pdf-ui">
+        <button id="prevBtn" class="slider-arrow prev" aria-label="Previous"></button>
+
+        <span id="pageLabel">1</span>
+
+        <button id="nextBtn" class="slider-arrow next" aria-label="Next"></button>
+
+        <button id="starsBtn">😂</button>
+        <button id="acidBtn">acid</button>
+        <button id="warpBtn">warp</button>
+        <button id="attackBtn">A#U attack</button>
+        <button id="resetBtn">reset</button>
+        <button id="nextPdfBtn">pdf</button>
+    </div>
+
+    <div class="palette-ui">
+    <button class="color-dot is-active green" data-filter="green" data-color="0,255,0"></button>
+    <button class="color-dot lime" data-filter="lime" data-color="212,255,82"></button>
+    <button class="color-dot orange" data-filter="orange" data-color="255,90,0"></button>
+    <button class="color-dot white" data-filter="white" data-color="255,255,255"></button>
+    <button class="color-dot violet" data-filter="violet" data-color="170,0,255"></button>
+    </div>
+</div>
+
+<script>
+  import "../scripts/pdf-live.js";
+</script>

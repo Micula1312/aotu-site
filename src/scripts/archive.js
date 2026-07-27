@@ -137,12 +137,22 @@ async function ensureTagIdIfNeeded() {
 // ---------- URL sync + pills ----------
 function syncURL() {
   const sp = new URLSearchParams(location.search);
+
   const q = (searchInput?.value || '').trim();
+
   q ? sp.set('q', q) : sp.delete('q');
   CURRENT_TYPE ? sp.set('mtype', CURRENT_TYPE) : sp.delete('mtype');
-  CURRENT_TAG  ? sp.set('mtag',  CURRENT_TAG)  : sp.delete('mtag');
+  CURRENT_TAG  ? sp.set('mtag', CURRENT_TAG)   : sp.delete('mtag');
   CURRENT_KIND ? sp.set('mkind', CURRENT_KIND) : sp.delete('mkind');
-  history.replaceState(null, '', `${location.pathname}?${sp.toString()}`);
+
+  const query = sp.toString();
+
+  history.replaceState(
+    null,
+    '',
+    query ? `${location.pathname}?${query}` : location.pathname
+  );
+
   renderActivePills();
 }
 
