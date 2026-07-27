@@ -2,38 +2,113 @@
    Drop this next to js/archive.js and include it in Base or this page.
 */
 
-/* Toolbar (filters/search) */
+/* ===== TOOLBAR ARCHIVIO ===== */
+
 section.bar {
-  display: inline;
-  grid-template-columns: 140px 1fr auto;
-  gap: 10px;
+  display: block;
+  width: 100%;
   margin: 12px 0 14px;
 }
-@media (max-width: 720px) {
-  section.bar { grid-template-columns: 1fr; }
+
+#archive-filters {
+  display: block;
+  width: 100%;
 }
 
+/* Prima riga: select + search + refresh */
+.archive-filters-wrapper {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  gap: 10px;
+}
+
+.archive-filters-wrapper select {
+  flex: 0 0 180px;
+}
+
+.archive-filters-wrapper input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+.archive-filters-wrapper #refresh {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Aspetto comune */
 section.bar select,
 section.bar input,
 section.bar button {
   padding: 10px 12px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--chip-bg, #012313), color-mix(in srgb, var(--chip-bg, #012313) 86%, #000 14%));
+  background: linear-gradient(
+    180deg,
+    var(--chip-bg, #012313),
+    color-mix(in srgb, var(--chip-bg, #012313) 86%, #000 14%)
+  );
   color: var(--fg);
   box-shadow: var(--shadow-inset);
 }
-section.bar input::placeholder { color: color-mix(in srgb, var(--muted) 70%, transparent); }
-section.bar button { cursor: pointer; font-weight: 700; }
-section.bar button:hover { box-shadow: var(--shadow-neon); }
 
-
-section.bar .archive-filters-wrapper {
-display: flex;
+section.bar input::placeholder {
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
 }
 
-section.bar .archive-filters-wrapper input {
-flex: auto;
+section.bar button {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+section.bar button:hover {
+  box-shadow: var(--shadow-neon);
+}
+
+/* Seconda riga: filtri attivi + clear all */
+.active-filters-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+#activeFilters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#clearAllFilters[hidden] {
+  display: none;
+}
+
+#tagList {
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* Mobile */
+@media (max-width: 720px) {
+  .archive-filters-wrapper {
+    flex-direction: column;
+  }
+
+  .archive-filters-wrapper select,
+  .archive-filters-wrapper input,
+  .archive-filters-wrapper #refresh {
+    flex: none;
+    width: 100%;
+  }
+
+  .active-filters-row {
+    align-items: flex-start;
+  }
 }
 
 /* Loading / state */
@@ -134,7 +209,7 @@ flex: auto;
   filter:none;
 
   transform:
-    scale(var(--pixel-scale))
+    scale(var(--pixel-scale));
 
   transform-origin:center;
   transition:

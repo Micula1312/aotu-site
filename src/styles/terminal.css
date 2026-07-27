@@ -479,6 +479,7 @@ body.neon .index details.drawer[open]{ box-shadow: 0 0 24px rgba(0,255,120,.22) 
     box-shadow: var(--shadow);
   }
 
+
   
 
   /* Backdrop */
@@ -522,7 +523,7 @@ body.neon .sidebar-pull{ box-shadow: 0 0 22px rgba(0,255,120,.22), var(--shadow)
 
 
 /* ========== MOBILE: linguetta INDEX full-width + cassetto fullscreen ========== */
-@media (max-width: 880px){
+@media (max-width: 900px){
   /* Linguetta in alto a tutta la viewport */
   .sidebar-pull{
     position: fixed; left: 0; right: 0; top: 0;
